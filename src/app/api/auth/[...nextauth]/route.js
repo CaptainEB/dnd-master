@@ -146,6 +146,17 @@ export const authOptions = {
 				session.user.role = token.role;
 				session.user.avatarUrl = token.avatarUrl;
 				session.user.activeCampaign = token.activeCampaign;
+
+				// Add convenience properties for backward compatibility
+				if (token.activeCampaign) {
+					session.user.activeCampaignId = token.activeCampaign.id;
+					session.user.activeCampaignName = token.activeCampaign.name;
+					session.user.campaignRole = token.activeCampaign.userRole;
+				} else {
+					session.user.activeCampaignId = null;
+					session.user.activeCampaignName = null;
+					session.user.campaignRole = null;
+				}
 			}
 			return session;
 		},

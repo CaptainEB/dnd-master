@@ -1378,3 +1378,293 @@ export async function deleteCampaignUpdate(updateId) {
 		};
 	}
 }
+
+// ===== RULES ACTIONS =====
+
+/**
+ * Get all rules for a campaign
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignRules(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Get all rules for the campaign, ordered by category and order
+		const rules = await prisma.rule.findMany({
+			where: { campaignId },
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+			orderBy: [{ category: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
+		});
+
+		return {
+			success: true,
+			data: rules,
+		};
+	} catch (error) {
+		console.error('Error fetching campaign rules:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch rules',
+		};
+	}
+}
+
+/**
+ * Create a new rule - DM/Admin only
+ * @param {string} campaignId
+ * @param {Object} ruleData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createCampaignRule(campaignId, ruleData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can create rules',
+			};
+		}
+
+		// Create the rule
+		const rule = await prisma.rule.create({
+			data: {
+				title: ruleData.title,
+				content: ruleData.content,
+				category: ruleData.category || 'General',
+				order: ruleData.order || 0,
+				authorId: session.user.id,
+				campaignId: campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: rule,
+		};
+	} catch (error) {
+		console.error('Error creating rule:', error);
+		return {
+			success: false,
+			error: 'Failed to create rule',
+		};
+	}
+}
+
+/**
+ * Update an existing rule - DM/Admin only
+ * @param {string} ruleId
+ * @param {Object} ruleData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCampaignRule(ruleId, ruleData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing rule with campaign info
+		const existingRule = await prisma.rule.findUnique({
+			where: { id: ruleId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingRule) {
+			return {
+				success: false,
+				error: 'Rule not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingRule.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can edit rules',
+			};
+		}
+
+		// Update the rule
+		const updatedRule = await prisma.rule.update({
+			where: { id: ruleId },
+			data: {
+				title: ruleData.title,
+				content: ruleData.content,
+				category: ruleData.category,
+				order: ruleData.order,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedRule,
+		};
+	} catch (error) {
+		console.error('Error updating rule:', error);
+		return {
+			success: false,
+			error: 'Failed to update rule',
+		};
+	}
+}
+
+/**
+ * Delete a rule - DM/Admin only
+ * @param {string} ruleId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteCampaignRule(ruleId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing rule with campaign info
+		const existingRule = await prisma.rule.findUnique({
+			where: { id: ruleId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingRule) {
+			return {
+				success: false,
+				error: 'Rule not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingRule.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can delete rules',
+			};
+		}
+
+		// Delete the rule
+		await prisma.rule.delete({
+			where: { id: ruleId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting rule:', error);
+		return {
+			success: false,
+			error: 'Failed to delete rule',
+		};
+	}
+}
