@@ -1668,3 +1668,343 @@ export async function deleteCampaignRule(ruleId) {
 		};
 	}
 }
+
+// ===== NOTES ACTIONS =====
+
+/**
+ * Get personal notes for the current user in a campaign
+ * @param {string} campaignId
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 20)
+ * @param {string} searchQuery - Optional search query
+ * @param {string} tagFilter - Optional tag filter
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQuery = '', tagFilter = '') {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		const skip = (page - 1) * limit;
+
+		// Build where clause for filtering
+		const where = {
+			campaignId: campaignId,
+			authorId: session.user.id, // Only get user's own notes
+		};
+
+		// Add search filter
+		if (searchQuery) {
+			where.OR = [
+				{
+					title: {
+						contains: searchQuery,
+						mode: 'insensitive',
+					},
+				},
+				{
+					content: {
+						contains: searchQuery,
+						mode: 'insensitive',
+					},
+				},
+			];
+		}
+
+		// Add tag filter
+		if (tagFilter) {
+			where.tags = {
+				has: tagFilter,
+			};
+		}
+
+		// Get notes with pagination
+		const [notes, totalCount] = await Promise.all([
+			prisma.note.findMany({
+				where: where,
+				include: {
+					author: {
+						select: {
+							id: true,
+							email: true,
+						},
+					},
+				},
+				orderBy: { updatedAt: 'desc' },
+				skip: skip,
+				take: limit,
+			}),
+			prisma.note.count({
+				where: where,
+			}),
+		]);
+
+		const totalPages = Math.ceil(totalCount / limit);
+
+		// Get all unique tags for this user in this campaign
+		const allUserNotes = await prisma.note.findMany({
+			where: {
+				campaignId: campaignId,
+				authorId: session.user.id,
+			},
+			select: {
+				tags: true,
+			},
+		});
+
+		const allTags = [...new Set(allUserNotes.flatMap((note) => note.tags))].sort();
+
+		return {
+			success: true,
+			data: {
+				notes,
+				pagination: {
+					page,
+					limit,
+					totalCount,
+					totalPages,
+					hasNext: page < totalPages,
+					hasPrev: page > 1,
+				},
+				availableTags: allTags,
+			},
+		};
+	} catch (error) {
+		console.error('Error fetching personal notes:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch notes',
+		};
+	}
+}
+
+/**
+ * Create a new personal note
+ * @param {string} campaignId
+ * @param {Object} noteData - {title?, content, tags?}
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createPersonalNote(campaignId, noteData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Validate required fields
+		if (!noteData.content || noteData.content.trim().length === 0) {
+			return {
+				success: false,
+				error: 'Note content is required',
+			};
+		}
+
+		// Create the note
+		const note = await prisma.note.create({
+			data: {
+				title: noteData.title?.trim() || null,
+				content: noteData.content.trim(),
+				tags: noteData.tags || [],
+				authorId: session.user.id,
+				campaignId: campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: note,
+		};
+	} catch (error) {
+		console.error('Error creating note:', error);
+		return {
+			success: false,
+			error: 'Failed to create note',
+		};
+	}
+}
+
+/**
+ * Update a personal note - Users can only edit their own notes
+ * @param {string} noteId
+ * @param {Object} noteData - {title?, content, tags?}
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updatePersonalNote(noteId, noteData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing note
+		const existingNote = await prisma.note.findUnique({
+			where: { id: noteId },
+			include: {
+				author: {
+					select: {
+						id: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		if (!existingNote) {
+			return {
+				success: false,
+				error: 'Note not found',
+			};
+		}
+
+		// Check permissions: Users can only edit their own notes
+		if (existingNote.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You can only edit your own notes',
+			};
+		}
+
+		// Validate required fields
+		if (!noteData.content || noteData.content.trim().length === 0) {
+			return {
+				success: false,
+				error: 'Note content is required',
+			};
+		}
+
+		// Update the note
+		const updatedNote = await prisma.note.update({
+			where: { id: noteId },
+			data: {
+				title: noteData.title?.trim() || null,
+				content: noteData.content.trim(),
+				tags: noteData.tags || [],
+				updatedAt: new Date(),
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedNote,
+		};
+	} catch (error) {
+		console.error('Error updating note:', error);
+		return {
+			success: false,
+			error: 'Failed to update note',
+		};
+	}
+}
+
+/**
+ * Delete a personal note - Users can only delete their own notes
+ * @param {string} noteId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deletePersonalNote(noteId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing note
+		const existingNote = await prisma.note.findUnique({
+			where: { id: noteId },
+		});
+
+		if (!existingNote) {
+			return {
+				success: false,
+				error: 'Note not found',
+			};
+		}
+
+		// Check permissions: Users can only delete their own notes
+		if (existingNote.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You can only delete your own notes',
+			};
+		}
+
+		// Delete the note
+		await prisma.note.delete({
+			where: { id: noteId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting note:', error);
+		return {
+			success: false,
+			error: 'Failed to delete note',
+		};
+	}
+}
