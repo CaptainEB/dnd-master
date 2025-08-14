@@ -46,9 +46,35 @@ export const authOptions = {
 				if (email) {
 					const existingUser = await prisma.user.findUnique({
 						where: { email },
+						include: {
+							activeCampaign: {
+								select: {
+									id: true,
+									name: true,
+								},
+							},
+						},
 					});
 
 					if (existingUser) {
+						// Get user's role in active campaign
+						let activeCampaignWithRole = null;
+						if (existingUser.activeCampaign) {
+							const membership = await prisma.campaignMember.findFirst({
+								where: {
+									userId: existingUser.id,
+									campaignId: existingUser.activeCampaign.id,
+								},
+								select: {
+									role: true,
+								},
+							});
+
+							activeCampaignWithRole = {
+								...existingUser.activeCampaign,
+								userRole: membership?.role || null,
+							};
+						}
 						// Update avatar if provided from OAuth provider
 						if (user.image && account.provider === 'google') {
 							try {
@@ -66,6 +92,7 @@ export const authOptions = {
 						token.id = existingUser.id;
 						token.role = existingUser.role;
 						token.avatarUrl = user.image || existingUser.avatarUrl;
+						token.activeCampaign = activeCampaignWithRole;
 					}
 				}
 			}
@@ -74,11 +101,39 @@ export const authOptions = {
 			if (trigger === 'update' && token.id) {
 				const existingUser = await prisma.user.findUnique({
 					where: { id: token.id },
+					include: {
+						activeCampaign: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+					},
 				});
 
 				if (existingUser) {
+					// Get user's role in active campaign
+					let activeCampaignWithRole = null;
+					if (existingUser.activeCampaign) {
+						const membership = await prisma.campaignMember.findFirst({
+							where: {
+								userId: existingUser.id,
+								campaignId: existingUser.activeCampaign.id,
+							},
+							select: {
+								role: true,
+							},
+						});
+
+						activeCampaignWithRole = {
+							...existingUser.activeCampaign,
+							userRole: membership?.role || null,
+						};
+					}
+
 					token.role = existingUser.role;
 					token.avatarUrl = existingUser.avatarUrl;
+					token.activeCampaign = activeCampaignWithRole;
 				}
 			}
 
@@ -90,6 +145,7 @@ export const authOptions = {
 				session.user.id = token.id;
 				session.user.role = token.role;
 				session.user.avatarUrl = token.avatarUrl;
+				session.user.activeCampaign = token.activeCampaign;
 			}
 			return session;
 		},
@@ -99,6 +155,9 @@ export const authOptions = {
 			if (url.startsWith(baseUrl)) return url;
 			return baseUrl;
 		},
+	},
+	pages: {
+		error: '/auth/error',
 	},
 };
 

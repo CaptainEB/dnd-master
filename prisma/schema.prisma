@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,16 +8,110 @@ datasource db {
 }
 
 model user {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  avatarUrl String?
-  email     String   @unique
-  role      UserRole @default(PLAYER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  avatarUrl        String?
+  email            String   @unique
+  role             UserRole @default(PLAYER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  username         String?
+  activeCampaignId String?  @db.ObjectId
+
+  // Relations
+  activeCampaign  campaign?        @relation("UserActiveCampaign", fields: [activeCampaignId], references: [id])
+  campaignMembers CampaignMember[]
+  updates         Update[]
+  notes           Note[]
+}
+
+model campaign {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  activeUsers user[]           @relation("UserActiveCampaign")
+  members     CampaignMember[]
+  updates     Update[]
+  rules       Rule[]
+  notes       Note[]
+  quests      Quest[]
+}
+
+model CampaignMember {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String       @db.ObjectId
+  campaignId String       @db.ObjectId
+  role       CampaignRole @default(PLAYER) // Role within this specific campaign
+  joinedAt   DateTime     @default(now())
+
+  user     user     @relation(fields: [userId], references: [id])
+  campaign campaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([userId, campaignId]) // Prevent duplicate memberships
+}
+
+// ---------- Content Models for the Tabs ----------
+
+model Update {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  content    String
+  createdAt  DateTime @default(now())
+  authorId   String   @db.ObjectId
+  campaignId String   @db.ObjectId
+
+  author   user     @relation(fields: [authorId], references: [id])
+  campaign campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Rule {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String // Can be markdown or plain text
+  createdAt  DateTime @default(now())
+  campaignId String   @db.ObjectId
+
+  campaign campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Note {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  content    String
+  createdAt  DateTime @default(now())
+  authorId   String   @db.ObjectId
+  campaignId String   @db.ObjectId
+
+  author   user     @relation(fields: [authorId], references: [id])
+  campaign campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Quest {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  status      QuestStatus @default(ACTIVE)
+  reward      String?
+  difficulty  String?
+  createdAt   DateTime    @default(now())
+  campaignId  String      @db.ObjectId
+
+  campaign campaign @relation(fields: [campaignId], references: [id])
+}
+
+enum QuestStatus {
+  ACTIVE
+  COMPLETED
 }
 
 enum UserRole {
   PLAYER
   DM
   ADMIN
+}
+
+enum CampaignRole {
+  PLAYER
+  DM
 }
