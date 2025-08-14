@@ -2008,3 +2008,282 @@ export async function deletePersonalNote(noteId) {
 		};
 	}
 }
+
+// ===== QUEST ACTIONS =====
+
+/**
+ * Get all quests for a campaign
+ * @param {string} campaignId
+ * @param {string} statusFilter - Optional status filter (AVAILABLE, IN_PROGRESS, COMPLETED, UNAVAILABLE)
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignQuests(campaignId, statusFilter = null) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Build where clause
+		const where = { campaignId };
+		if (statusFilter) {
+			where.status = statusFilter;
+		}
+
+		// Get all quests for the campaign
+		const quests = await prisma.quest.findMany({
+			where: where,
+			orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+		});
+
+		return {
+			success: true,
+			data: quests,
+		};
+	} catch (error) {
+		console.error('Error fetching campaign quests:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch quests',
+		};
+	}
+}
+
+/**
+ * Create a new quest - DM/Admin only
+ * @param {string} campaignId
+ * @param {Object} questData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createCampaignQuest(campaignId, questData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can create quests',
+			};
+		}
+
+		// Validate required fields
+		if (!questData.title || !questData.description) {
+			return {
+				success: false,
+				error: 'Title and description are required',
+			};
+		}
+
+		// Create the quest
+		const quest = await prisma.quest.create({
+			data: {
+				title: questData.title.trim(),
+				description: questData.description.trim(),
+				status: questData.status || 'AVAILABLE',
+				reward: questData.reward?.trim() || null,
+				difficulty: questData.difficulty?.trim() || null,
+				campaignId: campaignId,
+			},
+		});
+
+		return {
+			success: true,
+			data: quest,
+		};
+	} catch (error) {
+		console.error('Error creating quest:', error);
+		return {
+			success: false,
+			error: 'Failed to create quest',
+		};
+	}
+}
+
+/**
+ * Update an existing quest - DM/Admin only
+ * @param {string} questId
+ * @param {Object} questData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCampaignQuest(questId, questData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing quest with campaign info
+		const existingQuest = await prisma.quest.findUnique({
+			where: { id: questId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingQuest) {
+			return {
+				success: false,
+				error: 'Quest not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingQuest.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can edit quests',
+			};
+		}
+
+		// Update the quest
+		const updatedQuest = await prisma.quest.update({
+			where: { id: questId },
+			data: {
+				title: questData.title?.trim(),
+				description: questData.description?.trim(),
+				status: questData.status,
+				reward: questData.reward?.trim() || null,
+				difficulty: questData.difficulty?.trim() || null,
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedQuest,
+		};
+	} catch (error) {
+		console.error('Error updating quest:', error);
+		return {
+			success: false,
+			error: 'Failed to update quest',
+		};
+	}
+}
+
+/**
+ * Delete a quest - DM/Admin only
+ * @param {string} questId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteCampaignQuest(questId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing quest with campaign info
+		const existingQuest = await prisma.quest.findUnique({
+			where: { id: questId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingQuest) {
+			return {
+				success: false,
+				error: 'Quest not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingQuest.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can delete quests',
+			};
+		}
+
+		// Delete the quest
+		await prisma.quest.delete({
+			where: { id: questId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting quest:', error);
+		return {
+			success: false,
+			error: 'Failed to delete quest',
+		};
+	}
+}

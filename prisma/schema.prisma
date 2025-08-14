@@ -87,7 +87,7 @@ model Rule {
 
 model Note {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  title      String?  // Optional title for the note
+  title      String? // Optional title for the note
   content    String
   tags       String[] // Array of tags for organization
   createdAt  DateTime @default(now())
@@ -105,7 +105,7 @@ model Quest {
   id          String      @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
-  status      QuestStatus @default(ACTIVE)
+  status      QuestStatus @default(AVAILABLE)
   reward      String?
   difficulty  String?
   createdAt   DateTime    @default(now())
@@ -115,7 +115,9 @@ model Quest {
 }
 
 enum QuestStatus {
-  ACTIVE
+  AVAILABLE
+  IN_PROGRESS
+  UNAVAILABLE
   COMPLETED
 }
 
