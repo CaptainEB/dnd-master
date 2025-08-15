@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Calendar, ChevronLeft, ChevronRight, Edit, Plus, Trash2, User } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Edit, Plus, Shield, Trash2, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -323,7 +323,7 @@ export default function UpdatesPage() {
 											<CardDescription className="flex items-center gap-4">
 												<span className="flex items-center gap-1 text-purple-600">
 													<User size={14} />
-													{update.author.email}
+													{update.author.characterName || update.author.email?.split('@')[0] || 'Unknown User'}
 												</span>
 												<span className="flex items-center gap-1 text-gray-500">
 													<Calendar size={14} />

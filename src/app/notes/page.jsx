@@ -473,7 +473,7 @@ export default function NotesPage() {
 													<CardDescription className="flex items-center gap-4">
 														<span className="flex items-center gap-1 text-purple-600">
 															<User className="h-4 w-4" />
-															{note.author.email}
+															{note.author.characterName || note.author.email?.split('@')[0] || 'Unknown User'}
 														</span>
 														<span className="flex items-center gap-1 text-gray-500">
 															<Calendar className="h-4 w-4" />

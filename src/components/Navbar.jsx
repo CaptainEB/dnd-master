@@ -1,11 +1,11 @@
 'use client';
 
-import { LayoutDashboard, Sword, User } from 'lucide-react';
+import { LayoutDashboard, Sword } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import ActiveCampaignSelector from './ActiveCampaignSelector';
-import SignOutButton from './SignOutButton';
+import UserDropdown from './UserDropdown';
 
 export default function Navbar() {
 	const { data: session, status } = useSession();
@@ -44,23 +44,8 @@ export default function Navbar() {
 										<span className="hidden sm:inline">Dashboard</span>
 									</Link>
 
-									{/* User Info */}
-									<div className="flex items-center gap-3">
-										{session.user.avatarUrl ? (
-											<img src={session.user.avatarUrl} alt="Profile" className="h-8 w-8 rounded-full border-2 border-purple-200" />
-										) : (
-											<div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-												<User size={16} className="text-purple-600" />
-											</div>
-										)}
-										<div className="hidden sm:block">
-											<p className="text-sm font-medium text-gray-700">{session.user.email}</p>
-											<p className="text-xs text-gray-500 capitalize">{session.user.role?.toLowerCase()}</p>
-										</div>
-									</div>
-
-									{/* Sign Out Button */}
-									<SignOutButton />
+									{/* User Dropdown */}
+									<UserDropdown />
 								</>
 							)}
 						</div>

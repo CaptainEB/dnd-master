@@ -42,11 +42,12 @@ model campaign {
 }
 
 model CampaignMember {
-  id         String       @id @default(auto()) @map("_id") @db.ObjectId
-  userId     String       @db.ObjectId
-  campaignId String       @db.ObjectId
-  role       CampaignRole @default(PLAYER) // Role within this specific campaign
-  joinedAt   DateTime     @default(now())
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String       @db.ObjectId
+  campaignId    String       @db.ObjectId
+  role          CampaignRole @default(PLAYER) // Role within this specific campaign
+  characterName String? // Character name for this campaign
+  joinedAt      DateTime     @default(now())
 
   user     user     @relation(fields: [userId], references: [id])
   campaign campaign @relation(fields: [campaignId], references: [id])

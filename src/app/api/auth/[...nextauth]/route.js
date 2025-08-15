@@ -67,12 +67,14 @@ export const authOptions = {
 								},
 								select: {
 									role: true,
+									characterName: true,
 								},
 							});
 
 							activeCampaignWithRole = {
 								...existingUser.activeCampaign,
 								userRole: membership?.role || null,
+								characterName: membership?.characterName || null,
 							};
 						}
 						// Update avatar if provided from OAuth provider
@@ -91,6 +93,7 @@ export const authOptions = {
 
 						token.id = existingUser.id;
 						token.role = existingUser.role;
+						token.username = existingUser.username;
 						token.avatarUrl = user.image || existingUser.avatarUrl;
 						token.activeCampaign = activeCampaignWithRole;
 					}
@@ -122,16 +125,19 @@ export const authOptions = {
 							},
 							select: {
 								role: true,
+								characterName: true,
 							},
 						});
 
 						activeCampaignWithRole = {
 							...existingUser.activeCampaign,
 							userRole: membership?.role || null,
+							characterName: membership?.characterName || null,
 						};
 					}
 
 					token.role = existingUser.role;
+					token.username = existingUser.username;
 					token.avatarUrl = existingUser.avatarUrl;
 					token.activeCampaign = activeCampaignWithRole;
 				}
@@ -144,6 +150,7 @@ export const authOptions = {
 			if (session?.user) {
 				session.user.id = token.id;
 				session.user.role = token.role;
+				session.user.username = token.username;
 				session.user.avatarUrl = token.avatarUrl;
 				session.user.activeCampaign = token.activeCampaign;
 
@@ -152,10 +159,12 @@ export const authOptions = {
 					session.user.activeCampaignId = token.activeCampaign.id;
 					session.user.activeCampaignName = token.activeCampaign.name;
 					session.user.campaignRole = token.activeCampaign.userRole;
+					session.user.characterName = token.activeCampaign.characterName;
 				} else {
 					session.user.activeCampaignId = null;
 					session.user.activeCampaignName = null;
 					session.user.campaignRole = null;
+					session.user.characterName = null;
 				}
 			}
 			return session;

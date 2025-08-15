@@ -118,7 +118,7 @@ export default async function AdminCampaigns() {
 																member.role === 'DM' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
 															}`}
 														>
-															{member.user.email.split('@')[0]} ({member.role})
+															{member.user.email?.split('@')[0] || 'Unknown User'} ({member.role})
 														</span>
 													))}
 													{campaign.members.length > 5 && (

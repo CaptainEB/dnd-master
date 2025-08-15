@@ -161,7 +161,7 @@ export default async function AdminCampaignDetail({ params }) {
 										<h4 className="font-medium text-gray-900 mb-1">{update.title}</h4>
 										<p className="text-sm text-gray-600 mb-2 line-clamp-2">{update.content}</p>
 										<div className="flex items-center gap-2 text-xs text-gray-500">
-											<span>By: {update.author.email.split('@')[0]}</span>
+											<span>By: {update.author.email?.split('@')[0] || 'Unknown User'}</span>
 											<span>•</span>
 											<span>
 												<DateDisplay date={update.createdAt} />

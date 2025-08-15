@@ -521,7 +521,7 @@ export default function RulesPage() {
 															{rule.category}
 														</Badge>
 														<span>•</span>
-														<span>By {rule.author.username || rule.author.email}</span>
+														<span>By {rule.author.characterName || rule.author.username || rule.author.email?.split('@')[0] || 'Unknown User'}</span>
 														<span>•</span>
 														<span>{formatDate(rule.createdAt)}</span>
 													</div>

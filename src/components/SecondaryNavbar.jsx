@@ -1,11 +1,18 @@
 'use client';
 
 import { BookOpen, ClipboardList, FileText, Scroll } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function SecondaryNavbar() {
 	const pathname = usePathname();
+	const { data: session, status } = useSession();
+
+	// Only show secondary nav if user is authenticated and has an active campaign
+	if (status === 'loading' || status === 'unauthenticated' || !session?.user?.activeCampaignId) {
+		return null;
+	}
 
 	const navItems = [
 		{

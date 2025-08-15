@@ -1095,6 +1095,22 @@ export async function getCampaignUpdates(campaignId, page = 1, limit = 10) {
 							role: true,
 						},
 					},
+					// Get the author's character name for this campaign
+					campaign: {
+						select: {
+							members: {
+								where: {
+									userId: {
+										in: [], // Will be populated below
+									},
+								},
+								select: {
+									userId: true,
+									characterName: true,
+								},
+							},
+						},
+					},
 				},
 				orderBy: { createdAt: 'desc' },
 				skip: skip,
@@ -1105,12 +1121,42 @@ export async function getCampaignUpdates(campaignId, page = 1, limit = 10) {
 			}),
 		]);
 
+		// Get all unique author IDs to fetch their character names
+		const authorIds = [...new Set(updates.map((update) => update.authorId))];
+
+		// Get character names for all authors in this campaign
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaignId: campaignId,
+				userId: { in: authorIds },
+			},
+			select: {
+				userId: true,
+				characterName: true,
+			},
+		});
+
+		// Create a map of userId -> characterName
+		const characterNameMap = {};
+		campaignMembers.forEach((member) => {
+			characterNameMap[member.userId] = member.characterName;
+		});
+
+		// Add character names to updates
+		const updatesWithCharacterNames = updates.map((update) => ({
+			...update,
+			author: {
+				...update.author,
+				characterName: characterNameMap[update.authorId] || null,
+			},
+		}));
+
 		const totalPages = Math.ceil(totalCount / limit);
 
 		return {
 			success: true,
 			data: {
-				updates,
+				updates: updatesWithCharacterNames,
 				pagination: {
 					page,
 					limit,
@@ -1195,9 +1241,29 @@ export async function createCampaignUpdate(updateData) {
 			},
 		});
 
+		// Get the author's character name for this campaign
+		const authorMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: updateData.campaignId,
+			},
+			select: {
+				characterName: true,
+			},
+		});
+
+		// Add character name to the response
+		const updateWithCharacterName = {
+			...update,
+			author: {
+				...update.author,
+				characterName: authorMembership?.characterName || null,
+			},
+		};
+
 		return {
 			success: true,
-			data: update,
+			data: updateWithCharacterName,
 		};
 	} catch (error) {
 		console.error('Error creating update:', error);
@@ -1427,9 +1493,37 @@ export async function getCampaignRules(campaignId) {
 			orderBy: [{ category: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
 		});
 
+		// Get character names for rule authors
+		const authorIds = [...new Set(rules.map((rule) => rule.authorId))];
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaignId: campaignId,
+				userId: { in: authorIds },
+			},
+			select: {
+				userId: true,
+				characterName: true,
+			},
+		});
+
+		// Create character name map
+		const characterNameMap = {};
+		campaignMembers.forEach((member) => {
+			characterNameMap[member.userId] = member.characterName;
+		});
+
+		// Add character names to rules
+		const rulesWithCharacterNames = rules.map((rule) => ({
+			...rule,
+			author: {
+				...rule.author,
+				characterName: characterNameMap[rule.authorId] || null,
+			},
+		}));
+
 		return {
 			success: true,
-			data: rules,
+			data: rulesWithCharacterNames,
 		};
 	} catch (error) {
 		console.error('Error fetching campaign rules:', error);
@@ -1760,6 +1854,34 @@ export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQ
 			}),
 		]);
 
+		// Get character names for note authors
+		const authorIds = [...new Set(notes.map((note) => note.authorId))];
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaignId: campaignId,
+				userId: { in: authorIds },
+			},
+			select: {
+				userId: true,
+				characterName: true,
+			},
+		});
+
+		// Create character name map
+		const characterNameMap = {};
+		campaignMembers.forEach((member) => {
+			characterNameMap[member.userId] = member.characterName;
+		});
+
+		// Add character names to notes
+		const notesWithCharacterNames = notes.map((note) => ({
+			...note,
+			author: {
+				...note.author,
+				characterName: characterNameMap[note.authorId] || null,
+			},
+		}));
+
 		const totalPages = Math.ceil(totalCount / limit);
 
 		// Get all unique tags for this user in this campaign
@@ -1778,7 +1900,7 @@ export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQ
 		return {
 			success: true,
 			data: {
-				notes,
+				notes: notesWithCharacterNames,
 				pagination: {
 					page,
 					limit,
@@ -2284,6 +2406,157 @@ export async function deleteCampaignQuest(questId) {
 		return {
 			success: false,
 			error: 'Failed to delete quest',
+		};
+	}
+}
+
+/**
+ * Update user profile (username)
+ * @param {Object} profileData - Profile data {username}
+ */
+export async function updateUserProfile(profileData) {
+	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user?.id) {
+			return {
+				success: false,
+				error: 'Unauthorized - Please log in',
+			};
+		}
+
+		// Validate input
+		if (!profileData.username || !profileData.username.trim()) {
+			return {
+				success: false,
+				error: 'Username is required',
+			};
+		}
+
+		const username = profileData.username.trim();
+
+		// Check if username is already taken by another user
+		const existingUser = await prisma.user.findFirst({
+			where: {
+				username: username,
+				id: { not: session.user.id },
+			},
+		});
+
+		if (existingUser) {
+			return {
+				success: false,
+				error: 'Username is already taken',
+			};
+		}
+
+		// Update user profile
+		const updatedUser = await prisma.user.update({
+			where: { id: session.user.id },
+			data: { username: username },
+			select: {
+				id: true,
+				email: true,
+				username: true,
+				role: true,
+				avatarUrl: true,
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedUser,
+		};
+	} catch (error) {
+		console.error('Error updating user profile:', error);
+		return {
+			success: false,
+			error: 'Failed to update profile',
+		};
+	}
+}
+
+/**
+ * Update character name for current user in their active campaign
+ * @param {string} characterName - New character name
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCharacterName(characterName) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		if (!session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'No active campaign selected',
+			};
+		}
+
+		// Validate character name
+		if (!characterName || typeof characterName !== 'string') {
+			return {
+				success: false,
+				error: 'Character name is required',
+			};
+		}
+
+		const trimmedName = characterName.trim();
+		if (trimmedName.length < 1 || trimmedName.length > 50) {
+			return {
+				success: false,
+				error: 'Character name must be between 1 and 50 characters',
+			};
+		}
+
+		// Check if character name already exists in this campaign
+		const existingCharacter = await prisma.campaignMember.findFirst({
+			where: {
+				campaignId: session.user.activeCampaignId,
+				characterName: trimmedName,
+				userId: {
+					not: session.user.id,
+				},
+			},
+		});
+
+		if (existingCharacter) {
+			return {
+				success: false,
+				error: 'This character name is already taken in this campaign',
+			};
+		}
+
+		// Update the character name
+		const updatedMember = await prisma.campaignMember.update({
+			where: {
+				userId_campaignId: {
+					userId: session.user.id,
+					campaignId: session.user.activeCampaignId,
+				},
+			},
+			data: {
+				characterName: trimmedName,
+			},
+		});
+
+		return {
+			success: true,
+			data: {
+				characterName: updatedMember.characterName,
+			},
+		};
+	} catch (error) {
+		console.error('Error updating character name:', error);
+		return {
+			success: false,
+			error: 'Failed to update character name',
 		};
 	}
 }
