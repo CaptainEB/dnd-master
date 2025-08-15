@@ -12,6 +12,7 @@ import { Loader2, Crown, Users, Calendar, UserCheck, UserPlus, Mail, UserMinus, 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSession } from 'next-auth/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { getDMCampaignMembers, promoteUserToDM, invitePlayerByEmail, getUserCampaigns, promoteToDMInCampaign, demoteFromDMInCampaign } from '../../admin/components/actions';
@@ -24,6 +25,7 @@ const inviteSchema = z.object({
 });
 
 export default function ManagePlayersSection() {
+	const { data: session } = useSession();
 	const [campaignMembers, setCampaignMembers] = useState([]);
 	const [campaigns, setCampaigns] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -181,8 +183,8 @@ export default function ManagePlayersSection() {
 
 	if (isLoading) {
 		return (
-			<div className="text-center py-12 text-gray-500">
-				<Users className="h-12 w-12 text-gray-400 mx-auto mb-4 animate-pulse" />
+			<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+				<Users className={`h-12 w-12 mx-auto mb-4 animate-pulse ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
 				<p>Loading campaign members...</p>
 			</div>
 		);
@@ -190,7 +192,7 @@ export default function ManagePlayersSection() {
 
 	if (error) {
 		return (
-			<div className="text-center py-12 text-red-500">
+			<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-red-400' : 'text-red-500'}`}>
 				<p>Error: {error}</p>
 			</div>
 		);
@@ -199,23 +201,23 @@ export default function ManagePlayersSection() {
 	return (
 		<div className="space-y-8">
 			{/* Invite Player Section */}
-			<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+			<div className={`rounded-xl p-6 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'}`}>
 				<div className="flex items-center justify-between mb-4">
 					<div>
-						<h4 className="text-lg font-bold text-gray-900 mb-1">Invite New Player</h4>
-						<p className="text-gray-600">Add players to your campaigns by email</p>
+						<h4 className={`text-lg font-bold mb-1 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Invite New Player</h4>
+						<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Add players to your campaigns by email</p>
 					</div>
 					<Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
 						<DialogTrigger asChild>
-							<Button className="bg-blue-600 hover:bg-blue-700">
+							<Button className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
 								<UserPlus className="h-4 w-4 mr-2" />
 								Invite Player
 							</Button>
 						</DialogTrigger>
-						<DialogContent className="sm:max-w-[500px]">
+						<DialogContent className={`sm:max-w-[500px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 							<DialogHeader>
-								<DialogTitle>Invite Player to Campaign</DialogTitle>
-								<DialogDescription>
+								<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Invite Player to Campaign</DialogTitle>
+								<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
 									Enter the player's details to send them an invitation.
 								</DialogDescription>
 							</DialogHeader>
@@ -226,11 +228,12 @@ export default function ManagePlayersSection() {
 										name="email"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Email Address *</FormLabel>
+												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Email Address *</FormLabel>
 												<FormControl>
 													<Input 
 														placeholder="player@example.com" 
 														{...field}
+														className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 														onChange={(e) => {
 															field.onChange(e);
 															handleEmailChange(e.target.value);
@@ -247,9 +250,13 @@ export default function ManagePlayersSection() {
 										name="username"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Preferred Username *</FormLabel>
+												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Preferred Username *</FormLabel>
 												<FormControl>
-													<Input placeholder="Enter username" {...field} />
+													<Input 
+														placeholder="Enter username" 
+														{...field} 
+														className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -261,16 +268,20 @@ export default function ManagePlayersSection() {
 										name="campaignId"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Campaign *</FormLabel>
+												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Campaign *</FormLabel>
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger>
+														<SelectTrigger className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}>
 															<SelectValue placeholder="Select campaign" />
 														</SelectTrigger>
 													</FormControl>
-													<SelectContent>
+													<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
 														{campaigns.map((campaign) => (
-															<SelectItem key={campaign.id} value={campaign.id}>
+															<SelectItem 
+																key={campaign.id} 
+																value={campaign.id}
+																className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
+															>
 																{campaign.name}
 															</SelectItem>
 														))}
@@ -286,16 +297,26 @@ export default function ManagePlayersSection() {
 										name="role"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Role *</FormLabel>
+												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Role *</FormLabel>
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger>
+														<SelectTrigger className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}>
 															<SelectValue />
 														</SelectTrigger>
 													</FormControl>
-													<SelectContent>
-														<SelectItem value="PLAYER">Player</SelectItem>
-														<SelectItem value="DM">Dungeon Master</SelectItem>
+													<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
+														<SelectItem 
+															value="PLAYER"
+															className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
+														>
+															Player
+														</SelectItem>
+														<SelectItem 
+															value="DM"
+															className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
+														>
+															Dungeon Master
+														</SelectItem>
 													</SelectContent>
 												</Select>
 												<FormMessage />
@@ -304,7 +325,7 @@ export default function ManagePlayersSection() {
 									/>
 
 									{inviteForm.formState.errors.root && (
-										<div className="text-sm text-red-600">
+										<div className={`text-sm ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>
 											{inviteForm.formState.errors.root.message}
 										</div>
 									)}
@@ -315,14 +336,14 @@ export default function ManagePlayersSection() {
 											variant="outline"
 											onClick={() => setInviteDialogOpen(false)}
 											disabled={inviteLoading}
-											className="flex-1"
+											className={`flex-1 ${session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
 										>
 											Cancel
 										</Button>
 										<Button 
 											type="submit" 
 											disabled={inviteLoading} 
-											className="bg-blue-600 hover:bg-blue-700 flex-1"
+											className={`flex-1 ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
 										>
 											{inviteLoading ? (
 												<>

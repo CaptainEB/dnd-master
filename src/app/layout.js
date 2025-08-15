@@ -1,3 +1,4 @@
+import DarkModeProvider from '@/components/DarkModeProvider';
 import Navbar from '@/components/Navbar';
 import SecondaryNavbar from '@/components/SecondaryNavbar';
 import SessionProvider from '@/components/SessionProvider';
@@ -26,11 +27,13 @@ export default async function RootLayout({ children }) {
 
 	return (
 		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
 				<SessionProvider session={session}>
-					<Navbar />
-					<SecondaryNavbar />
-					{children}
+					<DarkModeProvider>
+						<Navbar />
+						<SecondaryNavbar />
+						{children}
+					</DarkModeProvider>
 				</SessionProvider>
 			</body>
 		</html>

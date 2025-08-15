@@ -38,7 +38,13 @@ export default function SecondaryNavbar() {
 	];
 
 	return (
-		<nav className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-purple-100 sticky top-16 z-40 h-12">
+		<nav
+			className={`border-b sticky top-16 z-40 h-12 ${
+				session?.user?.darkMode
+					? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700'
+					: 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100'
+			}`}
+		>
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div className="flex items-center h-12 gap-8">
 					{navItems.map((item) => {
@@ -49,8 +55,14 @@ export default function SecondaryNavbar() {
 							<Link
 								key={item.href}
 								href={item.href}
-								className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/50 ${
-									isActive ? 'bg-white/80 text-purple-700 shadow-sm border border-purple-200' : 'text-gray-600 hover:text-purple-600'
+								className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+									session?.user?.darkMode
+										? `hover:bg-gray-700/50 ${
+												isActive ? 'bg-gray-700/80 text-purple-300 shadow-sm border border-purple-500' : 'text-gray-300 hover:text-purple-400'
+											}`
+										: `hover:bg-white/50 ${
+												isActive ? 'bg-white/80 text-purple-700 shadow-sm border border-purple-200' : 'text-gray-600 hover:text-purple-600'
+											}`
 								}`}
 							>
 								<Icon size={16} />

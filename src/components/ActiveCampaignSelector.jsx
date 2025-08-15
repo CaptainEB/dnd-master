@@ -71,19 +71,21 @@ export default function ActiveCampaignSelector() {
 		<div className="flex items-center gap-2 px-3 py-2">
 			<Shield size={16} className="text-purple-600" />
 			<Select value={activeCampaign || 'none'} onValueChange={handleCampaignChange} disabled={loading}>
-				<SelectTrigger className="w-48 h-8 border-purple-200 bg-white/50">
+				<SelectTrigger
+					className={`w-48 h-8 ${session?.user?.darkMode ? 'border-purple-500 bg-gray-800/50 text-white' : 'border-purple-200 bg-white/50'}`}
+				>
 					<SelectValue placeholder={loading ? 'Loading...' : 'Select Campaign'} />
 				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="none">
-						<span className="text-gray-500">No Active Campaign</span>
+				<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}>
+					<SelectItem value="none" className={session?.user?.darkMode ? 'text-gray-400 focus:bg-gray-700' : ''}>
+						<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}>No Active Campaign</span>
 					</SelectItem>
 					{campaigns.map((campaign) => (
-						<SelectItem key={campaign.id} value={campaign.id}>
+						<SelectItem key={campaign.id} value={campaign.id} className={session?.user?.darkMode ? 'text-white focus:bg-gray-700' : ''}>
 							<div className="flex items-center gap-2">
 								<div className={`w-2 h-2 rounded-full ${campaign.userRole === 'DM' ? 'bg-blue-500' : 'bg-green-500'}`} />
 								<span>{campaign.name}</span>
-								<span className="text-xs text-gray-500">({campaign.userRole})</span>
+								<span className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>({campaign.userRole})</span>
 							</div>
 						</SelectItem>
 					))}

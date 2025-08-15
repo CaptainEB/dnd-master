@@ -2511,6 +2511,48 @@ export async function updateUserProfile(profileData) {
 }
 
 /**
+ * Update user's dark mode preference
+ * @param {boolean} darkMode - Dark mode preference
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateUserTheme(darkMode) {
+	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user?.id) {
+			return {
+				success: false,
+				error: 'Unauthorized - Please log in',
+			};
+		}
+
+		// Update user's dark mode preference
+		const updatedUser = await prisma.user.update({
+			where: { id: session.user.id },
+			data: { darkMode: darkMode },
+			select: {
+				id: true,
+				email: true,
+				username: true,
+				role: true,
+				avatarUrl: true,
+				darkMode: true,
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedUser,
+		};
+	} catch (error) {
+		console.error('Error updating user theme:', error);
+		return {
+			success: false,
+			error: 'Failed to update theme preference',
+		};
+	}
+}
+
+/**
  * Update character name for current user in their active campaign
  * @param {string} characterName - New character name
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}

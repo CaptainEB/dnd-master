@@ -1,6 +1,6 @@
 'use client';
 
-import { updateCharacterName, updateUserProfile } from '@/app/admin/components/actions';
+import { updateCharacterName, updateUserProfile, updateUserTheme } from '@/app/admin/components/actions';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronDown, Edit, LogOut, Save, User } from 'lucide-react';
+import { ChevronDown, Edit, LogOut, Moon, Save, Sun, User } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useState } from 'react';
 
@@ -90,23 +90,37 @@ export default function UserDropdown() {
 		signOut({ callbackUrl: '/' });
 	};
 
+	const toggleDarkMode = async () => {
+		try {
+			const newDarkMode = !session.user.darkMode;
+			const result = await updateUserTheme(newDarkMode);
+
+			if (result.success) {
+				// Update the session to reflect the new theme
+				await update();
+			}
+		} catch (error) {
+			console.error('Error toggling dark mode:', error);
+		}
+	};
+
 	if (!session?.user) return null;
 
 	const displayName = session.user.username || session.user.email?.split('@')[0] || 'User';
 
 	// Always show character name section with helpful placeholders
 	let characterDisplayName;
-	let characterNameStyle = 'text-xs font-medium';
+	let characterNameStyle = `text-xs font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`;
 
 	if (session.user.characterName) {
 		characterDisplayName = session.user.characterName;
-		characterNameStyle = 'text-xs text-blue-600 font-medium';
+		characterNameStyle = `text-xs font-medium ${session?.user?.darkMode ? 'text-cyan-400' : 'text-blue-600'}`;
 	} else if (session.user.activeCampaignId) {
 		characterDisplayName = 'Set character name';
-		characterNameStyle = 'text-xs text-orange-500 font-medium italic';
+		characterNameStyle = `text-xs font-medium italic ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-500'}`;
 	} else {
 		characterDisplayName = 'No active campaign';
-		characterNameStyle = 'text-xs text-gray-400 font-medium italic';
+		characterNameStyle = `text-xs font-medium italic ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`;
 	}
 
 	const hasActiveCampaign = !!session.user.activeCampaignId;
@@ -116,7 +130,11 @@ export default function UserDropdown() {
 			<Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<button className="flex items-center gap-3 p-2 rounded-lg hover:bg-purple-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+						<button
+							className={`flex items-center gap-3 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+								session?.user?.darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-white/50'
+							}`}
+						>
 							{session.user.avatarUrl ? (
 								<img
 									src={session.user.avatarUrl}
@@ -132,15 +150,15 @@ export default function UserDropdown() {
 								<User size={16} className="text-purple-600" />
 							</div>
 							<div className="hidden sm:block text-left">
-								<p className="text-sm font-medium text-gray-700">{displayName}</p>
+								<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>{displayName}</p>
 								<p className={characterNameStyle}>{characterDisplayName}</p>
-								<p className="text-xs text-gray-500 capitalize">{session.user.role?.toLowerCase()}</p>
+								<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{session.user.role?.toLowerCase()}</p>
 							</div>
-							<ChevronDown size={16} className="text-gray-400" />
+							<ChevronDown size={16} className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-400'} />
 						</button>
 					</DropdownMenuTrigger>
 
-					<DropdownMenuContent className="w-64" align="end">
+					<DropdownMenuContent className={`w-64 ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}`} align="end">
 						<DropdownMenuLabel className="font-normal">
 							<div className="flex items-center gap-3">
 								{session.user.avatarUrl ? (
@@ -158,14 +176,14 @@ export default function UserDropdown() {
 									<User size={20} className="text-purple-600" />
 								</div>
 								<div className="flex-1">
-									<p className="font-medium text-gray-900">{displayName}</p>
-									<p className="text-sm text-gray-500">{session.user.email}</p>
+									<p className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+									<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{session.user.email}</p>
 									<p
-										className={`text-sm font-medium ${session.user.characterName ? 'text-blue-600' : session.user.activeCampaignId ? 'text-orange-500 italic' : 'text-gray-400 italic'}`}
+										className={`text-sm font-medium ${session.user.characterName ? (session?.user?.darkMode ? 'text-cyan-400' : 'text-blue-400') : session.user.activeCampaignId ? (session?.user?.darkMode ? 'text-orange-400' : 'text-orange-400') + ' italic' : (session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400') + ' italic'}`}
 									>
 										Character: {characterDisplayName}
 									</p>
-									<p className="text-xs text-purple-600 capitalize">{session.user.role?.toLowerCase()}</p>
+									<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`}>{session.user.role?.toLowerCase()}</p>
 								</div>
 							</div>
 						</DropdownMenuLabel>
@@ -177,6 +195,7 @@ export default function UserDropdown() {
 								e.preventDefault();
 								setShowEditDialog(true);
 							}}
+							className={session?.user?.darkMode ? 'focus:bg-gray-700 hover:bg-gray-700' : 'focus:bg-gray-50 hover:bg-gray-50'}
 						>
 							<Edit className="mr-2 h-4 w-4" />
 							Change Username
@@ -190,7 +209,9 @@ export default function UserDropdown() {
 								}
 							}}
 							disabled={!hasActiveCampaign}
-							className={!hasActiveCampaign ? 'opacity-50 cursor-not-allowed' : ''}
+							className={`${!hasActiveCampaign ? 'opacity-50 cursor-not-allowed' : ''} ${
+								session?.user?.darkMode ? 'focus:bg-gray-700 hover:bg-gray-700' : 'focus:bg-gray-50 hover:bg-gray-50'
+							}`}
 						>
 							<User className="mr-2 h-4 w-4" />
 							{hasActiveCampaign ? 'Change Character Name' : 'Set Character Name (Need Active Campaign)'}
@@ -198,20 +219,42 @@ export default function UserDropdown() {
 
 						<DropdownMenuSeparator />
 
-						<DropdownMenuItem onClick={() => signOut()}>
+						<DropdownMenuItem
+							onClick={toggleDarkMode}
+							className={session?.user?.darkMode ? 'focus:bg-gray-700 hover:bg-gray-700' : 'focus:bg-gray-50 hover:bg-gray-50'}
+						>
+							{session.user.darkMode ? (
+								<>
+									<Sun className="mr-2 h-4 w-4" />
+									Light Mode
+								</>
+							) : (
+								<>
+									<Moon className="mr-2 h-4 w-4" />
+									Dark Mode
+								</>
+							)}
+						</DropdownMenuItem>
+
+						<DropdownMenuSeparator />
+
+						<DropdownMenuItem
+							onClick={() => signOut()}
+							className={session?.user?.darkMode ? 'focus:bg-gray-700 hover:bg-gray-700' : 'focus:bg-gray-50 hover:bg-gray-50'}
+						>
 							<LogOut className="mr-2 h-4 w-4" />
 							Sign Out
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 
-				<DialogContent className="max-w-md border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+				<DialogContent className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 					<DialogHeader>
-						<DialogTitle className="text-gray-800">Change Username</DialogTitle>
+						<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>Change Username</DialogTitle>
 					</DialogHeader>
 					<form onSubmit={handleUpdateUsername} className="space-y-4">
 						<div>
-							<Label htmlFor="username" className="text-gray-700">
+							<Label htmlFor="username" className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>
 								Username
 							</Label>
 							<Input
@@ -219,7 +262,7 @@ export default function UserDropdown() {
 								placeholder="Enter your username"
 								value={username}
 								onChange={(e) => setUsername(e.target.value)}
-								className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+								className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'}
 								required
 							/>
 						</div>
@@ -251,13 +294,13 @@ export default function UserDropdown() {
 			</Dialog>
 
 			<Dialog open={showCharacterDialog} onOpenChange={setShowCharacterDialog}>
-				<DialogContent className="max-w-md border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+				<DialogContent className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 					<DialogHeader>
-						<DialogTitle className="text-gray-800">{session?.user?.characterName ? 'Change Character Name' : 'Set Your Character Name'}</DialogTitle>
+						<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{session?.user?.characterName ? 'Change Character Name' : 'Set Your Character Name'}</DialogTitle>
 					</DialogHeader>
 					<form onSubmit={handleUpdateCharacterName} className="space-y-4">
 						<div>
-							<Label htmlFor="characterName" className="text-gray-700">
+							<Label htmlFor="characterName" className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>
 								Character Name
 							</Label>
 							<Input
@@ -265,10 +308,10 @@ export default function UserDropdown() {
 								placeholder={session?.user?.characterName ? 'Enter your character name' : 'e.g., Aragorn, Gandalf, Legolas...'}
 								value={characterName}
 								onChange={(e) => setCharacterName(e.target.value)}
-								className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+								className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'}
 								required
 							/>
-							<p className="text-xs text-gray-500 mt-1">
+							<p className={`text-xs mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 								{session?.user?.characterName
 									? 'This is your character name for the current campaign'
 									: 'Choose a character name for this campaign - you can have different names for different campaigns!'}

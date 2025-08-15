@@ -96,6 +96,7 @@ export const authOptions = {
 						token.username = existingUser.username;
 						token.avatarUrl = user.image || existingUser.avatarUrl;
 						token.activeCampaign = activeCampaignWithRole;
+						token.darkMode = existingUser.darkMode;
 					}
 				}
 			}
@@ -140,6 +141,7 @@ export const authOptions = {
 					token.username = existingUser.username;
 					token.avatarUrl = existingUser.avatarUrl;
 					token.activeCampaign = activeCampaignWithRole;
+					token.darkMode = existingUser.darkMode;
 				}
 			}
 
@@ -153,6 +155,7 @@ export const authOptions = {
 				session.user.username = token.username;
 				session.user.avatarUrl = token.avatarUrl;
 				session.user.activeCampaign = token.activeCampaign;
+				session.user.darkMode = token.darkMode;
 
 				// Add convenience properties for backward compatibility
 				if (token.activeCampaign) {

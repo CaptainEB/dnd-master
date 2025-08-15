@@ -190,14 +190,20 @@ export default function UpdatesPage() {
 
 	if (!session?.user?.activeCampaign) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-4xl mx-auto">
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Shield className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h2 className="text-2xl font-bold text-gray-800 mb-2">No Active Campaign</h2>
-								<p className="text-gray-600">Please select an active campaign to view updates.</p>
+								<h2 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Active Campaign</h2>
+								<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Please select an active campaign to view updates.</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -207,14 +213,21 @@ export default function UpdatesPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+		<div
+			className={`min-h-screen pt-28 p-8 ${
+				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+			}`}
+		>
 			<div className="max-w-4xl mx-auto">
 				{/* Header */}
 				<div className="flex justify-between items-center mb-8">
 					<div>
-						<h1 className="text-4xl font-bold text-gray-800 mb-2">Campaign Updates</h1>
-						<p className="text-gray-600">
-							Latest updates for <span className="font-semibold text-purple-700">{session.user.activeCampaign.name}</span>
+						<h1 className={`text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Campaign Updates</h1>
+						<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+							Latest updates for{' '}
+							<span className={`font-semibold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
+								{session.user.activeCampaign.name}
+							</span>
 						</p>
 					</div>
 
@@ -227,7 +240,7 @@ export default function UpdatesPage() {
 									Add Update
 								</Button>
 							</DialogTrigger>
-							<DialogContent className="max-w-md border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+							<DialogContent className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 								<DialogHeader>
 									<DialogTitle className="text-gray-800">Create New Update</DialogTitle>
 								</DialogHeader>
@@ -295,18 +308,18 @@ export default function UpdatesPage() {
 				{/* Updates List */}
 				{loading ? (
 					<div className="text-center py-12">
-						<div className="text-gray-600 flex flex-col items-center gap-3">
+						<div className={`flex flex-col items-center gap-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
 							Loading updates...
 						</div>
 					</div>
 				) : updates.length === 0 ? (
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Plus className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h3 className="text-xl font-semibold text-gray-800 mb-2">No Updates Yet</h3>
-								<p className="text-gray-600 mb-4">
+								<h3 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Updates Yet</h3>
+								<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 									{canManageUpdates ? 'Be the first to add a campaign update!' : 'No updates have been posted for this campaign yet.'}
 								</p>
 							</div>
@@ -315,17 +328,22 @@ export default function UpdatesPage() {
 				) : (
 					<div className="space-y-6">
 						{updates.map((update) => (
-							<Card key={update.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+							<Card
+								key={update.id}
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 ${
+									session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'
+								}`}
+							>
 								<CardHeader className="pb-3">
 									<div className="flex justify-between items-start">
 										<div className="flex-1">
-											<CardTitle className="text-xl text-gray-800 mb-2">{update.title}</CardTitle>
+											<CardTitle className={`text-xl mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{update.title}</CardTitle>
 											<CardDescription className="flex items-center gap-4">
-												<span className="flex items-center gap-1 text-purple-600">
+												<span className={`flex items-center gap-1 ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
 													<User size={14} />
 													{update.author.characterName || update.author.email?.split('@')[0] || 'Unknown User'}
 												</span>
-												<span className="flex items-center gap-1 text-gray-500">
+												<span className={`flex items-center gap-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 													<Calendar size={14} />
 													{formatDate(update.createdAt)}
 												</span>
@@ -354,8 +372,12 @@ export default function UpdatesPage() {
 									</div>
 								</CardHeader>
 								<CardContent className="pt-0">
-									<div className="bg-gradient-to-r from-purple-50/50 to-blue-50/50 p-4 rounded-lg border border-purple-100">
-										<p className="whitespace-pre-wrap text-gray-700 leading-relaxed">{update.content}</p>
+									<div
+										className={`p-4 rounded-lg border ${session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'}`}
+									>
+										<p className={`whitespace-pre-wrap leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+											{update.content}
+										</p>
 									</div>
 								</CardContent>
 							</Card>
@@ -375,7 +397,9 @@ export default function UpdatesPage() {
 							<ChevronLeft size={16} />
 							Previous
 						</Button>
-						<div className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
+						<div
+							className={`backdrop-blur-sm px-4 py-2 rounded-lg border shadow-sm ${session?.user?.darkMode ? 'bg-gray-700/80 border-gray-600' : 'bg-white/80 border-purple-100'}`}
+						>
 							<span className="text-sm text-gray-600">
 								Page {pagination.page} of {pagination.totalPages}
 							</span>
@@ -394,7 +418,7 @@ export default function UpdatesPage() {
 
 				{/* Edit Dialog */}
 				<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-					<DialogContent className="max-w-md border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+					<DialogContent className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 						<DialogHeader>
 							<DialogTitle className="text-gray-800">Edit Update</DialogTitle>
 						</DialogHeader>

@@ -213,11 +213,17 @@ export default function RulesPage() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="flex items-center justify-center">
 						<Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-						<span className="ml-2 text-gray-600">Loading rules...</span>
+						<span className={`ml-2 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading rules...</span>
 					</div>
 				</div>
 			</div>
@@ -226,12 +232,18 @@ export default function RulesPage() {
 
 	if (!session?.user?.activeCampaignId) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="text-center">
 						<BookOpen className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-						<h1 className="text-2xl font-bold text-gray-800 mb-2">No Active Campaign</h1>
-						<p className="text-gray-600">Select an active campaign to view rules.</p>
+						<h1 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Active Campaign</h1>
+						<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Select an active campaign to view rules.</p>
 					</div>
 				</div>
 			</div>
@@ -243,11 +255,17 @@ export default function RulesPage() {
 	// Prevent hydration mismatch by not rendering until mounted
 	if (!mounted) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="flex items-center justify-center">
 						<Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-						<span className="ml-2 text-gray-600">Loading...</span>
+						<span className={`ml-2 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading...</span>
 					</div>
 				</div>
 			</div>
@@ -255,19 +273,27 @@ export default function RulesPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+		<div
+			className={`min-h-screen pt-28 p-8 ${
+				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+			}`}
+		>
 			<div className="max-w-7xl mx-auto">
 				{/* Header */}
 				<div className="mb-8">
 					<div className="flex items-center justify-between">
 						<div>
-							<h1 className="text-4xl font-bold text-gray-800 mb-2">Campaign Rules</h1>
-							<p className="text-purple-600 font-medium">{session.user.activeCampaignName}</p>
+							<h1 className={`text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Campaign Rules</h1>
+							<p className={`font-medium ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>{session.user.activeCampaignName}</p>
 						</div>
 
 						<div className="flex items-center gap-4">
 							{/* View Mode Toggle */}
-							<div className="flex bg-white/80 backdrop-blur-sm rounded-lg border border-purple-200 p-1">
+							<div
+								className={`flex rounded-lg p-1 backdrop-blur-sm ${
+									session?.user?.darkMode ? 'bg-gray-800/80 border border-gray-700' : 'bg-white/80 border border-purple-200'
+								}`}
+							>
 								<Button
 									variant={viewMode === 'read' ? 'default' : 'ghost'}
 									size="sm"
@@ -299,9 +325,11 @@ export default function RulesPage() {
 											Add Rule
 										</Button>
 									</DialogTrigger>
-									<DialogContent className="max-w-2xl border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+									<DialogContent
+										className={`max-w-2xl border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+									>
 										<DialogHeader>
-											<DialogTitle className="text-gray-800">Create New Rule</DialogTitle>
+											<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Create New Rule</DialogTitle>
 										</DialogHeader>
 										<Form {...createForm}>
 											<form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
@@ -311,7 +339,7 @@ export default function RulesPage() {
 														name="title"
 														render={({ field }) => (
 															<FormItem>
-																<FormLabel className="text-gray-700">Title</FormLabel>
+																<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Title</FormLabel>
 																<FormControl>
 																	<Input className="border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...field} />
 																</FormControl>
@@ -324,7 +352,7 @@ export default function RulesPage() {
 														name="category"
 														render={({ field }) => (
 															<FormItem>
-																<FormLabel className="text-gray-700">Category</FormLabel>
+																<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Category</FormLabel>
 																<FormControl>
 																	<Input className="border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...field} />
 																</FormControl>
@@ -338,7 +366,9 @@ export default function RulesPage() {
 													name="content"
 													render={({ field }) => (
 														<FormItem>
-															<FormLabel className="text-gray-700">Content (Markdown Supported)</FormLabel>
+															<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+																Content (Markdown Supported)
+															</FormLabel>
 															<FormControl>
 																<Textarea
 																	rows={8}
@@ -356,7 +386,9 @@ export default function RulesPage() {
 													name="order"
 													render={({ field }) => (
 														<FormItem>
-															<FormLabel className="text-gray-700">Order (for sorting within category)</FormLabel>
+															<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+																Order (for sorting within category)
+															</FormLabel>
 															<FormControl>
 																<Input
 																	type="number"
@@ -442,11 +474,11 @@ export default function RulesPage() {
 
 				{/* Content */}
 				{rules.length === 0 ? (
-					<Card className="bg-white/80 backdrop-blur-sm border-purple-200">
+					<Card className={`backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'}`}>
 						<CardContent className="text-center py-12">
 							<BookOpen className="h-16 w-16 text-purple-400 mx-auto mb-4" />
-							<h2 className="text-xl font-semibold text-gray-800 mb-2">No Rules Yet</h2>
-							<p className="text-gray-600 mb-4">
+							<h2 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Rules Yet</h2>
+							<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 								{canEdit ? 'Get started by creating your first campaign rule.' : "The DM hasn't added any rules yet."}
 							</p>
 						</CardContent>
@@ -456,18 +488,27 @@ export default function RulesPage() {
 						{/* Table of Contents */}
 						{toc.length > 0 && (
 							<div className="lg:col-span-1">
-								<Card className="sticky top-32 bg-white/80 backdrop-blur-sm border-purple-200">
+								<Card
+									className={`sticky top-32 backdrop-blur-sm ${
+										session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'
+									}`}
+								>
 									<CardHeader>
-										<CardTitle className="text-lg text-gray-800">Table of Contents</CardTitle>
+										<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Table of Contents</CardTitle>
 									</CardHeader>
 									<CardContent className="space-y-3">
 										{toc.map((categoryGroup) => (
 											<div key={categoryGroup.category}>
-												<h4 className="font-semibold text-purple-700 mb-2">{categoryGroup.category}</h4>
+												<h4 className={`font-semibold mb-2 ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
+													{categoryGroup.category}
+												</h4>
 												<ul className="space-y-1 ml-2">
 													{categoryGroup.rules.map((rule) => (
 														<li key={rule.id}>
-															<a href={`#rule-${rule.id}`} className="text-sm text-gray-600 hover:text-purple-600 transition-colors block py-1">
+															<a
+																href={`#rule-${rule.id}`}
+																className={`text-sm block py-1 transition-colors ${session?.user?.darkMode ? 'text-gray-300 hover:text-cyan-400' : 'text-gray-600 hover:text-purple-600'}`}
+															>
 																{rule.title}
 															</a>
 														</li>
@@ -484,17 +525,23 @@ export default function RulesPage() {
 						<div className={`${toc.length > 0 ? 'lg:col-span-3' : 'lg:col-span-4'} space-y-6`}>
 							{Object.keys(groupedRules).map((category) => (
 								<div key={category}>
-									<h2 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-purple-200 pb-2">{category}</h2>
+									<h2
+										className={`text-2xl font-bold mb-4 border-b-2 pb-2 ${session?.user?.darkMode ? 'text-white border-gray-600' : 'text-gray-800 border-purple-200'}`}
+									>
+										{category}
+									</h2>
 									<div className="space-y-4">
 										{groupedRules[category].map((rule) => (
 											<Card
 												key={rule.id}
 												id={`rule-${rule.id}`}
-												className="bg-white/80 backdrop-blur-sm border-purple-200 hover:shadow-md transition-shadow"
+												className={`backdrop-blur-sm hover:shadow-md transition-shadow ${
+													session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'
+												}`}
 											>
 												<CardHeader className="pb-4">
 													<div className="flex items-center justify-between">
-														<CardTitle className="text-xl text-gray-800">{rule.title}</CardTitle>
+														<CardTitle className={`text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{rule.title}</CardTitle>
 														{viewMode === 'edit' && canEdit && (
 															<div className="flex items-center gap-2">
 																<Button
@@ -516,8 +563,11 @@ export default function RulesPage() {
 															</div>
 														)}
 													</div>
-													<div className="flex items-center gap-2 text-sm text-gray-500">
-														<Badge variant="outline" className="border-purple-200 text-purple-700">
+													<div className={`flex items-center gap-2 text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+														<Badge
+															variant="outline"
+															className={`${session?.user?.darkMode ? 'border-cyan-400/50 text-cyan-400' : 'border-purple-200 text-purple-700'}`}
+														>
 															{rule.category}
 														</Badge>
 														<span>•</span>
@@ -528,7 +578,13 @@ export default function RulesPage() {
 												</CardHeader>
 												<CardContent>
 													<div className="prose prose-sm max-w-none">
-														<div className="bg-gradient-to-r from-purple-50/50 to-blue-50/50 p-4 rounded-lg text-gray-700">
+														<div
+															className={`p-4 rounded-lg ${
+																session?.user?.darkMode
+																	? 'bg-gray-700/50 text-gray-200'
+																	: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 text-gray-700'
+															}`}
+														>
 															<ReactMarkdown remarkPlugins={[remarkGfm]}>{rule.content}</ReactMarkdown>
 														</div>
 													</div>
@@ -546,7 +602,7 @@ export default function RulesPage() {
 				<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
 					<DialogContent className="max-w-2xl border-0 shadow-xl bg-white/95 backdrop-blur-sm">
 						<DialogHeader>
-							<DialogTitle className="text-gray-800">Edit Rule</DialogTitle>
+							<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Edit Rule</DialogTitle>
 						</DialogHeader>
 						<Form {...editForm}>
 							<form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
@@ -556,7 +612,7 @@ export default function RulesPage() {
 										name="title"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-gray-700">Title</FormLabel>
+												<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Title</FormLabel>
 												<FormControl>
 													<Input className="border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...field} />
 												</FormControl>
@@ -569,7 +625,7 @@ export default function RulesPage() {
 										name="category"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-gray-700">Category</FormLabel>
+												<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Category</FormLabel>
 												<FormControl>
 													<Input className="border-purple-200 focus:border-purple-500 focus:ring-purple-500" {...field} />
 												</FormControl>
@@ -583,7 +639,7 @@ export default function RulesPage() {
 									name="content"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel className="text-gray-700">Content (Markdown Supported)</FormLabel>
+											<FormLabel className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Content (Markdown Supported)</FormLabel>
 											<FormControl>
 												<Textarea
 													rows={8}

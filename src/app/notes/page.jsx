@@ -189,14 +189,22 @@ export default function NotesPage() {
 
 	if (!session?.user?.activeCampaignId) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-4xl mx-auto">
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Tag className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h2 className="text-2xl font-bold text-gray-800 mb-2">No Active Campaign</h2>
-								<p className="text-gray-600">Please select an active campaign to view and manage your notes.</p>
+								<h2 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Active Campaign</h2>
+								<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+									Please select an active campaign to view and manage your notes.
+								</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -206,14 +214,21 @@ export default function NotesPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+		<div
+			className={`min-h-screen pt-28 p-8 ${
+				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+			}`}
+		>
 			<div className="max-w-4xl mx-auto">
 				{/* Header */}
 				<div className="flex justify-between items-center mb-8">
 					<div>
-						<h1 className="text-4xl font-bold text-gray-800 mb-2">Campaign Notes</h1>
-						<p className="text-gray-600">
-							Your personal notes for <span className="font-semibold text-purple-700">{session.user.activeCampaignName}</span>
+						<h1 className={`text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Campaign Notes</h1>
+						<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+							Your personal notes for{' '}
+							<span className={`font-semibold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
+								{session.user.activeCampaignName}
+							</span>
 						</p>
 					</div>
 
@@ -241,14 +256,14 @@ export default function NotesPage() {
 				)}
 
 				{/* Search and Filter Controls */}
-				<Card className="mb-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+				<Card className={`mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 					<CardHeader>
-						<CardTitle className="text-lg text-gray-800">Search & Filter</CardTitle>
+						<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Search & Filter</CardTitle>
 					</CardHeader>
 					<CardContent>
 						<div className="flex flex-col md:flex-row gap-4">
 							<div className="flex-1">
-								<Label htmlFor="search" className="text-gray-700">
+								<Label htmlFor="search" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Search notes
 								</Label>
 								<div className="flex gap-2 mt-1">
@@ -270,7 +285,7 @@ export default function NotesPage() {
 								</div>
 							</div>
 							<div className="flex-1">
-								<Label htmlFor="tagFilter" className="text-gray-700">
+								<Label htmlFor="tagFilter" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Filter by tag
 								</Label>
 								<select
@@ -296,14 +311,16 @@ export default function NotesPage() {
 
 				{/* New Note Form */}
 				{showNewNoteForm && (
-					<Card className="mb-6 border-0 shadow-lg bg-gradient-to-r from-blue-50/50 to-purple-50/50 backdrop-blur-sm">
+					<Card
+						className={`mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-gradient-to-r from-blue-50/50 to-purple-50/50'}`}
+					>
 						<CardHeader>
-							<CardTitle className="text-lg text-gray-800">Create New Note</CardTitle>
+							<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Create New Note</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<form onSubmit={handleCreateNote} className="space-y-4">
 								<div>
-									<Label htmlFor="newTitle" className="text-gray-700">
+									<Label htmlFor="newTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Title (optional)
 									</Label>
 									<Input
@@ -315,7 +332,7 @@ export default function NotesPage() {
 									/>
 								</div>
 								<div>
-									<Label htmlFor="newContent" className="text-gray-700">
+									<Label htmlFor="newContent" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Content *
 									</Label>
 									<Textarea
@@ -328,7 +345,7 @@ export default function NotesPage() {
 									/>
 								</div>
 								<div>
-									<Label className="text-gray-700">Tags</Label>
+									<Label className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Tags</Label>
 									<div className="flex gap-2 mt-1 mb-2">
 										<Input
 											placeholder="Add a tag..."
@@ -380,12 +397,14 @@ export default function NotesPage() {
 						</div>
 					</div>
 				) : notes.length === 0 ? (
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Tag className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h3 className="text-xl font-semibold text-gray-800 mb-2">{searchQuery || tagFilter ? 'No Notes Found' : 'No Notes Yet'}</h3>
-								<p className="text-gray-600 mb-4">
+								<h3 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+									{searchQuery || tagFilter ? 'No Notes Found' : 'No Notes Yet'}
+								</h3>
+								<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 									{searchQuery || tagFilter ? 'No notes found matching your search criteria.' : 'Create your first note to get started!'}
 								</p>
 							</div>
@@ -394,12 +413,15 @@ export default function NotesPage() {
 				) : (
 					<div className="space-y-6">
 						{notes.map((note) => (
-							<Card key={note.id} className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200">
+							<Card
+								key={note.id}
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
+							>
 								{editingNote?.id === note.id ? (
 									<CardContent className="pt-6">
 										<form onSubmit={handleUpdateNote} className="space-y-4">
 											<div>
-												<Label htmlFor="editTitle" className="text-gray-700">
+												<Label htmlFor="editTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 													Title (optional)
 												</Label>
 												<Input
@@ -411,7 +433,7 @@ export default function NotesPage() {
 												/>
 											</div>
 											<div>
-												<Label htmlFor="editContent" className="text-gray-700">
+												<Label htmlFor="editContent" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 													Content *
 												</Label>
 												<Textarea
@@ -424,7 +446,7 @@ export default function NotesPage() {
 												/>
 											</div>
 											<div>
-												<Label className="text-gray-700">Tags</Label>
+												<Label className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Tags</Label>
 												<div className="flex gap-2 mt-1 mb-2">
 													<Input
 														placeholder="Add a tag..."
@@ -469,9 +491,11 @@ export default function NotesPage() {
 										<CardHeader className="pb-3">
 											<div className="flex justify-between items-start">
 												<div className="flex-1">
-													<CardTitle className="text-xl text-gray-800 mb-2">{note.title || 'Untitled Note'}</CardTitle>
+													<CardTitle className={`text-xl mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														{note.title || 'Untitled Note'}
+													</CardTitle>
 													<CardDescription className="flex items-center gap-4">
-														<span className="flex items-center gap-1 text-purple-600">
+														<span className={`flex items-center gap-1 ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
 															<User className="h-4 w-4" />
 															{note.author.characterName || note.author.email?.split('@')[0] || 'Unknown User'}
 														</span>
@@ -505,13 +529,21 @@ export default function NotesPage() {
 											</div>
 										</CardHeader>
 										<CardContent className="pt-0">
-											<div className="bg-gradient-to-r from-purple-50/50 to-blue-50/50 p-4 rounded-lg border border-purple-100 mb-4">
-												<p className="whitespace-pre-wrap text-gray-700 leading-relaxed">{note.content}</p>
+											<div
+												className={`p-4 rounded-lg border mb-4 ${session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'}`}
+											>
+												<p className={`whitespace-pre-wrap leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+													{note.content}
+												</p>
 											</div>
 											{note.tags && note.tags.length > 0 && (
 												<div className="flex flex-wrap gap-2">
 													{note.tags.map((tag) => (
-														<Badge key={tag} variant="outline" className="border-purple-200 text-purple-700">
+														<Badge
+															key={tag}
+															variant="outline"
+															className={`${session?.user?.darkMode ? 'border-cyan-600 text-cyan-400' : 'border-purple-200 text-purple-700'}`}
+														>
 															{tag}
 														</Badge>
 													))}
@@ -536,7 +568,9 @@ export default function NotesPage() {
 						>
 							Previous
 						</Button>
-						<div className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
+						<div
+							className={`backdrop-blur-sm px-4 py-2 rounded-lg border shadow-sm ${session?.user?.darkMode ? 'bg-gray-700/80 border-gray-600' : 'bg-white/80 border-purple-100'}`}
+						>
 							<span className="text-sm text-gray-600">
 								Page {pagination.page} of {pagination.totalPages} ({pagination.totalCount} total notes)
 							</span>

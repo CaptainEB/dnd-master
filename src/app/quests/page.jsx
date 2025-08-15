@@ -208,14 +208,22 @@ export default function QuestsPage() {
 
 	if (!session?.user?.activeCampaignId) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+			<div
+				className={`min-h-screen pt-28 p-8 ${
+					session?.user?.darkMode
+						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				}`}
+			>
 				<div className="max-w-6xl mx-auto">
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Scroll className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h2 className="text-2xl font-bold text-gray-800 mb-2">No Active Campaign</h2>
-								<p className="text-gray-600">Please select an active campaign to view the quest board.</p>
+								<h2 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>No Active Campaign</h2>
+								<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+									Please select an active campaign to view the quest board.
+								</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -225,17 +233,24 @@ export default function QuestsPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 pt-28 p-8">
+		<div
+			className={`min-h-screen pt-28 p-8 ${
+				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+			}`}
+		>
 			<div className="max-w-6xl mx-auto">
 				{/* Header */}
 				<div className="flex justify-between items-center mb-8">
 					<div>
-						<h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+						<h1 className={`text-4xl font-bold mb-2 flex items-center gap-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 							<Scroll className="h-10 w-10 text-purple-600" />
 							Quest Board
 						</h1>
-						<p className="text-gray-600">
-							Available adventures for <span className="font-semibold text-purple-700">{session.user.activeCampaignName}</span>
+						<p className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-600'}`}>
+							Available adventures for{' '}
+							<span className={`font-semibold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
+								{session.user.activeCampaignName}
+							</span>
 						</p>
 					</div>
 
@@ -248,13 +263,15 @@ export default function QuestsPage() {
 									Post Quest
 								</Button>
 							</DialogTrigger>
-							<DialogContent className="max-w-2xl border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+							<DialogContent
+								className={`max-w-2xl border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+							>
 								<DialogHeader>
-									<DialogTitle className="text-gray-800">Post New Quest</DialogTitle>
+									<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Post New Quest</DialogTitle>
 								</DialogHeader>
 								<form onSubmit={handleCreateQuest} className="space-y-4">
 									<div>
-										<Label htmlFor="createTitle" className="text-gray-700">
+										<Label htmlFor="createTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 											Quest Title *
 										</Label>
 										<Input
@@ -267,7 +284,7 @@ export default function QuestsPage() {
 										/>
 									</div>
 									<div>
-										<Label htmlFor="createDescription" className="text-gray-700">
+										<Label htmlFor="createDescription" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 											Description *
 										</Label>
 										<Textarea
@@ -281,7 +298,7 @@ export default function QuestsPage() {
 									</div>
 									<div className="grid grid-cols-3 gap-4">
 										<div>
-											<Label htmlFor="createStatus" className="text-gray-700">
+											<Label htmlFor="createStatus" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 												Status
 											</Label>
 											<select
@@ -297,7 +314,7 @@ export default function QuestsPage() {
 											</select>
 										</div>
 										<div>
-											<Label htmlFor="createDifficulty" className="text-gray-700">
+											<Label htmlFor="createDifficulty" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 												Difficulty
 											</Label>
 											<Input
@@ -309,7 +326,7 @@ export default function QuestsPage() {
 											/>
 										</div>
 										<div>
-											<Label htmlFor="createReward" className="text-gray-700">
+											<Label htmlFor="createReward" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 												Reward
 											</Label>
 											<Input
@@ -341,31 +358,50 @@ export default function QuestsPage() {
 
 				{/* Error Display */}
 				{error && (
-					<Card className="mb-6 border-red-200 bg-red-50/80 backdrop-blur-sm shadow-lg">
+					<Card
+						className={`mb-6 backdrop-blur-sm shadow-lg ${session?.user?.darkMode ? 'border-red-800 bg-red-900/80' : 'border-red-200 bg-red-50/80'}`}
+					>
 						<CardContent className="pt-6">
-							<p className="text-red-600">{error}</p>
+							<p className={`${session?.user?.darkMode ? 'text-red-300' : 'text-red-600'}`}>{error}</p>
 						</CardContent>
 					</Card>
 				)}
 
 				{/* Status Filter Tabs */}
-				<Card className="mb-6 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+				<Card className={`mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 					<CardContent className="pt-6">
 						<Tabs value={selectedStatus} onValueChange={setSelectedStatus}>
-							<TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-purple-100 to-blue-100">
-								<TabsTrigger value="AVAILABLE" className="data-[state=active]:bg-green-200 data-[state=active]:text-green-800">
+							<TabsList
+								className={`grid w-full grid-cols-5 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-700 to-gray-600' : 'bg-gradient-to-r from-purple-100 to-blue-100'}`}
+							>
+								<TabsTrigger
+									value="AVAILABLE"
+									className={`${session?.user?.darkMode ? 'data-[state=active]:bg-green-800 data-[state=active]:text-green-200' : 'data-[state=active]:bg-green-200 data-[state=active]:text-green-800'}`}
+								>
 									Available ({quests.filter((q) => q.status === 'AVAILABLE').length})
 								</TabsTrigger>
-								<TabsTrigger value="IN_PROGRESS" className="data-[state=active]:bg-blue-200 data-[state=active]:text-blue-800">
+								<TabsTrigger
+									value="IN_PROGRESS"
+									className={`${session?.user?.darkMode ? 'data-[state=active]:bg-blue-800 data-[state=active]:text-blue-200' : 'data-[state=active]:bg-blue-200 data-[state=active]:text-blue-800'}`}
+								>
 									In Progress ({quests.filter((q) => q.status === 'IN_PROGRESS').length})
 								</TabsTrigger>
-								<TabsTrigger value="COMPLETED" className="data-[state=active]:bg-purple-200 data-[state=active]:text-purple-800">
+								<TabsTrigger
+									value="COMPLETED"
+									className={`${session?.user?.darkMode ? 'data-[state=active]:bg-cyan-800 data-[state=active]:text-cyan-200' : 'data-[state=active]:bg-purple-200 data-[state=active]:text-purple-800'}`}
+								>
 									Completed ({quests.filter((q) => q.status === 'COMPLETED').length})
 								</TabsTrigger>
-								<TabsTrigger value="UNAVAILABLE" className="data-[state=active]:bg-gray-200 data-[state=active]:text-gray-800">
+								<TabsTrigger
+									value="UNAVAILABLE"
+									className={`${session?.user?.darkMode ? 'data-[state=active]:bg-gray-700 data-[state=active]:text-gray-300' : 'data-[state=active]:bg-gray-200 data-[state=active]:text-gray-800'}`}
+								>
 									Unavailable ({quests.filter((q) => q.status === 'UNAVAILABLE').length})
 								</TabsTrigger>
-								<TabsTrigger value="ALL" className="data-[state=active]:bg-purple-200 data-[state=active]:text-purple-800">
+								<TabsTrigger
+									value="ALL"
+									className={`${session?.user?.darkMode ? 'data-[state=active]:bg-cyan-800 data-[state=active]:text-cyan-200' : 'data-[state=active]:bg-purple-200 data-[state=active]:text-purple-800'}`}
+								>
 									All ({quests.length})
 								</TabsTrigger>
 							</TabsList>
@@ -382,11 +418,11 @@ export default function QuestsPage() {
 						</div>
 					</div>
 				) : filteredQuests.length === 0 ? (
-					<Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Scroll className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h3 className="text-xl font-semibold text-gray-800 mb-2">
+								<h3 className={`text-xl font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>
 									No {selectedStatus === 'ALL' ? '' : selectedStatus.toLowerCase().replace('_', ' ')} Quests
 								</h3>
 								<p className="text-gray-600 mb-4">
@@ -400,7 +436,7 @@ export default function QuestsPage() {
 						{filteredQuests.map((quest) => (
 							<Card
 								key={quest.id}
-								className="border-0 shadow-lg bg-white/80 backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative overflow-hidden"
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative overflow-hidden ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
 							>
 								{/* Parchment-like border decoration */}
 								<div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200"></div>
@@ -408,7 +444,7 @@ export default function QuestsPage() {
 								<CardHeader className="pb-3">
 									<div className="flex justify-between items-start">
 										<div className="flex-1">
-											<CardTitle className="text-lg text-gray-800 mb-2 flex items-center gap-2">
+											<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2 flex items-center gap-2`}>
 												<Crown className="h-5 w-5 text-yellow-600" />
 												{quest.title}
 											</CardTitle>
@@ -449,8 +485,10 @@ export default function QuestsPage() {
 									</div>
 								</CardHeader>
 								<CardContent className="pt-0">
-									<div className="bg-gradient-to-r from-amber-50/50 to-yellow-50/50 p-3 rounded-lg border border-amber-100 mb-3">
-										<p className="text-gray-700 text-sm leading-relaxed">{quest.description}</p>
+									<div
+										className={`p-4 rounded-lg border mb-3 ${session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'}`}
+									>
+										<p className={`text-sm leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{quest.description}</p>
 									</div>
 									{quest.reward && (
 										<div className="flex items-center gap-2 text-sm font-medium text-yellow-700">
@@ -466,13 +504,13 @@ export default function QuestsPage() {
 
 				{/* Edit Quest Dialog */}
 				<Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-					<DialogContent className="max-w-2xl border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+					<DialogContent className={`max-w-2xl border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 						<DialogHeader>
-							<DialogTitle className="text-gray-800">Edit Quest</DialogTitle>
+							<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Edit Quest</DialogTitle>
 						</DialogHeader>
 						<form onSubmit={handleUpdateQuest} className="space-y-4">
 							<div>
-								<Label htmlFor="editTitle" className="text-gray-700">
+								<Label htmlFor="editTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Quest Title *
 								</Label>
 								<Input
@@ -485,7 +523,7 @@ export default function QuestsPage() {
 								/>
 							</div>
 							<div>
-								<Label htmlFor="editDescription" className="text-gray-700">
+								<Label htmlFor="editDescription" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Description *
 								</Label>
 								<Textarea
@@ -499,7 +537,7 @@ export default function QuestsPage() {
 							</div>
 							<div className="grid grid-cols-3 gap-4">
 								<div>
-									<Label htmlFor="editStatus" className="text-gray-700">
+									<Label htmlFor="editStatus" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Status
 									</Label>
 									<select
@@ -515,7 +553,7 @@ export default function QuestsPage() {
 									</select>
 								</div>
 								<div>
-									<Label htmlFor="editDifficulty" className="text-gray-700">
+									<Label htmlFor="editDifficulty" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Difficulty
 									</Label>
 									<Input
@@ -527,7 +565,7 @@ export default function QuestsPage() {
 									/>
 								</div>
 								<div>
-									<Label htmlFor="editReward" className="text-gray-700">
+									<Label htmlFor="editReward" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Reward
 									</Label>
 									<Input
