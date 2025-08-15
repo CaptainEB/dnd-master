@@ -1,21 +1,28 @@
 'use client';
 
+import { DateDisplay } from '@/components/DateDisplay';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { DateDisplay } from '@/components/DateDisplay';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Crown, Users, Calendar, UserCheck, UserPlus, Mail, UserMinus, Shield } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Calendar, Crown, Loader2, Mail, Shield, UserCheck, UserMinus, UserPlus, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { getDMCampaignMembers, promoteUserToDM, invitePlayerByEmail, getUserCampaigns, promoteToDMInCampaign, demoteFromDMInCampaign } from '../../admin/components/actions';
+import {
+	demoteFromDMInCampaign,
+	getDMCampaignMembers,
+	getUserCampaigns,
+	invitePlayerByEmail,
+	promoteToDMInCampaign,
+	promoteUserToDM,
+} from '../../admin/components/actions';
 
 const inviteSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -52,8 +59,8 @@ export default function ManagePlayersSection() {
 		loadData();
 		// Get current user info from session
 		fetch('/api/auth/session')
-			.then(res => res.json())
-			.then(session => {
+			.then((res) => res.json())
+			.then((session) => {
 				if (session?.user) {
 					setCurrentUser(session.user);
 				}
@@ -64,10 +71,7 @@ export default function ManagePlayersSection() {
 	const loadData = async () => {
 		try {
 			setIsLoading(true);
-			const [membersResult, campaignsResult] = await Promise.all([
-				getDMCampaignMembers(),
-				getUserCampaigns()
-			]);
+			const [membersResult, campaignsResult] = await Promise.all([getDMCampaignMembers(), getUserCampaigns()]);
 
 			if (membersResult.success) {
 				setCampaignMembers(membersResult.data);
@@ -77,7 +81,7 @@ export default function ManagePlayersSection() {
 
 			if (campaignsResult.success) {
 				// Filter for DM campaigns
-				const dmCampaigns = campaignsResult.data.filter(campaign => campaign.userRole === 'DM');
+				const dmCampaigns = campaignsResult.data.filter((campaign) => campaign.userRole === 'DM');
 				setCampaigns(dmCampaigns);
 			}
 		} catch (err) {
@@ -93,11 +97,9 @@ export default function ManagePlayersSection() {
 			const result = await promoteToDMInCampaign(userId, campaignId);
 			if (result.success) {
 				// Update the member's role in the campaign members list
-				setCampaignMembers(campaignMembers.map(member => 
-					member.user.id === userId && member.campaign.id === campaignId
-						? { ...member, role: 'DM' }
-						: member
-				));
+				setCampaignMembers(
+					campaignMembers.map((member) => (member.user.id === userId && member.campaign.id === campaignId ? { ...member, role: 'DM' } : member))
+				);
 				setConfirmDialog({ open: false, user: null, action: null, campaignId: null });
 				router.refresh();
 			} else {
@@ -116,11 +118,11 @@ export default function ManagePlayersSection() {
 			const result = await demoteFromDMInCampaign(campaignId);
 			if (result.success) {
 				// Update the current user's role in the campaign members list
-				setCampaignMembers(campaignMembers.map(member => 
-					member.user.id === currentUser?.id && member.campaign.id === campaignId
-						? { ...member, role: 'PLAYER' }
-						: member
-				));
+				setCampaignMembers(
+					campaignMembers.map((member) =>
+						member.user.id === currentUser?.id && member.campaign.id === campaignId ? { ...member, role: 'PLAYER' } : member
+					)
+				);
 				setConfirmDialog({ open: false, user: null, action: null, campaignId: null });
 				router.refresh();
 			} else {
@@ -175,9 +177,7 @@ export default function ManagePlayersSection() {
 
 	// Helper function to check if current user can demote (is there another DM in this campaign?)
 	const canCurrentUserDemote = (campaignId) => {
-		const campaignDMs = campaignMembers.filter(member => 
-			member.campaign.id === campaignId && member.role === 'DM'
-		);
+		const campaignDMs = campaignMembers.filter((member) => member.campaign.id === campaignId && member.role === 'DM');
 		return campaignDMs.length > 1;
 	};
 
@@ -201,7 +201,9 @@ export default function ManagePlayersSection() {
 	return (
 		<div className="space-y-8">
 			{/* Invite Player Section */}
-			<div className={`rounded-xl p-6 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'}`}>
+			<div
+				className={`rounded-xl p-6 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'}`}
+			>
 				<div className="flex items-center justify-between mb-4">
 					<div>
 						<h4 className={`text-lg font-bold mb-1 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Invite New Player</h4>
@@ -230,8 +232,8 @@ export default function ManagePlayersSection() {
 											<FormItem>
 												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Email Address *</FormLabel>
 												<FormControl>
-													<Input 
-														placeholder="player@example.com" 
+													<Input
+														placeholder="player@example.com"
 														{...field}
 														className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 														onChange={(e) => {
@@ -252,9 +254,9 @@ export default function ManagePlayersSection() {
 											<FormItem>
 												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Preferred Username *</FormLabel>
 												<FormControl>
-													<Input 
-														placeholder="Enter username" 
-														{...field} 
+													<Input
+														placeholder="Enter username"
+														{...field}
 														className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 													/>
 												</FormControl>
@@ -271,14 +273,18 @@ export default function ManagePlayersSection() {
 												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Campaign *</FormLabel>
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}>
+														<SelectTrigger
+															className={
+																session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+															}
+														>
 															<SelectValue placeholder="Select campaign" />
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
 														{campaigns.map((campaign) => (
-															<SelectItem 
-																key={campaign.id} 
+															<SelectItem
+																key={campaign.id}
 																value={campaign.id}
 																className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 															>
@@ -300,18 +306,22 @@ export default function ManagePlayersSection() {
 												<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Role *</FormLabel>
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}>
+														<SelectTrigger
+															className={
+																session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'
+															}
+														>
 															<SelectValue />
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
-														<SelectItem 
+														<SelectItem
 															value="PLAYER"
 															className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 														>
 															Player
 														</SelectItem>
-														<SelectItem 
+														<SelectItem
 															value="DM"
 															className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 														>
@@ -340,9 +350,9 @@ export default function ManagePlayersSection() {
 										>
 											Cancel
 										</Button>
-										<Button 
-											type="submit" 
-											disabled={inviteLoading} 
+										<Button
+											type="submit"
+											disabled={inviteLoading}
 											className={`flex-1 ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
 										>
 											{inviteLoading ? (
@@ -368,7 +378,7 @@ export default function ManagePlayersSection() {
 			{/* Campaign Members Section */}
 			<div>
 				<h4 className="text-lg font-bold text-gray-900 mb-4">Campaign Members</h4>
-				
+
 				{campaignMembers.length === 0 ? (
 					<div className="text-center py-12 text-gray-500">
 						<UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -382,11 +392,7 @@ export default function ManagePlayersSection() {
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-4">
 										<div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-											{member.role === 'DM' ? (
-												<Crown className="h-6 w-6 text-purple-600" />
-											) : (
-												<Users className="h-6 w-6 text-blue-600" />
-											)}
+											{member.role === 'DM' ? <Crown className="h-6 w-6 text-purple-600" /> : <Users className="h-6 w-6 text-blue-600" />}
 										</div>
 										<div>
 											<h4 className="font-semibold text-gray-900">
@@ -395,21 +401,20 @@ export default function ManagePlayersSection() {
 											</h4>
 											<div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
 												<div className="flex items-center gap-2">
-													<Badge 
-														variant="secondary" 
-														className={
-															member.role === 'DM' ? 'bg-purple-100 text-purple-800' :
-															'bg-green-100 text-green-800'
-														}
+													<Badge
+														variant="secondary"
+														className={member.role === 'DM' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}
 													>
 														{member.role} in {member.campaign.name}
 													</Badge>
-													<Badge 
+													<Badge
 														variant="outline"
 														className={
-															member.user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-															member.user.role === 'DM' ? 'bg-blue-100 text-blue-800' :
-															'bg-gray-100 text-gray-800'
+															member.user.role === 'ADMIN'
+																? 'bg-red-100 text-red-800'
+																: member.user.role === 'DM'
+																	? 'bg-blue-100 text-blue-800'
+																	: 'bg-gray-100 text-gray-800'
 														}
 													>
 														Global: {member.user.role}
@@ -443,7 +448,7 @@ export default function ManagePlayersSection() {
 												)}
 											</Button>
 										)}
-										
+
 										{/* Step down button - only show for current user if they're DM and there are other DMs */}
 										{member.role === 'DM' && member.user.id === currentUser?.id && (
 											<Button
@@ -465,7 +470,7 @@ export default function ManagePlayersSection() {
 												)}
 											</Button>
 										)}
-										
+
 										{/* DM indicator for other DMs */}
 										{member.role === 'DM' && member.user.id !== currentUser?.id && (
 											<div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-lg">
@@ -504,17 +509,15 @@ export default function ManagePlayersSection() {
 									Are you sure you want to promote <strong>{confirmDialog.user?.email}</strong> to Dungeon Master in this campaign?
 								</>
 							) : (
-								<>
-									Are you sure you want to step down from Dungeon Master role in this campaign?
-								</>
+								<>Are you sure you want to step down from Dungeon Master role in this campaign?</>
 							)}
 						</DialogDescription>
 					</DialogHeader>
-					<div className={`border rounded-lg p-4 my-4 ${
-						confirmDialog.action === 'promote' 
-							? 'bg-blue-50 border-blue-200' 
-							: 'bg-orange-50 border-orange-200'
-					}`}>
+					<div
+						className={`border rounded-lg p-4 my-4 ${
+							confirmDialog.action === 'promote' ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'
+						}`}
+					>
 						{confirmDialog.action === 'promote' ? (
 							<>
 								<h4 className="font-medium text-blue-900 mb-2">This will grant them the ability to:</h4>
@@ -547,16 +550,17 @@ export default function ManagePlayersSection() {
 							onClick={handleConfirmAction}
 							disabled={
 								(confirmDialog.action === 'promote' && promotingUserId === confirmDialog.user?.id) ||
-								(confirmDialog.action === 'demote' && (demotingCampaignId === confirmDialog.campaignId || !canCurrentUserDemote(confirmDialog.campaignId)))
+								(confirmDialog.action === 'demote' &&
+									(demotingCampaignId === confirmDialog.campaignId || !canCurrentUserDemote(confirmDialog.campaignId)))
 							}
 							className={
 								confirmDialog.action === 'promote'
-									? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-									: "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+									? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
+									: 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
 							}
 						>
-							{((confirmDialog.action === 'promote' && promotingUserId === confirmDialog.user?.id) ||
-							  (confirmDialog.action === 'demote' && demotingCampaignId === confirmDialog.campaignId)) ? (
+							{(confirmDialog.action === 'promote' && promotingUserId === confirmDialog.user?.id) ||
+							(confirmDialog.action === 'demote' && demotingCampaignId === confirmDialog.campaignId) ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 									{confirmDialog.action === 'promote' ? 'Promoting...' : 'Stepping down...'}

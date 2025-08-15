@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, UserPlus } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
 import * as z from 'zod';
 import { createUser } from '../components/actions';
 
@@ -83,10 +83,10 @@ export default function CreateUserForm() {
 								<FormItem>
 									<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Email</FormLabel>
 									<FormControl>
-										<Input 
-											placeholder="user@example.com" 
-											type="email" 
-											{...field} 
+										<Input
+											placeholder="user@example.com"
+											type="email"
+											{...field}
 											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 										/>
 									</FormControl>
@@ -102,9 +102,9 @@ export default function CreateUserForm() {
 								<FormItem>
 									<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Preferred Username</FormLabel>
 									<FormControl>
-										<Input 
-											placeholder="johndoe" 
-											{...field} 
+										<Input
+											placeholder="johndoe"
+											{...field}
 											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 										/>
 									</FormControl>
@@ -121,24 +121,23 @@ export default function CreateUserForm() {
 									<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Role</FormLabel>
 									<Select onValueChange={field.onChange} defaultValue={field.value}>
 										<FormControl>
-											<SelectTrigger className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}>
+											<SelectTrigger
+												className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
+											>
 												<SelectValue placeholder="Select a role" />
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
-											<SelectItem 
+											<SelectItem
 												value="PLAYER"
 												className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 											>
 												Player
 											</SelectItem>
-											<SelectItem 
-												value="DM"
-												className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
-											>
+											<SelectItem value="DM" className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}>
 												Dungeon Master
 											</SelectItem>
-											<SelectItem 
+											<SelectItem
 												value="ADMIN"
 												className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 											>
@@ -152,9 +151,7 @@ export default function CreateUserForm() {
 						/>
 
 						{form.formState.errors.root && (
-							<div className={`text-sm p-3 rounded-md ${
-								session?.user?.darkMode ? 'text-red-400 bg-red-900/20' : 'text-red-600 bg-red-50'
-							}`}>
+							<div className={`text-sm p-3 rounded-md ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20' : 'text-red-600 bg-red-50'}`}>
 								{form.formState.errors.root.message}
 							</div>
 						)}
@@ -168,12 +165,14 @@ export default function CreateUserForm() {
 									setOpen(false);
 								}}
 								disabled={isLoading}
-								className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}
+								className={
+									session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+								}
 							>
 								Cancel
 							</Button>
-							<Button 
-								type="submit" 
+							<Button
+								type="submit"
 								disabled={isLoading}
 								className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
 							>

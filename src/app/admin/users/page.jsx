@@ -4,8 +4,8 @@ import { DateDisplay } from '@/components/DateDisplay';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, Calendar, FileText, Shield, StickyNote, User, UserPlus, Users } from 'lucide-react';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getAllUsers } from '../components/actions';
 import CreateUserForm from './CreateUserForm';
@@ -37,11 +37,15 @@ export default function AdminUsersPage() {
 
 	if (loading) {
 		return (
-			<div className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}>
+			<div
+				className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+			>
 				<div className="container mx-auto px-4 py-8">
 					<div className="text-center py-12">
 						<div className={`flex flex-col items-center gap-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-							<div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${session?.user?.darkMode ? 'border-cyan-400' : 'border-purple-600'}`}></div>
+							<div
+								className={`animate-spin rounded-full h-8 w-8 border-b-2 ${session?.user?.darkMode ? 'border-cyan-400' : 'border-purple-600'}`}
+							></div>
 							Loading users...
 						</div>
 					</div>
@@ -52,7 +56,9 @@ export default function AdminUsersPage() {
 
 	if (error) {
 		return (
-			<div className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}>
+			<div
+				className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+			>
 				<div className="container mx-auto px-4 py-8">
 					<div className="mb-8">
 						<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>User Management</h1>
@@ -71,10 +77,15 @@ export default function AdminUsersPage() {
 	const playerCount = users.filter((user) => user.role === 'PLAYER').length;
 
 	return (
-		<div className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}>
+		<div
+			className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+		>
 			<div className="container mx-auto px-4 py-8">
 				<div className="mb-8">
-					<Link href="/admin/dashboard" className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}>
+					<Link
+						href="/admin/dashboard"
+						className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
+					>
 						<ArrowLeft size={20} />
 						Back to Dashboard
 					</Link>
@@ -145,18 +156,20 @@ export default function AdminUsersPage() {
 						{users.length > 0 ? (
 							users.map((user) => (
 								<Link key={user.id} href={`/admin/users/${user.id}`}>
-									<div className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
-										session?.user?.darkMode 
-											? 'bg-gray-700/50 hover:bg-gray-700' 
-											: 'bg-gray-50 hover:bg-gray-100'
-									}`}>
+									<div
+										className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
+											session?.user?.darkMode ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
+										}`}
+									>
 										<div className="flex items-center gap-4">
 											{user.avatarUrl ? (
 												<img src={user.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full" />
 											) : (
-												<div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-													session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'
-												}`}>
+												<div
+													className={`h-12 w-12 rounded-full flex items-center justify-center ${
+														session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'
+													}`}
+												>
 													<User size={20} className={session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'} />
 												</div>
 											)}
@@ -166,10 +179,16 @@ export default function AdminUsersPage() {
 													<span
 														className={`px-2 py-1 rounded-full text-xs font-medium ${
 															user.role === 'ADMIN'
-																? session?.user?.darkMode ? 'bg-red-800 text-red-300' : 'bg-red-100 text-red-800'
+																? session?.user?.darkMode
+																	? 'bg-red-800 text-red-300'
+																	: 'bg-red-100 text-red-800'
 																: user.role === 'DM'
-																	? session?.user?.darkMode ? 'bg-blue-800 text-blue-300' : 'bg-blue-100 text-blue-800'
-																	: session?.user?.darkMode ? 'bg-green-800 text-green-300' : 'bg-green-100 text-green-800'
+																	? session?.user?.darkMode
+																		? 'bg-blue-800 text-blue-300'
+																		: 'bg-blue-100 text-blue-800'
+																	: session?.user?.darkMode
+																		? 'bg-green-800 text-green-300'
+																		: 'bg-green-100 text-green-800'
 														}`}
 													>
 														{user.role}
@@ -185,21 +204,27 @@ export default function AdminUsersPage() {
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
 													<Users size={14} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{user._count.campaignMembers}</span>
+													<span className={`font-medium ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+														{user._count.campaignMembers}
+													</span>
 												</div>
 												<span>Campaigns</span>
 											</div>
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
 													<FileText size={14} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>{user._count.updates}</span>
+													<span className={`font-medium ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
+														{user._count.updates}
+													</span>
 												</div>
 												<span>Updates</span>
 											</div>
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
 													<StickyNote size={14} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-600'}`}>{user._count.notes}</span>
+													<span className={`font-medium ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+														{user._count.notes}
+													</span>
 												</div>
 												<span>Notes</span>
 											</div>

@@ -152,7 +152,9 @@ export default function UserDropdown() {
 							<div className="hidden sm:block text-left">
 								<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>{displayName}</p>
 								<p className={characterNameStyle}>{characterDisplayName}</p>
-								<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-500'}`}>{session.user.role?.toLowerCase()}</p>
+								<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+									{session.user.role?.toLowerCase()}
+								</p>
 							</div>
 							<ChevronDown size={16} className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-400'} />
 						</button>
@@ -183,7 +185,9 @@ export default function UserDropdown() {
 									>
 										Character: {characterDisplayName}
 									</p>
-									<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`}>{session.user.role?.toLowerCase()}</p>
+									<p className={`text-xs capitalize ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
+										{session.user.role?.toLowerCase()}
+									</p>
 								</div>
 							</div>
 						</DropdownMenuLabel>
@@ -262,7 +266,11 @@ export default function UserDropdown() {
 								placeholder="Enter your username"
 								value={username}
 								onChange={(e) => setUsername(e.target.value)}
-								className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'}
+								className={
+									session?.user?.darkMode
+										? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+										: 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'
+								}
 								required
 							/>
 						</div>
@@ -296,7 +304,9 @@ export default function UserDropdown() {
 			<Dialog open={showCharacterDialog} onOpenChange={setShowCharacterDialog}>
 				<DialogContent className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}>
 					<DialogHeader>
-						<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{session?.user?.characterName ? 'Change Character Name' : 'Set Your Character Name'}</DialogTitle>
+						<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+							{session?.user?.characterName ? 'Change Character Name' : 'Set Your Character Name'}
+						</DialogTitle>
 					</DialogHeader>
 					<form onSubmit={handleUpdateCharacterName} className="space-y-4">
 						<div>
@@ -308,7 +318,11 @@ export default function UserDropdown() {
 								placeholder={session?.user?.characterName ? 'Enter your character name' : 'e.g., Aragorn, Gandalf, Legolas...'}
 								value={characterName}
 								onChange={(e) => setCharacterName(e.target.value)}
-								className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'}
+								className={
+									session?.user?.darkMode
+										? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
+										: 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'
+								}
 								required
 							/>
 							<p className={`text-xs mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>

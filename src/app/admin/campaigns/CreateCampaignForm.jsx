@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useSession } from 'next-auth/react';
 import * as z from 'zod';
 import { createCampaign } from '../components/actions';
 
@@ -64,7 +64,9 @@ export default function CreateCampaignForm() {
 			<DialogContent className={`sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 				<DialogHeader>
 					<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Create New Campaign</DialogTitle>
-					<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>Create a new D&D campaign. You can add members and content later.</DialogDescription>
+					<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
+						Create a new D&D campaign. You can add members and content later.
+					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -75,9 +77,9 @@ export default function CreateCampaignForm() {
 								<FormItem>
 									<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Campaign Name *</FormLabel>
 									<FormControl>
-										<Input 
-											placeholder="Enter campaign name..." 
-											{...field} 
+										<Input
+											placeholder="Enter campaign name..."
+											{...field}
 											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 										/>
 									</FormControl>
@@ -92,10 +94,10 @@ export default function CreateCampaignForm() {
 								<FormItem>
 									<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}>Description</FormLabel>
 									<FormControl>
-										<Textarea 
-											placeholder="Enter campaign description..." 
-											rows={3} 
-											{...field} 
+										<Textarea
+											placeholder="Enter campaign description..."
+											rows={3}
+											{...field}
 											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900'}
 										/>
 									</FormControl>
@@ -104,23 +106,23 @@ export default function CreateCampaignForm() {
 							)}
 						/>
 						{form.formState.errors.root && (
-							<div className={`text-sm ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>
-								{form.formState.errors.root.message}
-							</div>
+							<div className={`text-sm ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>{form.formState.errors.root.message}</div>
 						)}
 						<DialogFooter>
-							<Button 
-								type="button" 
-								variant="outline" 
-								onClick={() => setOpen(false)} 
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setOpen(false)}
 								disabled={isLoading}
-								className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}
+								className={
+									session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+								}
 							>
 								Cancel
 							</Button>
-							<Button 
-								type="submit" 
-								disabled={isLoading} 
+							<Button
+								type="submit"
+								disabled={isLoading}
 								className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}
 							>
 								{isLoading ? 'Creating...' : 'Create Campaign'}

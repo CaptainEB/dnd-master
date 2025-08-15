@@ -70,9 +70,13 @@ export default function DMDashboard() {
 								<button
 									onClick={() => scrollToSection('campaigns')}
 									className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-										activeSection === 'campaigns' 
-											? (session?.user?.darkMode ? 'bg-cyan-800 text-cyan-200 font-medium' : 'bg-purple-100 text-purple-800 font-medium')
-											: (session?.user?.darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100')
+										activeSection === 'campaigns'
+											? session?.user?.darkMode
+												? 'bg-cyan-800 text-cyan-200 font-medium'
+												: 'bg-purple-100 text-purple-800 font-medium'
+											: session?.user?.darkMode
+												? 'text-gray-300 hover:bg-gray-700'
+												: 'text-gray-600 hover:bg-gray-100'
 									}`}
 								>
 									<div className="flex items-center gap-2">
@@ -83,9 +87,13 @@ export default function DMDashboard() {
 								<button
 									onClick={() => scrollToSection('manage-players')}
 									className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-										activeSection === 'manage-players' 
-											? (session?.user?.darkMode ? 'bg-cyan-800 text-cyan-200 font-medium' : 'bg-purple-100 text-purple-800 font-medium')
-											: (session?.user?.darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100')
+										activeSection === 'manage-players'
+											? session?.user?.darkMode
+												? 'bg-cyan-800 text-cyan-200 font-medium'
+												: 'bg-purple-100 text-purple-800 font-medium'
+											: session?.user?.darkMode
+												? 'text-gray-300 hover:bg-gray-700'
+												: 'text-gray-600 hover:bg-gray-100'
 									}`}
 								>
 									<div className="flex items-center gap-2">
@@ -123,7 +131,9 @@ export default function DMDashboard() {
 									<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
 										<Scroll className={`h-16 w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
 										<h4 className={`text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No Campaigns Yet</h4>
-										<p className={`mb-6 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create your first campaign to start your D&D adventure!</p>
+										<p className={`mb-6 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+											Create your first campaign to start your D&D adventure!
+										</p>
 									</div>
 								) : (
 									<div className="grid gap-6">
@@ -135,12 +145,24 @@ export default function DMDashboard() {
 												<div className="p-6">
 													<div className="flex items-start justify-between mb-4">
 														<div>
-															<h4 className={`text-xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{campaign.name}</h4>
-															<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{campaign.description || 'No description provided'}</p>
+															<h4 className={`text-xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+																{campaign.name}
+															</h4>
+															<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+																{campaign.description || 'No description provided'}
+															</p>
 														</div>
 														<div className="flex gap-2">
-															<span className={`px-3 py-1 text-sm font-medium rounded-full ${session?.user?.darkMode ? 'bg-cyan-800 text-cyan-200' : 'bg-purple-100 text-purple-800'}`}>DM</span>
-															<span className={`px-3 py-1 text-sm font-medium rounded-full ${session?.user?.darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'}`}>Active</span>
+															<span
+																className={`px-3 py-1 text-sm font-medium rounded-full ${session?.user?.darkMode ? 'bg-cyan-800 text-cyan-200' : 'bg-purple-100 text-purple-800'}`}
+															>
+																DM
+															</span>
+															<span
+																className={`px-3 py-1 text-sm font-medium rounded-full ${session?.user?.darkMode ? 'bg-green-800 text-green-200' : 'bg-green-100 text-green-800'}`}
+															>
+																Active
+															</span>
 														</div>
 													</div>
 
@@ -150,7 +172,9 @@ export default function DMDashboard() {
 																<Users className={`h-5 w-5 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
 															</div>
 															<div>
-																<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{campaign.memberCount || 0} Members</p>
+																<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+																	{campaign.memberCount || 0} Members
+																</p>
 																<p className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total players</p>
 															</div>
 														</div>
