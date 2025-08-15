@@ -16,6 +16,7 @@ model user {
   updatedAt        DateTime @updatedAt
   username         String?
   activeCampaignId String?  @db.ObjectId
+  darkMode         Boolean  @default(false)
 
   // Relations
   activeCampaign  campaign?        @relation("UserActiveCampaign", fields: [activeCampaignId], references: [id])
