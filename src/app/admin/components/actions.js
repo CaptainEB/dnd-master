@@ -74,7 +74,7 @@ export async function getAllCampaigns() {
 }
 
 /**
- * Create a new campaign - Admin only
+ * Create a new campaign - Admin or DM
  * @param {Object} campaignData - Campaign data {name, description}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
@@ -90,11 +90,11 @@ export async function createCampaign(campaignData) {
 			};
 		}
 
-		// Verify ADMIN role
-		if (session.user.role !== 'ADMIN') {
+		// Verify ADMIN or DM role
+		if (session.user.role !== 'ADMIN' && session.user.role !== 'DM') {
 			return {
 				success: false,
-				error: 'Unauthorized - Admin access required',
+				error: 'Unauthorized - Admin or DM access required',
 			};
 		}
 
@@ -119,6 +119,17 @@ export async function createCampaign(campaignData) {
 				createdAt: true,
 			},
 		});
+
+		// If creator is a DM (not admin), automatically add them as DM member
+		if (session.user.role === 'DM') {
+			await prisma.campaignMember.create({
+				data: {
+					userId: session.user.id,
+					campaignId: campaign.id,
+					role: 'DM',
+				},
+			});
+		}
 
 		return {
 			success: true,
@@ -256,7 +267,7 @@ export async function getCampaignById(campaignId) {
 }
 
 /**
- * Get all users - Admin only
+ * Get all users - Admin or DM (for player invitations)
  * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
  */
 export async function getAllUsers() {
@@ -271,11 +282,11 @@ export async function getAllUsers() {
 			};
 		}
 
-		// Verify ADMIN role
-		if (session.user.role !== 'ADMIN') {
+		// Verify ADMIN or DM role
+		if (session.user.role !== 'ADMIN' && session.user.role !== 'DM') {
 			return {
 				success: false,
-				error: 'Unauthorized - Admin access required',
+				error: 'Unauthorized - Admin or DM access required',
 			};
 		}
 
@@ -389,7 +400,7 @@ export async function createUser(userData) {
 }
 
 /**
- * Add a member to a campaign - Admin only
+ * Add a member to a campaign - Admin or DM (for their own campaigns)
  * @param {Object} memberData - Member data {userId, campaignId, role}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
@@ -405,11 +416,27 @@ export async function addCampaignMember(memberData) {
 			};
 		}
 
-		// Verify ADMIN role
-		if (session.user.role !== 'ADMIN') {
+		// For DMs, verify they are DM of the campaign
+		if (session.user.role === 'DM') {
+			const dmMembership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: memberData.campaignId,
+					role: 'DM',
+				},
+			});
+
+			if (!dmMembership) {
+				return {
+					success: false,
+					error: 'Unauthorized - You must be a DM of this campaign',
+				};
+			}
+		} else if (session.user.role !== 'ADMIN') {
+			// Only ADMIN and DM roles can add members
 			return {
 				success: false,
-				error: 'Unauthorized - Admin access required',
+				error: 'Unauthorized - Admin or DM access required',
 			};
 		}
 
@@ -957,6 +984,13 @@ export async function getUserCampaigns() {
 						id: true,
 						name: true,
 						description: true,
+						createdAt: true,
+						updatedAt: true,
+						_count: {
+							select: {
+								members: true,
+							},
+						},
 					},
 				},
 				role: true,
@@ -969,6 +1003,7 @@ export async function getUserCampaigns() {
 		const campaigns = memberships.map((membership) => ({
 			...membership.campaign,
 			userRole: membership.role,
+			memberCount: membership.campaign._count.members,
 		}));
 
 		return {
@@ -2557,6 +2592,544 @@ export async function updateCharacterName(characterName) {
 		return {
 			success: false,
 			error: 'Failed to update character name',
+		};
+	}
+}
+
+/**
+ * Get all campaign members for DM's campaigns
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getDMCampaignMembers() {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify DM role
+		if (session.user.role !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM access required',
+			};
+		}
+
+		// Get all campaign members from campaigns where user is DM
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaign: {
+					members: {
+						some: {
+							userId: session.user.id,
+							role: 'DM',
+						},
+					},
+				},
+			},
+			select: {
+				id: true,
+				role: true,
+				joinedAt: true,
+				characterName: true,
+				user: {
+					select: {
+						id: true,
+						email: true,
+						username: true,
+						role: true,
+						createdAt: true,
+						_count: {
+							select: {
+								campaignMembers: true,
+							},
+						},
+					},
+				},
+				campaign: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
+			orderBy: {
+				joinedAt: 'desc',
+			},
+		});
+
+		return {
+			success: true,
+			data: campaignMembers,
+		};
+	} catch (error) {
+		console.error('Error fetching DM campaign members:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch campaign members',
+		};
+	}
+}
+
+/**
+ * Invite player by email - creates user if doesn't exist, adds to campaign
+ * @param {Object} inviteData - {email, role, username, campaignId}
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function invitePlayerByEmail(inviteData) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify DM role
+		if (session.user.role !== 'DM' && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Validate input
+		if (!inviteData.email || !inviteData.role || !inviteData.campaignId) {
+			return {
+				success: false,
+				error: 'Email, role, and campaign are required',
+			};
+		}
+
+		// For DMs, verify they are DM of the specified campaign
+		if (session.user.role === 'DM') {
+			const dmMembership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: inviteData.campaignId,
+					role: 'DM',
+				},
+			});
+
+			if (!dmMembership) {
+				return {
+					success: false,
+					error: 'Unauthorized - You must be a DM of this campaign',
+				};
+			}
+		}
+
+		// Check if user already exists
+		let user = await prisma.user.findUnique({
+			where: { email: inviteData.email },
+		});
+
+		// Create user if doesn't exist
+		if (!user) {
+			user = await prisma.user.create({
+				data: {
+					email: inviteData.email,
+					username: inviteData.username || inviteData.email.split('@')[0],
+					role: 'PLAYER', // Always create as PLAYER initially
+				},
+			});
+		}
+
+		// Check if user is already a member of this campaign
+		const existingMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: user.id,
+				campaignId: inviteData.campaignId,
+			},
+		});
+
+		if (existingMembership) {
+			return {
+				success: false,
+				error: 'User is already a member of this campaign',
+			};
+		}
+
+		// Add user to campaign
+		const membership = await prisma.campaignMember.create({
+			data: {
+				userId: user.id,
+				campaignId: inviteData.campaignId,
+				role: inviteData.role,
+			},
+			select: {
+				id: true,
+				role: true,
+				joinedAt: true,
+				user: {
+					select: {
+						id: true,
+						email: true,
+						username: true,
+						role: true,
+					},
+				},
+				campaign: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: membership,
+		};
+	} catch (error) {
+		console.error('Error inviting player:', error);
+		return {
+			success: false,
+			error: 'Failed to invite player',
+		};
+	}
+}
+
+/**
+ * Promote a user to DM role - DM or Admin only
+ * @param {string} userId - User ID to promote
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function promoteUserToDM(userId) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify DM or ADMIN role
+		if (session.user.role !== 'DM' && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Validate user ID
+		if (!userId) {
+			return {
+				success: false,
+				error: 'User ID is required',
+			};
+		}
+
+		// Check if user exists and is currently a PLAYER
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			select: {
+				id: true,
+				email: true,
+				role: true,
+				_count: {
+					select: {
+						campaignMembers: true,
+					},
+				},
+			},
+		});
+
+		if (!user) {
+			return {
+				success: false,
+				error: 'User not found',
+			};
+		}
+
+		if (user.role !== 'PLAYER') {
+			return {
+				success: false,
+				error: `User is already a ${user.role}`,
+			};
+		}
+
+		// Promote user to DM
+		const updatedUser = await prisma.user.update({
+			where: { id: userId },
+			data: { role: 'DM' },
+			select: {
+				id: true,
+				email: true,
+				role: true,
+				createdAt: true,
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedUser,
+		};
+	} catch (error) {
+		console.error('Error promoting user to DM:', error);
+		return {
+			success: false,
+			error: 'Failed to promote user to DM',
+		};
+	}
+}
+
+/**
+ * Promote player to DM within a specific campaign
+ * @param {string} userId - User ID to promote
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function promoteToDMInCampaign(userId, campaignId) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify DM role in the campaign
+		const dmMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+				role: 'DM',
+			},
+		});
+
+		if (!dmMembership) {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a DM of this campaign',
+			};
+		}
+
+		// Check if user is a member of this campaign
+		const targetMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: userId,
+				campaignId: campaignId,
+			},
+			include: {
+				user: true,
+			},
+		});
+
+		if (!targetMembership) {
+			return {
+				success: false,
+				error: 'User is not a member of this campaign',
+			};
+		}
+
+		if (targetMembership.role === 'DM') {
+			return {
+				success: false,
+				error: 'User is already a DM in this campaign',
+			};
+		}
+
+		// Update campaign membership role to DM
+		const updatedMembership = await prisma.campaignMember.update({
+			where: { id: targetMembership.id },
+			data: { role: 'DM' },
+			include: {
+				user: true,
+				campaign: true,
+			},
+		});
+
+		// Also promote user's global role to DM if they're still a PLAYER
+		if (targetMembership.user.role === 'PLAYER') {
+			await prisma.user.update({
+				where: { id: userId },
+				data: { role: 'DM' },
+			});
+		}
+
+		return {
+			success: true,
+			data: updatedMembership,
+		};
+	} catch (error) {
+		console.error('Error promoting user to DM in campaign:', error);
+		return {
+			success: false,
+			error: 'Failed to promote user to DM',
+		};
+	}
+}
+
+/**
+ * Demote DM to player within a specific campaign (only self-demotion)
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function demoteFromDMInCampaign(campaignId) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is DM in the campaign
+		const userMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+				role: 'DM',
+			},
+		});
+
+		if (!userMembership) {
+			return {
+				success: false,
+				error: 'You are not a DM in this campaign',
+			};
+		}
+
+		// Check how many DMs are in this campaign
+		const dmCount = await prisma.campaignMember.count({
+			where: {
+				campaignId: campaignId,
+				role: 'DM',
+			},
+		});
+
+		if (dmCount <= 1) {
+			return {
+				success: false,
+				error: 'Cannot step down - there must be at least one DM in the campaign. Promote another player to DM first.',
+			};
+		}
+
+		// Demote to PLAYER in this campaign
+		const updatedMembership = await prisma.campaignMember.update({
+			where: { id: userMembership.id },
+			data: { role: 'PLAYER' },
+			include: {
+				user: true,
+				campaign: true,
+			},
+		});
+
+		// Check if user is DM in any other campaigns
+		const otherDMRoles = await prisma.campaignMember.count({
+			where: {
+				userId: session.user.id,
+				role: 'DM',
+				campaignId: { not: campaignId },
+			},
+		});
+
+		// If user is not DM in any other campaigns, demote their global role to PLAYER
+		if (otherDMRoles === 0 && session.user.role === 'DM') {
+			await prisma.user.update({
+				where: { id: session.user.id },
+				data: { role: 'PLAYER' },
+			});
+		}
+
+		return {
+			success: true,
+			data: updatedMembership,
+		};
+	} catch (error) {
+		console.error('Error demoting from DM in campaign:', error);
+		return {
+			success: false,
+			error: 'Failed to step down from DM role',
+		};
+	}
+}
+
+/**
+ * Get campaign members for a specific campaign (accessible to campaign members)
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignMembers(campaignId) {
+	try {
+		// Check authentication
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of this campaign
+		const userMembership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!userMembership) {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Get all campaign members
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaignId: campaignId,
+			},
+			select: {
+				id: true,
+				role: true,
+				joinedAt: true,
+				characterName: true,
+				user: {
+					select: {
+						id: true,
+						email: true,
+						username: true,
+						role: true,
+					},
+				},
+			},
+			orderBy: [
+				{ role: 'desc' }, // DMs first
+				{ joinedAt: 'asc' }, // Then by join date
+			],
+		});
+
+		return {
+			success: true,
+			data: campaignMembers,
+		};
+	} catch (error) {
+		console.error('Error fetching campaign members:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch campaign members',
 		};
 	}
 }
