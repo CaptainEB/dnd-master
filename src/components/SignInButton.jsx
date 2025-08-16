@@ -1,11 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function SignInButton() {
+	const router = useRouter();
+
 	const handleSignIn = () => {
-		signIn('google');
+		router.push('/auth/signin');
 	};
 
 	return (

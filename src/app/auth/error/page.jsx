@@ -80,7 +80,7 @@ function ErrorContent() {
 						{/* Action Buttons */}
 						<div className="space-y-3">
 							<Button asChild className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-								<Link href="/api/auth/signin">
+								<Link href="/auth/signin">
 									<LogIn className="w-4 h-4 mr-2" />
 									Try Sign In Again
 								</Link>

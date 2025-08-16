@@ -174,12 +174,19 @@ export const authOptions = {
 		},
 
 		async redirect({ url, baseUrl }) {
+			// For signout, respect the callbackUrl parameter passed to signOut()
+			if (url === baseUrl || url === `${baseUrl}/`) {
+				return url;
+			}
+			// Handle custom redirects (like callbackUrl from signOut)
 			if (url.startsWith('/')) return `${baseUrl}${url}`;
 			if (url.startsWith(baseUrl)) return url;
-			return baseUrl;
+			// Default redirect after successful sign in - go to dashboard
+			return `${baseUrl}/redirect`;
 		},
 	},
 	pages: {
+		signIn: '/auth/signin',
 		error: '/auth/error',
 	},
 };
