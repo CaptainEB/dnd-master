@@ -24,6 +24,7 @@ model user {
   updates         Update[]
   rules           Rule[]
   notes           Note[]
+  creatures       Creature[]
 }
 
 model campaign {
@@ -40,6 +41,7 @@ model campaign {
   rules       Rule[]
   notes       Note[]
   quests      Quest[]
+  creatures   Creature[]
 }
 
 model CampaignMember {
@@ -114,6 +116,58 @@ model Quest {
   campaignId  String      @db.ObjectId
 
   campaign campaign @relation(fields: [campaignId], references: [id])
+}
+
+model Creature {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  category    String   @default("NPC") // NPC, Monster, Human, etc.
+  tags        String[] // Array of tags for flexible categorization
+  avatarUrl   String? // Optional image URL
+
+  // D&D Stats
+  armorClass Int?
+  hitPoints  Int?
+  speed      String? // e.g., "30 ft., fly 60 ft."
+
+  // Ability Scores
+  strength     Int?
+  dexterity    Int?
+  constitution Int?
+  intelligence Int?
+  wisdom       Int?
+  charisma     Int?
+
+  // Combat & Skills
+  challengeRating     String? // e.g., "1/4", "5", "15"
+  proficiencyBonus    Int?
+  skills              String? // JSON string for complex skill data
+  savingThrows        String? // JSON string for saving throw bonuses
+  damageResistances   String?
+  damageImmunities    String?
+  conditionImmunities String?
+  senses              String? // e.g., "darkvision 60 ft., passive Perception 12"
+  languages           String? // e.g., "Common, Draconic"
+
+  // D&D Features (stored as JSON for flexibility)
+  traits           String? // JSON array of traits
+  actions          String? // JSON array of actions
+  legendaryActions String? // JSON array of legendary actions
+  lairActions      String? // JSON array of lair actions
+  spellcasting     String? // JSON object for spellcasting info
+
+  // Metadata
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  creatorId  String   @db.ObjectId
+  campaignId String   @db.ObjectId
+
+  creator  user     @relation(fields: [creatorId], references: [id])
+  campaign campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId, category])
+  @@index([campaignId, name])
 }
 
 enum QuestStatus {

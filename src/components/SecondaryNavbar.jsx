@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ClipboardList, FileText, Scroll } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Scroll, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,6 +34,11 @@ export default function SecondaryNavbar() {
 			name: 'Quests',
 			href: '/quests',
 			icon: Scroll,
+		},
+		{
+			name: 'Glossary',
+			href: '/glossary',
+			icon: Users,
 		},
 	];
 

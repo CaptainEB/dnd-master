@@ -3175,3 +3175,344 @@ export async function getCampaignMembers(campaignId) {
 		};
 	}
 }
+
+// ============ CREATURE ACTIONS ============
+
+/**
+ * Get all creatures for the active campaign
+ * @param {string} campaignId - Campaign ID
+ * @param {string} search - Search term (optional)
+ * @param {string} category - Category filter (optional)
+ * @param {string[]} tags - Tags filter (optional)
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignCreatures(campaignId, search = '', category = '', tags = []) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Build filter conditions
+		const where = {
+			campaignId: campaignId,
+		};
+
+		// Add search filter
+		if (search) {
+			where.OR = [{ name: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }];
+		}
+
+		// Add category filter
+		if (category) {
+			where.category = category;
+		}
+
+		// Add tags filter
+		if (tags.length > 0) {
+			where.tags = { hasSome: tags };
+		}
+
+		const creatures = await prisma.creature.findMany({
+			where,
+			include: {
+				creator: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+						campaignMembers: {
+							where: {
+								campaignId: campaignId,
+							},
+							select: {
+								characterName: true,
+								role: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				name: 'asc', // Alphabetical order
+			},
+		});
+
+		return {
+			success: true,
+			data: creatures,
+		};
+	} catch (error) {
+		console.error('Error fetching creatures:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch creatures',
+		};
+	}
+}
+
+/**
+ * Create a new creature
+ * @param {Object} creatureData - Creature data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createCreature(creatureData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		if (!session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'No active campaign',
+			};
+		}
+
+		// Check if user is DM or Admin
+		if (session.user.role !== 'ADMIN' && session.user.campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Only DMs and Admins can create creatures',
+			};
+		}
+
+		// Validate required fields
+		if (!creatureData.name) {
+			return {
+				success: false,
+				error: 'Name is required',
+			};
+		}
+
+		// Create the creature
+		const creature = await prisma.creature.create({
+			data: {
+				name: creatureData.name,
+				description: creatureData.description || '',
+				category: creatureData.category || 'NPC',
+				tags: creatureData.tags || [],
+				avatarUrl: creatureData.avatarUrl || null,
+
+				// D&D Stats
+				armorClass: creatureData.armorClass || null,
+				hitPoints: creatureData.hitPoints || null,
+				speed: creatureData.speed || null,
+
+				// Ability Scores
+				strength: creatureData.strength || null,
+				dexterity: creatureData.dexterity || null,
+				constitution: creatureData.constitution || null,
+				intelligence: creatureData.intelligence || null,
+				wisdom: creatureData.wisdom || null,
+				charisma: creatureData.charisma || null,
+
+				// Combat & Skills
+				challengeRating: creatureData.challengeRating || null,
+				proficiencyBonus: creatureData.proficiencyBonus || null,
+				skills: creatureData.skills || null,
+				savingThrows: creatureData.savingThrows || null,
+				damageResistances: creatureData.damageResistances || null,
+				damageImmunities: creatureData.damageImmunities || null,
+				conditionImmunities: creatureData.conditionImmunities || null,
+				senses: creatureData.senses || null,
+				languages: creatureData.languages || null,
+
+				// D&D Features
+				traits: creatureData.traits || null,
+				actions: creatureData.actions || null,
+				legendaryActions: creatureData.legendaryActions || null,
+				lairActions: creatureData.lairActions || null,
+				spellcasting: creatureData.spellcasting || null,
+
+				// Metadata
+				creatorId: session.user.id,
+				campaignId: session.user.activeCampaignId,
+			},
+			include: {
+				creator: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: creature,
+		};
+	} catch (error) {
+		console.error('Error creating creature:', error);
+		return {
+			success: false,
+			error: 'Failed to create creature',
+		};
+	}
+}
+
+/**
+ * Update a creature
+ * @param {string} creatureId - Creature ID
+ * @param {Object} creatureData - Updated creature data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCreature(creatureId, creatureData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Find the creature
+		const existingCreature = await prisma.creature.findUnique({
+			where: { id: creatureId },
+		});
+
+		if (!existingCreature) {
+			return {
+				success: false,
+				error: 'Creature not found',
+			};
+		}
+
+		// Check permissions - only creator, DM, or Admin can edit
+		if (session.user.role !== 'ADMIN' && session.user.campaignRole !== 'DM' && existingCreature.creatorId !== session.user.id) {
+			return {
+				success: false,
+				error: 'Permission denied',
+			};
+		}
+
+		// Update the creature
+		const updatedCreature = await prisma.creature.update({
+			where: { id: creatureId },
+			data: {
+				name: creatureData.name,
+				description: creatureData.description || '',
+				category: creatureData.category || 'NPC',
+				tags: creatureData.tags || [],
+				avatarUrl: creatureData.avatarUrl || null,
+
+				// D&D Stats
+				armorClass: creatureData.armorClass || null,
+				hitPoints: creatureData.hitPoints || null,
+				speed: creatureData.speed || null,
+
+				// Ability Scores
+				strength: creatureData.strength || null,
+				dexterity: creatureData.dexterity || null,
+				constitution: creatureData.constitution || null,
+				intelligence: creatureData.intelligence || null,
+				wisdom: creatureData.wisdom || null,
+				charisma: creatureData.charisma || null,
+
+				// Combat & Skills
+				challengeRating: creatureData.challengeRating || null,
+				proficiencyBonus: creatureData.proficiencyBonus || null,
+				skills: creatureData.skills || null,
+				savingThrows: creatureData.savingThrows || null,
+				damageResistances: creatureData.damageResistances || null,
+				damageImmunities: creatureData.damageImmunities || null,
+				conditionImmunities: creatureData.conditionImmunities || null,
+				senses: creatureData.senses || null,
+				languages: creatureData.languages || null,
+
+				// D&D Features
+				traits: creatureData.traits || null,
+				actions: creatureData.actions || null,
+				legendaryActions: creatureData.legendaryActions || null,
+				lairActions: creatureData.lairActions || null,
+				spellcasting: creatureData.spellcasting || null,
+			},
+			include: {
+				creator: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedCreature,
+		};
+	} catch (error) {
+		console.error('Error updating creature:', error);
+		return {
+			success: false,
+			error: 'Failed to update creature',
+		};
+	}
+}
+
+/**
+ * Delete a creature
+ * @param {string} creatureId - Creature ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteCreature(creatureId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Find the creature
+		const existingCreature = await prisma.creature.findUnique({
+			where: { id: creatureId },
+		});
+
+		if (!existingCreature) {
+			return {
+				success: false,
+				error: 'Creature not found',
+			};
+		}
+
+		// Check permissions - only creator, DM, or Admin can delete
+		if (session.user.role !== 'ADMIN' && session.user.campaignRole !== 'DM' && existingCreature.creatorId !== session.user.id) {
+			return {
+				success: false,
+				error: 'Permission denied',
+			};
+		}
+
+		// Delete the creature
+		await prisma.creature.delete({
+			where: { id: creatureId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting creature:', error);
+		return {
+			success: false,
+			error: 'Failed to delete creature',
+		};
+	}
+}
