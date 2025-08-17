@@ -74,7 +74,7 @@ export async function getAllCampaigns() {
 }
 
 /**
- * Create a new campaign - Admin or DM
+ * Create a new campaign - Admin only
  * @param {Object} campaignData - Campaign data {name, description}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
@@ -90,11 +90,11 @@ export async function createCampaign(campaignData) {
 			};
 		}
 
-		// Verify ADMIN or DM role
-		if (session.user.role !== 'ADMIN' && session.user.role !== 'DM') {
+		// Verify ADMIN role
+		if (session.user.role !== 'ADMIN') {
 			return {
 				success: false,
-				error: 'Unauthorized - Admin or DM access required',
+				error: 'Unauthorized - Admin access required',
 			};
 		}
 
@@ -120,16 +120,8 @@ export async function createCampaign(campaignData) {
 			},
 		});
 
-		// If creator is a DM (not admin), automatically add them as DM member
-		if (session.user.role === 'DM') {
-			await prisma.campaignMember.create({
-				data: {
-					userId: session.user.id,
-					campaignId: campaign.id,
-					role: 'DM',
-				},
-			});
-		}
+		// Admin users don't automatically get added as campaign members
+		// Campaign memberships are managed separately through the campaign member functions
 
 		return {
 			success: true,
@@ -161,12 +153,25 @@ export async function getCampaignById(campaignId) {
 			};
 		}
 
-		// Verify ADMIN role
+		// Verify ADMIN role or DM of this campaign
 		if (session.user.role !== 'ADMIN') {
-			return {
-				success: false,
-				error: 'Unauthorized - Admin access required',
-			};
+			// If not admin, check if user is a DM of this campaign
+			const campaignMembership = await prisma.campaignMember.findFirst({
+				where: {
+					campaignId: campaignId,
+					user: {
+						email: session.user.email,
+					},
+					role: 'DM',
+				},
+			});
+
+			if (!campaignMembership) {
+				return {
+					success: false,
+					error: 'Unauthorized - Admin access or DM role required for this campaign',
+				};
+			}
 		}
 
 		// Validate campaign ID
@@ -267,7 +272,7 @@ export async function getCampaignById(campaignId) {
 }
 
 /**
- * Get all users - Admin or DM (for player invitations)
+ * Get all users - Admin only
  * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
  */
 export async function getAllUsers() {
@@ -282,11 +287,11 @@ export async function getAllUsers() {
 			};
 		}
 
-		// Verify ADMIN or DM role
-		if (session.user.role !== 'ADMIN' && session.user.role !== 'DM') {
+		// Verify ADMIN role
+		if (session.user.role !== 'ADMIN') {
 			return {
 				success: false,
-				error: 'Unauthorized - Admin or DM access required',
+				error: 'Unauthorized - Admin access required',
 			};
 		}
 
@@ -365,11 +370,27 @@ export async function createUser(userData) {
 			};
 		}
 
+		// Convert old role values to new simplified system
+		let userRole = userData.role;
+		if (userData.role === 'DM' || userData.role === 'PLAYER') {
+			userRole = 'USER'; // DM and PLAYER both become USER in site-level permissions
+		} else if (userData.role === 'ADMIN') {
+			userRole = 'ADMIN'; // ADMIN stays ADMIN
+		} else if (userData.role === 'USER') {
+			userRole = 'USER'; // USER stays USER
+		} else {
+			// Invalid role provided
+			return {
+				success: false,
+				error: 'Invalid role. Must be USER or ADMIN.',
+			};
+		}
+
 		// Create user
 		const user = await prisma.user.create({
 			data: {
 				email: userData.email.trim().toLowerCase(),
-				role: userData.role,
+				role: userRole,
 				// Note: username field needs to be added to schema
 			},
 			select: {
@@ -400,7 +421,7 @@ export async function createUser(userData) {
 }
 
 /**
- * Add a member to a campaign - Admin or DM (for their own campaigns)
+ * Add a member to a campaign - Admin only
  * @param {Object} memberData - Member data {userId, campaignId, role}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
@@ -416,28 +437,25 @@ export async function addCampaignMember(memberData) {
 			};
 		}
 
-		// For DMs, verify they are DM of the campaign
-		if (session.user.role === 'DM') {
-			const dmMembership = await prisma.campaignMember.findFirst({
+		// Verify ADMIN role or DM of this campaign
+		if (session.user.role !== 'ADMIN') {
+			// If not admin, check if user is a DM of this campaign
+			const campaignMembership = await prisma.campaignMember.findFirst({
 				where: {
-					userId: session.user.id,
 					campaignId: memberData.campaignId,
+					user: {
+						email: session.user.email,
+					},
 					role: 'DM',
 				},
 			});
 
-			if (!dmMembership) {
+			if (!campaignMembership) {
 				return {
 					success: false,
-					error: 'Unauthorized - You must be a DM of this campaign',
+					error: 'Unauthorized - Admin access or DM role required for this campaign',
 				};
 			}
-		} else if (session.user.role !== 'ADMIN') {
-			// Only ADMIN and DM roles can add members
-			return {
-				success: false,
-				error: 'Unauthorized - Admin or DM access required',
-			};
 		}
 
 		// Validate required fields
@@ -857,20 +875,46 @@ export async function removeCampaignMember(membershipId) {
 			};
 		}
 
-		// Verify ADMIN role
-		if (session.user.role !== 'ADMIN') {
-			return {
-				success: false,
-				error: 'Unauthorized - Admin access required',
-			};
-		}
-
 		// Validate membership ID
 		if (!membershipId) {
 			return {
 				success: false,
 				error: 'Membership ID is required',
 			};
+		}
+
+		// Get the membership to check campaign access
+		const membership = await prisma.campaignMember.findUnique({
+			where: { id: membershipId },
+			select: { campaignId: true },
+		});
+
+		if (!membership) {
+			return {
+				success: false,
+				error: 'Membership not found',
+			};
+		}
+
+		// Verify ADMIN role or DM of this campaign
+		if (session.user.role !== 'ADMIN') {
+			// If not admin, check if user is a DM of this campaign
+			const campaignMembership = await prisma.campaignMember.findFirst({
+				where: {
+					campaignId: membership.campaignId,
+					user: {
+						email: session.user.email,
+					},
+					role: 'DM',
+				},
+			});
+
+			if (!campaignMembership) {
+				return {
+					success: false,
+					error: 'Unauthorized - Admin access or DM role required for this campaign',
+				};
+			}
 		}
 
 		// Remove campaign member
@@ -2172,9 +2216,10 @@ export async function deletePersonalNote(noteId) {
  * Get all quests for a campaign
  * @param {string} campaignId
  * @param {string} statusFilter - Optional status filter (AVAILABLE, IN_PROGRESS, COMPLETED, UNAVAILABLE)
+ * @param {string} questTypeFilter - Optional quest type filter
  * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
  */
-export async function getCampaignQuests(campaignId, statusFilter = null) {
+export async function getCampaignQuests(campaignId, statusFilter = null, questTypeFilter = null) {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -2205,11 +2250,22 @@ export async function getCampaignQuests(campaignId, statusFilter = null) {
 		if (statusFilter) {
 			where.status = statusFilter;
 		}
+		if (questTypeFilter) {
+			where.questTypeId = questTypeFilter;
+		}
 
 		// Get all quests for the campaign
 		const quests = await prisma.quest.findMany({
 			where: where,
 			orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+			include: {
+				questType: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
+			},
 		});
 
 		return {
@@ -2280,6 +2336,15 @@ export async function createCampaignQuest(campaignId, questData) {
 				reward: questData.reward?.trim() || null,
 				difficulty: questData.difficulty?.trim() || null,
 				campaignId: campaignId,
+				questTypeId: questData.questTypeId || null,
+			},
+			include: {
+				questType: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
 			},
 		});
 
@@ -2359,6 +2424,15 @@ export async function updateCampaignQuest(questId, questData) {
 				status: questData.status,
 				reward: questData.reward?.trim() || null,
 				difficulty: questData.difficulty?.trim() || null,
+				questTypeId: questData.questTypeId || null,
+			},
+			include: {
+				questType: {
+					select: {
+						id: true,
+						name: true,
+					},
+				},
 			},
 		});
 
@@ -2654,11 +2728,20 @@ export async function getDMCampaignMembers() {
 			};
 		}
 
-		// Verify DM role
-		if (session.user.role !== 'DM') {
+		// Check if user is DM of any campaign (can't check user.role since DM is a campaign role now)
+		const dmMemberships = await prisma.campaignMember.findMany({
+			where: {
+				user: {
+					email: session.user.email,
+				},
+				role: 'DM',
+			},
+		});
+
+		if (dmMemberships.length === 0) {
 			return {
 				success: false,
-				error: 'Unauthorized - DM access required',
+				error: 'Unauthorized - DM role required in at least one campaign',
 			};
 		}
 
@@ -2780,7 +2863,7 @@ export async function invitePlayerByEmail(inviteData) {
 				data: {
 					email: inviteData.email,
 					username: inviteData.username || inviteData.email.split('@')[0],
-					role: 'PLAYER', // Always create as PLAYER initially
+					role: 'USER', // Always create as USER initially
 				},
 			});
 		}
@@ -3076,22 +3159,8 @@ export async function demoteFromDMInCampaign(campaignId) {
 			},
 		});
 
-		// Check if user is DM in any other campaigns
-		const otherDMRoles = await prisma.campaignMember.count({
-			where: {
-				userId: session.user.id,
-				role: 'DM',
-				campaignId: { not: campaignId },
-			},
-		});
-
-		// If user is not DM in any other campaigns, demote their global role to PLAYER
-		if (otherDMRoles === 0 && session.user.role === 'DM') {
-			await prisma.user.update({
-				where: { id: session.user.id },
-				data: { role: 'PLAYER' },
-			});
-		}
+		// In the simplified role system, site-level roles are independent of campaign roles
+		// Users maintain their site role (USER/ADMIN) regardless of campaign permissions
 
 		return {
 			success: true,
@@ -3513,6 +3582,217 @@ export async function deleteCreature(creatureId) {
 		return {
 			success: false,
 			error: 'Failed to delete creature',
+		};
+	}
+}
+
+// ==================== QUEST TYPE ACTIONS ====================
+
+/**
+ * Get all quest types for a campaign
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getQuestTypes(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Get all quest types for the campaign
+		const questTypes = await prisma.questType.findMany({
+			where: { campaignId },
+			orderBy: { name: 'asc' },
+			include: {
+				_count: {
+					select: { quests: true },
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: questTypes,
+		};
+	} catch (error) {
+		console.error('Error fetching quest types:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch quest types',
+		};
+	}
+}
+
+/**
+ * Create a new quest type - DM/Admin only
+ * @param {string} campaignId
+ * @param {Object} questTypeData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createQuestType(campaignId, questTypeData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Check if quest type name already exists in this campaign
+		const existingQuestType = await prisma.questType.findFirst({
+			where: {
+				campaignId,
+				name: questTypeData.name,
+			},
+		});
+
+		if (existingQuestType) {
+			return {
+				success: false,
+				error: 'A quest type with this name already exists in this campaign',
+			};
+		}
+
+		// Create the quest type
+		const questType = await prisma.questType.create({
+			data: {
+				name: questTypeData.name,
+				description: questTypeData.description,
+				campaignId,
+			},
+		});
+
+		return {
+			success: true,
+			data: questType,
+		};
+	} catch (error) {
+		console.error('Error creating quest type:', error);
+		return {
+			success: false,
+			error: 'Failed to create quest type',
+		};
+	}
+}
+
+/**
+ * Delete a quest type - DM/Admin only
+ * @param {string} questTypeId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteQuestType(questTypeId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the quest type to verify campaign membership
+		const questType = await prisma.questType.findUnique({
+			where: { id: questTypeId },
+			include: {
+				_count: {
+					select: { quests: true },
+				},
+			},
+		});
+
+		if (!questType) {
+			return {
+				success: false,
+				error: 'Quest type not found',
+			};
+		}
+
+		// Check if quest type has associated quests
+		if (questType._count.quests > 0) {
+			return {
+				success: false,
+				error: 'Cannot delete quest type that has associated quests',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: questType.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Delete the quest type
+		await prisma.questType.delete({
+			where: { id: questTypeId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting quest type:', error);
+		return {
+			success: false,
+			error: 'Failed to delete quest type',
 		};
 	}
 }

@@ -9,8 +9,18 @@ async function main() {
 	});
 
 	if (existing) {
-		console.log('User already exists:', existing);
-		return;
+		if (existing.role === 'ADMIN') {
+			console.log('Admin user already exists:', existing);
+			return;
+		} else {
+			// Update existing user to admin role
+			const updated = await prisma.user.update({
+				where: { email },
+				data: { role: 'ADMIN' },
+			});
+			console.log('Updated existing user to admin:', updated);
+			return;
+		}
 	}
 
 	const admin = await prisma.user.create({

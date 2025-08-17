@@ -5,12 +5,12 @@ export async function middleware(request) {
 	const { pathname } = request.nextUrl;
 
 	// Allow access to public routes
-	const publicRoutes = ['/', '/auth/error', '/auth/signin', '/api/auth'];
+	const publicRoutes = ['/', '/api/auth', '/auth'];
 
 	// Check if current path is public
-	const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith('/api/auth/'));
+	const isPublicRoute = publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'));
 
-	// Allow access to public routes and API auth routes
+	// Allow access to public routes and auth routes
 	if (isPublicRoute) {
 		return NextResponse.next();
 	}

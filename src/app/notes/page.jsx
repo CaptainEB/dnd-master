@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, Edit, Plus, Save, Search, Tag, Trash2, User, X } from 'lucide-react';
@@ -173,14 +174,18 @@ export default function NotesPage() {
 	};
 
 	const formatDate = (date) => {
-		if (!mounted) return '';
-		return new Date(date).toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-		});
+		if (!date) return '';
+		try {
+			return new Date(date).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+		} catch {
+			return '';
+		}
 	};
 
 	if (!mounted) {
@@ -288,22 +293,25 @@ export default function NotesPage() {
 								<Label htmlFor="tagFilter" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Filter by tag
 								</Label>
-								<select
-									id="tagFilter"
-									className="mt-1 block w-full rounded-md border-purple-200 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-									value={tagFilter}
-									onChange={(e) => {
-										setTagFilter(e.target.value);
+								<Select
+									value={tagFilter || 'all'}
+									onValueChange={(value) => {
+										setTagFilter(value === 'all' ? '' : value);
 										setCurrentPage(1);
 									}}
 								>
-									<option value="">All tags</option>
-									{availableTags.map((tag) => (
-										<option key={tag} value={tag}>
-											{tag}
-										</option>
-									))}
-								</select>
+									<SelectTrigger className="w-full mt-1">
+										<SelectValue placeholder="All tags" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All tags</SelectItem>
+										{availableTags.map((tag) => (
+											<SelectItem key={tag} value={tag}>
+												{tag}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
 						</div>
 					</CardContent>

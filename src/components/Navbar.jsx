@@ -41,7 +41,9 @@ export default function Navbar() {
 
 									{/* Dashboard Button */}
 									<Link
-										href={session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.role === 'DM' ? '/dm/dashboard' : '/player/dashboard'}
+										href={
+											session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.campaignRole === 'DM' ? '/dm/dashboard' : '/player/dashboard'
+										}
 										className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
 											session?.user?.darkMode
 												? 'text-purple-400 hover:text-purple-300 hover:bg-gray-700/50'

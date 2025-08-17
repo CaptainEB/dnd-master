@@ -15,6 +15,22 @@ export default function AdminCampaigns() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
+	// Check if user is admin
+	if (session && session.user.role !== 'ADMIN') {
+		return (
+			<div
+				className={`min-h-screen pt-16 flex items-center justify-center ${
+					session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-purple-50 to-blue-50'
+				}`}
+			>
+				<div className="text-center">
+					<h1 className={`text-2xl font-bold mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Access Denied</h1>
+					<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>You need admin privileges to access this page.</p>
+				</div>
+			</div>
+		);
+	}
+
 	useEffect(() => {
 		const loadCampaigns = async () => {
 			try {

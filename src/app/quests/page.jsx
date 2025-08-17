@@ -1,15 +1,24 @@
 'use client';
 
-import { createCampaignQuest, deleteCampaignQuest, getCampaignQuests, updateCampaignQuest } from '@/app/admin/components/actions';
+import {
+	createCampaignQuest,
+	createQuestType,
+	deleteCampaignQuest,
+	deleteQuestType,
+	getCampaignQuests,
+	getQuestTypes,
+	updateCampaignQuest,
+} from '@/app/admin/components/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Coins, Crown, Edit, Plus, Save, Scroll, Shield, Sword, Target, Trash2, X, Zap } from 'lucide-react';
+import { Calendar, Coins, Crown, Edit, Plus, Save, Scroll, Shield, Sword, Tag, Target, Trash2, X, Zap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -17,9 +26,18 @@ export default function QuestsPage() {
 	const { data: session } = useSession();
 	const [mounted, setMounted] = useState(false);
 	const [quests, setQuests] = useState([]);
+	const [questTypes, setQuestTypes] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 	const [selectedStatus, setSelectedStatus] = useState('AVAILABLE');
+	const [selectedQuestType, setSelectedQuestType] = useState('ALL');
+
+	// Quest Type Filter
+	const [questTypeFilter, setQuestTypeFilter] = useState('all');
+
+	// Quest Type Management
+	const [showQuestTypeDialog, setShowQuestTypeDialog] = useState(false);
+	const [newQuestTypeName, setNewQuestTypeName] = useState('');
 
 	// Form states
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -31,6 +49,7 @@ export default function QuestsPage() {
 		status: 'AVAILABLE',
 		reward: '',
 		difficulty: '',
+		questTypeId: 'none',
 	});
 
 	useEffect(() => {
@@ -41,7 +60,10 @@ export default function QuestsPage() {
 	const canManageQuests = session?.user?.role === 'ADMIN' || session?.user?.campaignRole === 'DM';
 
 	const loadQuests = useCallback(async () => {
-		if (!session?.user?.activeCampaignId) return;
+		if (!session?.user?.activeCampaignId) {
+			setQuests([]);
+			return;
+		}
 
 		setLoading(true);
 		try {
@@ -61,11 +83,25 @@ export default function QuestsPage() {
 		}
 	}, [session?.user?.activeCampaignId]);
 
+	const loadQuestTypes = useCallback(async () => {
+		if (!session?.user?.activeCampaignId) return;
+
+		try {
+			const result = await getQuestTypes(session.user.activeCampaignId);
+			if (result.success) {
+				setQuestTypes(result.data);
+			}
+		} catch (err) {
+			console.error('Failed to load quest types:', err);
+		}
+	}, [session?.user?.activeCampaignId]);
+
 	useEffect(() => {
 		if (mounted && session?.user?.activeCampaignId) {
 			loadQuests();
+			loadQuestTypes();
 		}
-	}, [mounted, loadQuests]);
+	}, [mounted, loadQuests, loadQuestTypes]);
 
 	const handleCreateQuest = async (e) => {
 		e.preventDefault();
@@ -76,10 +112,14 @@ export default function QuestsPage() {
 		}
 
 		try {
-			const result = await createCampaignQuest(session.user.activeCampaignId, formData);
+			const questData = {
+				...formData,
+				questTypeId: formData.questTypeId === 'none' ? null : formData.questTypeId,
+			};
+			const result = await createCampaignQuest(session.user.activeCampaignId, questData);
 
 			if (result.success) {
-				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '' });
+				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '', questTypeId: 'none' });
 				setShowCreateDialog(false);
 				setError('');
 				await loadQuests();
@@ -101,12 +141,16 @@ export default function QuestsPage() {
 		}
 
 		try {
-			const result = await updateCampaignQuest(editingQuest.id, formData);
+			const questData = {
+				...formData,
+				questTypeId: formData.questTypeId === 'none' ? null : formData.questTypeId,
+			};
+			const result = await updateCampaignQuest(editingQuest.id, questData);
 
 			if (result.success) {
 				setEditingQuest(null);
 				setShowEditDialog(false);
-				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '' });
+				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '', questTypeId: 'none' });
 				setError('');
 				await loadQuests();
 			} else {
@@ -144,8 +188,54 @@ export default function QuestsPage() {
 			status: quest.status,
 			reward: quest.reward || '',
 			difficulty: quest.difficulty || '',
+			questTypeId: quest.questTypeId || 'none',
 		});
 		setShowEditDialog(true);
+	};
+
+	const handleCreateQuestType = async (e) => {
+		e.preventDefault();
+
+		if (!newQuestTypeName.trim()) {
+			setError('Quest type name is required');
+			return;
+		}
+
+		try {
+			const result = await createQuestType(session.user.activeCampaignId, {
+				name: newQuestTypeName.trim(),
+			});
+
+			if (result.success) {
+				setNewQuestTypeName('');
+				setShowQuestTypeDialog(false);
+				await loadQuestTypes();
+			} else {
+				setError(result.error || 'Failed to create quest type');
+			}
+		} catch (err) {
+			setError('Failed to create quest type');
+			console.error('Error creating quest type:', err);
+		}
+	};
+
+	const handleDeleteQuestType = async (questTypeId) => {
+		if (!confirm('Are you sure you want to delete this quest type? This will unassign it from all quests.')) {
+			return;
+		}
+
+		try {
+			const result = await deleteQuestType(questTypeId);
+			if (result.success) {
+				await loadQuestTypes();
+				await loadQuests(); // Refresh quests to update the UI
+			} else {
+				setError(result.error || 'Failed to delete quest type');
+			}
+		} catch (err) {
+			setError('Failed to delete quest type');
+			console.error('Error deleting quest type:', err);
+		}
 	};
 
 	const getDifficultyIcon = (difficulty) => {
@@ -192,15 +282,32 @@ export default function QuestsPage() {
 	};
 
 	const formatDate = (date) => {
-		if (!mounted) return '';
-		return new Date(date).toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-		});
+		if (!date) return '';
+		try {
+			return new Date(date).toLocaleDateString('en-US', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+			});
+		} catch {
+			return '';
+		}
 	};
 
-	const filteredQuests = quests.filter((quest) => (selectedStatus === 'ALL' ? true : quest.status === selectedStatus));
+	const filteredQuests = quests.filter((quest) => {
+		// Filter by status
+		const statusMatch = selectedStatus === 'ALL' ? true : quest.status === selectedStatus;
+
+		// Filter by quest type
+		let questTypeMatch = true;
+		if (questTypeFilter === 'all') {
+			questTypeMatch = true;
+		} else {
+			questTypeMatch = quest.questTypeId === questTypeFilter;
+		}
+
+		return statusMatch && questTypeMatch;
+	});
 
 	if (!mounted) {
 		return <div>Loading...</div>;
@@ -256,103 +363,184 @@ export default function QuestsPage() {
 
 					{/* Create Quest Button */}
 					{canManageQuests && (
-						<Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-							<DialogTrigger asChild>
-								<Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg">
-									<Plus className="h-4 w-4 mr-2" />
-									Post Quest
-								</Button>
-							</DialogTrigger>
-							<DialogContent
-								className={`max-w-2xl border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
-							>
-								<DialogHeader>
-									<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Post New Quest</DialogTitle>
-								</DialogHeader>
-								<form onSubmit={handleCreateQuest} className="space-y-4">
-									<div>
-										<Label htmlFor="createTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-											Quest Title *
-										</Label>
-										<Input
-											id="createTitle"
-											placeholder="e.g., Rescue the Missing Scholar"
-											value={formData.title}
-											onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-											className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-											required
-										/>
-									</div>
-									<div>
-										<Label htmlFor="createDescription" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-											Description *
-										</Label>
-										<Textarea
-											id="createDescription"
-											placeholder="Describe the quest objectives, background, and any important details..."
-											value={formData.description}
-											onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-											className="min-h-32 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-											required
-										/>
-									</div>
-									<div className="grid grid-cols-3 gap-4">
+						<div className="flex gap-2">
+							<Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+								<DialogTrigger asChild>
+									<Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg">
+										<Plus className="h-4 w-4 mr-2" />
+										Post Quest
+									</Button>
+								</DialogTrigger>
+								<DialogContent
+									className={`max-w-2xl border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+								>
+									<DialogHeader>
+										<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Post New Quest</DialogTitle>
+									</DialogHeader>
+									<form onSubmit={handleCreateQuest} className="space-y-4">
 										<div>
-											<Label htmlFor="createStatus" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-												Status
+											<Label htmlFor="createTitle" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+												Quest Title *
 											</Label>
-											<select
-												id="createStatus"
-												value={formData.status}
-												onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-												className="mt-1 block w-full rounded-md border-purple-200 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+											<Input
+												id="createTitle"
+												placeholder="e.g., Rescue the Missing Scholar"
+												value={formData.title}
+												onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+												className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+												required
+											/>
+										</div>
+										<div>
+											<Label htmlFor="createDescription" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+												Description *
+											</Label>
+											<Textarea
+												id="createDescription"
+												placeholder="Describe the quest objectives, background, and any important details..."
+												value={formData.description}
+												onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+												className="min-h-32 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+												required
+											/>
+										</div>
+										<div className="grid grid-cols-3 gap-4">
+											<div>
+												<Label htmlFor="createStatus" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Status
+												</Label>
+												<Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+													<SelectTrigger className="w-full mt-1">
+														<SelectValue placeholder="Select status" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="AVAILABLE">Available</SelectItem>
+														<SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+														<SelectItem value="COMPLETED">Completed</SelectItem>
+														<SelectItem value="UNAVAILABLE">Unavailable</SelectItem>
+													</SelectContent>
+												</Select>
+											</div>
+											<div>
+												<Label htmlFor="createDifficulty" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Difficulty
+												</Label>
+												<Input
+													id="createDifficulty"
+													placeholder="e.g., Easy, Challenging, Legendary, etc."
+													value={formData.difficulty}
+													onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+												/>
+											</div>
+											<div>
+												<Label className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Quest Type (Optional)</Label>
+												<Select value={formData.questTypeId} onValueChange={(value) => setFormData({ ...formData, questTypeId: value })}>
+													<SelectTrigger className="border-purple-200 focus:border-purple-500 focus:ring-purple-500">
+														<SelectValue placeholder="Select a quest type" />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="none">No Quest Type</SelectItem>
+														{questTypes.map((type) => (
+															<SelectItem key={type.id} value={type.id}>
+																{type.name}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											</div>
+											<div>
+												<Label htmlFor="createReward" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Reward
+												</Label>
+												<Input
+													id="createReward"
+													placeholder="e.g., 1000 gold, Magic item"
+													value={formData.reward}
+													onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
+													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+												/>
+											</div>
+										</div>
+										<div className="flex gap-2 pt-4">
+											<Button
+												type="submit"
+												className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
 											>
-												<option value="AVAILABLE">Available</option>
-												<option value="IN_PROGRESS">In Progress</option>
-												<option value="COMPLETED">Completed</option>
-												<option value="UNAVAILABLE">Unavailable</option>
-											</select>
+												<Save className="h-4 w-4 mr-2" />
+												Post Quest
+											</Button>
+											<Button
+												type="button"
+												variant="outline"
+												className={`${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+												onClick={() => setShowCreateDialog(false)}
+											>
+												Cancel
+											</Button>
 										</div>
-										<div>
-											<Label htmlFor="createDifficulty" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-												Difficulty
-											</Label>
-											<Input
-												id="createDifficulty"
-												placeholder="e.g., Easy, Challenging, Legendary, etc."
-												value={formData.difficulty}
-												onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-												className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-											/>
-										</div>
-										<div>
-											<Label htmlFor="createReward" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-												Reward
-											</Label>
-											<Input
-												id="createReward"
-												placeholder="e.g., 1000 gold, Magic item"
-												value={formData.reward}
-												onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
-												className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-											/>
+									</form>
+								</DialogContent>
+							</Dialog>
+
+							<Dialog open={showQuestTypeDialog} onOpenChange={setShowQuestTypeDialog}>
+								<DialogTrigger asChild>
+									<Button variant="outline" className="border-purple-200 text-purple-600 hover:bg-purple-50">
+										<Tag className="h-4 w-4 mr-2" />
+										Manage Quest Types
+									</Button>
+								</DialogTrigger>
+								<DialogContent
+									className={`max-w-md border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+								>
+									<DialogHeader>
+										<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Manage Quest Types</DialogTitle>
+									</DialogHeader>
+									<div className="space-y-4">
+										{/* Create New Quest Type */}
+										<form onSubmit={handleCreateQuestType} className="space-y-3">
+											<div>
+												<Label className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>New Quest Type Name</Label>
+												<Input
+													placeholder="e.g., Guild Missions, Side Quests"
+													value={newQuestTypeName}
+													onChange={(e) => setNewQuestTypeName(e.target.value)}
+													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+												/>
+											</div>
+											<Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+												Create Quest Type
+											</Button>
+										</form>
+
+										{/* Existing Quest Types */}
+										<div className="space-y-2">
+											<h4 className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Existing Quest Types</h4>
+											{questTypes.length === 0 ? (
+												<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No quest types created yet</p>
+											) : (
+												questTypes.map((type) => (
+													<div
+														key={type.id}
+														className={`flex items-center justify-between p-2 rounded border ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}
+													>
+														<span className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>{type.name}</span>
+														<Button
+															variant="ghost"
+															size="sm"
+															onClick={() => handleDeleteQuestType(type.id)}
+															className="text-red-600 hover:text-red-700 hover:bg-red-50"
+														>
+															<X className="h-4 w-4" />
+														</Button>
+													</div>
+												))
+											)}
 										</div>
 									</div>
-									<div className="flex gap-2 pt-4">
-										<Button
-											type="submit"
-											className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-										>
-											<Save className="h-4 w-4 mr-2" />
-											Post Quest
-										</Button>
-										<Button type="button" variant="outline" className="border-gray-300 hover:bg-gray-50" onClick={() => setShowCreateDialog(false)}>
-											Cancel
-										</Button>
-									</div>
-								</form>
-							</DialogContent>
-						</Dialog>
+								</DialogContent>
+							</Dialog>
+						</div>
 					)}
 				</div>
 
@@ -366,6 +554,32 @@ export default function QuestsPage() {
 						</CardContent>
 					</Card>
 				)}
+
+				{/* Quest Type Filter */}
+				<Card
+					className={`mb-6 backdrop-blur-sm shadow-lg ${session?.user?.darkMode ? 'border-purple-800 bg-gray-800/80' : 'border-purple-200 bg-white/80'}`}
+				>
+					<CardContent className="pt-6">
+						<div className="flex items-center gap-4">
+							<Label className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Filter by Quest Type:</Label>
+							<Select value={questTypeFilter} onValueChange={setQuestTypeFilter}>
+								<SelectTrigger
+									className={`w-64 ${session?.user?.darkMode ? 'border-purple-600 bg-gray-700 text-white' : 'border-purple-200 bg-white'}`}
+								>
+									<SelectValue placeholder="Select quest type filter" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All Quest Types ({quests.length})</SelectItem>
+									{questTypes.map((type) => (
+										<SelectItem key={type.id} value={type.id}>
+											{type.name} ({quests.filter((q) => q.questTypeId === type.id).length})
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</CardContent>
+				</Card>
 
 				{/* Status Filter Tabs */}
 				<Card className={`mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
@@ -410,6 +624,12 @@ export default function QuestsPage() {
 				</Card>
 
 				{/* Quests Grid */}
+				{!loading && filteredQuests.length > 0 && (
+					<div className={`mb-4 text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+						Showing {filteredQuests.length} of {quests.length} quest{quests.length === 1 ? '' : 's'}
+						{questTypeFilter !== 'all' && <span> • Filtered by: {questTypes.find((type) => type.id === questTypeFilter)?.name || 'Unknown'}</span>}
+					</div>
+				)}
 				{loading ? (
 					<div className="text-center py-12">
 						<div className="text-gray-600 flex flex-col items-center gap-3">
@@ -422,11 +642,13 @@ export default function QuestsPage() {
 						<CardContent className="pt-6">
 							<div className="text-center py-8">
 								<Scroll className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h3 className={`text-xl font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>
-									No {selectedStatus === 'ALL' ? '' : selectedStatus.toLowerCase().replace('_', ' ')} Quests
-								</h3>
+								<h3 className={`text-xl font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>No Quests Found</h3>
 								<p className="text-gray-600 mb-4">
-									{canManageQuests ? 'Post the first quest to get started!' : 'Check back later for new adventures.'}
+									{filteredQuests.length === 0 && quests.length > 0
+										? 'No quests match your current filters. Try adjusting the status or quest type filters.'
+										: canManageQuests
+											? 'Post the first quest to get started!'
+											: 'Check back later for new adventures.'}
 								</p>
 							</div>
 						</CardContent>
@@ -454,6 +676,15 @@ export default function QuestsPage() {
 													<Badge variant="outline" className={`border ${getDifficultyColor(quest.difficulty)}`}>
 														{getDifficultyIcon(quest.difficulty)}
 														<span className="ml-1">{quest.difficulty}</span>
+													</Badge>
+												)}
+												{quest.questType && (
+													<Badge
+														variant="outline"
+														className={`border-blue-200 bg-blue-50 text-blue-700 ${session?.user?.darkMode ? 'border-blue-600 bg-blue-900/50 text-blue-300' : ''}`}
+													>
+														<Tag className="h-3 w-3 mr-1" />
+														{quest.questType.name}
 													</Badge>
 												)}
 											</div>
@@ -540,17 +771,17 @@ export default function QuestsPage() {
 									<Label htmlFor="editStatus" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 										Status
 									</Label>
-									<select
-										id="editStatus"
-										value={formData.status}
-										onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-										className="mt-1 block w-full rounded-md border-purple-200 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-									>
-										<option value="AVAILABLE">Available</option>
-										<option value="IN_PROGRESS">In Progress</option>
-										<option value="COMPLETED">Completed</option>
-										<option value="UNAVAILABLE">Unavailable</option>
-									</select>
+									<Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+										<SelectTrigger className="w-full mt-1">
+											<SelectValue placeholder="Select status" />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="AVAILABLE">Available</SelectItem>
+											<SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+											<SelectItem value="COMPLETED">Completed</SelectItem>
+											<SelectItem value="UNAVAILABLE">Unavailable</SelectItem>
+										</SelectContent>
+									</Select>
 								</div>
 								<div>
 									<Label htmlFor="editDifficulty" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
@@ -577,12 +808,33 @@ export default function QuestsPage() {
 									/>
 								</div>
 							</div>
+							<div>
+								<Label className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>Quest Type (Optional)</Label>
+								<Select value={formData.questTypeId} onValueChange={(value) => setFormData({ ...formData, questTypeId: value })}>
+									<SelectTrigger className="border-purple-200 focus:border-purple-500 focus:ring-purple-500">
+										<SelectValue placeholder="Select a quest type" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="none">No Quest Type</SelectItem>
+										{questTypes.map((type) => (
+											<SelectItem key={type.id} value={type.id}>
+												{type.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
 							<div className="flex gap-2 pt-4">
 								<Button type="submit" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white">
 									<Save className="h-4 w-4 mr-2" />
 									Save Changes
 								</Button>
-								<Button type="button" variant="outline" className="border-gray-300 hover:bg-gray-50" onClick={() => setShowEditDialog(false)}>
+								<Button
+									type="button"
+									variant="outline"
+									className={`${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+									onClick={() => setShowEditDialog(false)}
+								>
 									Cancel
 								</Button>
 							</div>

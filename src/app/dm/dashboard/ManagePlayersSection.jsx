@@ -377,33 +377,52 @@ export default function ManagePlayersSection() {
 
 			{/* Campaign Members Section */}
 			<div>
-				<h4 className="text-lg font-bold text-gray-900 mb-4">Campaign Members</h4>
+				<h4 className={`text-lg font-bold mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Members</h4>
 
 				{campaignMembers.length === 0 ? (
-					<div className="text-center py-12 text-gray-500">
-						<UserCheck className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-						<h4 className="text-lg font-medium text-gray-900 mb-2">No Campaign Members</h4>
-						<p className="text-gray-600">Invite players to your campaigns to see them here.</p>
+					<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+						<UserCheck className={`h-16 w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+						<h4 className={`text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No Campaign Members</h4>
+						<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Invite players to your campaigns to see them here.</p>
 					</div>
 				) : (
 					<div className="space-y-4">
 						{campaignMembers.map((member) => (
-							<Card key={member.id} className="p-6 hover:shadow-md transition-shadow">
+							<Card
+								key={member.id}
+								className={`p-6 hover:shadow-md transition-shadow ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}`}
+							>
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-4">
-										<div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-											{member.role === 'DM' ? <Crown className="h-6 w-6 text-purple-600" /> : <Users className="h-6 w-6 text-blue-600" />}
+										<div
+											className={`w-12 h-12 rounded-full flex items-center justify-center ${
+												session?.user?.darkMode ? 'bg-gradient-to-br from-gray-600 to-gray-700' : 'bg-gradient-to-br from-blue-100 to-purple-100'
+											}`}
+										>
+											{member.role === 'DM' ? (
+												<Crown className={`h-6 w-6 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+											) : (
+												<Users className={`h-6 w-6 ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+											)}
 										</div>
 										<div>
-											<h4 className="font-semibold text-gray-900">
+											<h4 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 												{member.characterName || member.user.email}
 												{member.user.username && ` (${member.user.username})`}
 											</h4>
-											<div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+											<div className={`flex items-center gap-4 text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 												<div className="flex items-center gap-2">
 													<Badge
 														variant="secondary"
-														className={member.role === 'DM' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}
+														className={
+															member.role === 'DM'
+																? session?.user?.darkMode
+																	? 'bg-purple-900/30 text-purple-400 border-purple-800'
+																	: 'bg-purple-100 text-purple-800'
+																: session?.user?.darkMode
+																	? 'bg-green-900/30 text-green-400 border-green-800'
+																	: 'bg-green-100 text-green-800'
+														}
 													>
 														{member.role} in {member.campaign.name}
 													</Badge>
@@ -411,9 +430,11 @@ export default function ManagePlayersSection() {
 														variant="outline"
 														className={
 															member.user.role === 'ADMIN'
-																? 'bg-red-100 text-red-800'
-																: member.user.role === 'DM'
-																	? 'bg-blue-100 text-blue-800'
+																? session?.user?.darkMode
+																	? 'bg-red-900/30 text-red-400 border-red-800'
+																	: 'bg-red-100 text-red-800'
+																: session?.user?.darkMode
+																	? 'bg-gray-700 text-gray-300 border-gray-600'
 																	: 'bg-gray-100 text-gray-800'
 														}
 													>
@@ -433,7 +454,11 @@ export default function ManagePlayersSection() {
 											<Button
 												onClick={() => openConfirmDialog(member.user, 'promote', member.campaign.id)}
 												disabled={promotingUserId === member.user.id}
-												className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+												className={
+													session?.user?.darkMode
+														? 'bg-gradient-to-r from-purple-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white'
+														: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
+												}
 											>
 												{promotingUserId === member.user.id ? (
 													<>
@@ -455,7 +480,11 @@ export default function ManagePlayersSection() {
 												onClick={() => openConfirmDialog(member.user, 'demote', member.campaign.id)}
 												disabled={demotingCampaignId === member.campaign.id || !canCurrentUserDemote(member.campaign.id)}
 												variant="outline"
-												className="border-orange-300 text-orange-700 hover:bg-orange-50"
+												className={
+													session?.user?.darkMode
+														? 'border-orange-600 text-orange-400 hover:bg-orange-900/20 bg-gray-800'
+														: 'border-orange-300 text-orange-700 hover:bg-orange-50'
+												}
 											>
 												{demotingCampaignId === member.campaign.id ? (
 													<>
@@ -473,9 +502,13 @@ export default function ManagePlayersSection() {
 
 										{/* DM indicator for other DMs */}
 										{member.role === 'DM' && member.user.id !== currentUser?.id && (
-											<div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-lg">
-												<Shield className="h-4 w-4 text-purple-600" />
-												<span className="text-sm font-medium text-purple-700">Dungeon Master</span>
+											<div
+												className={`flex items-center gap-2 px-3 py-2 rounded-lg ${session?.user?.darkMode ? 'bg-purple-900/30' : 'bg-purple-50'}`}
+											>
+												<Shield className={`h-4 w-4 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+												<span className={`text-sm font-medium ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+													Dungeon Master
+												</span>
 											</div>
 										)}
 									</div>
@@ -488,22 +521,22 @@ export default function ManagePlayersSection() {
 
 			{/* Promotion/Demotion Confirmation Dialog */}
 			<Dialog open={confirmDialog.open} onOpenChange={closeConfirmDialog}>
-				<DialogContent>
+				<DialogContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}>
 					<DialogHeader>
-						<DialogTitle className="flex items-center gap-2">
+						<DialogTitle className={`flex items-center gap-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 							{confirmDialog.action === 'promote' ? (
 								<>
-									<Crown className="h-5 w-5 text-purple-600" />
+									<Crown className={`h-5 w-5 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
 									Promote to Dungeon Master
 								</>
 							) : (
 								<>
-									<UserMinus className="h-5 w-5 text-orange-600" />
+									<UserMinus className={`h-5 w-5 ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-600'}`} />
 									Step Down from Dungeon Master
 								</>
 							)}
 						</DialogTitle>
-						<DialogDescription>
+						<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
 							{confirmDialog.action === 'promote' ? (
 								<>
 									Are you sure you want to promote <strong>{confirmDialog.user?.email}</strong> to Dungeon Master in this campaign?
@@ -515,13 +548,21 @@ export default function ManagePlayersSection() {
 					</DialogHeader>
 					<div
 						className={`border rounded-lg p-4 my-4 ${
-							confirmDialog.action === 'promote' ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'
+							confirmDialog.action === 'promote'
+								? session?.user?.darkMode
+									? 'bg-blue-900/20 border-blue-800'
+									: 'bg-blue-50 border-blue-200'
+								: session?.user?.darkMode
+									? 'bg-orange-900/20 border-orange-800'
+									: 'bg-orange-50 border-orange-200'
 						}`}
 					>
 						{confirmDialog.action === 'promote' ? (
 							<>
-								<h4 className="font-medium text-blue-900 mb-2">This will grant them the ability to:</h4>
-								<ul className="text-sm text-blue-800 space-y-1">
+								<h4 className={`font-medium mb-2 ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-900'}`}>
+									This will grant them the ability to:
+								</h4>
+								<ul className={`text-sm space-y-1 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
 									<li>• Manage this campaign as a co-DM</li>
 									<li>• Invite players to this campaign</li>
 									<li>• Promote other players to DM role</li>
@@ -530,20 +571,26 @@ export default function ManagePlayersSection() {
 							</>
 						) : (
 							<>
-								<h4 className="font-medium text-orange-900 mb-2">This will:</h4>
-								<ul className="text-sm text-orange-800 space-y-1">
+								<h4 className={`font-medium mb-2 ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-900'}`}>This will:</h4>
+								<ul className={`text-sm space-y-1 ${session?.user?.darkMode ? 'text-orange-300' : 'text-orange-800'}`}>
 									<li>• Change your role to Player in this campaign</li>
 									<li>• Remove your DM privileges for this campaign</li>
 									<li>• Other DMs will continue to manage the campaign</li>
 									{!canCurrentUserDemote(confirmDialog.campaignId) && (
-										<li className="text-red-700 font-medium">• ⚠️ Cannot proceed - you are the only DM in this campaign</li>
+										<li className={`font-medium ${session?.user?.darkMode ? 'text-red-400' : 'text-red-700'}`}>
+											• ⚠️ Cannot proceed - you are the only DM in this campaign
+										</li>
 									)}
 								</ul>
 							</>
 						)}
 					</div>
 					<DialogFooter>
-						<Button variant="outline" onClick={closeConfirmDialog}>
+						<Button
+							variant="outline"
+							onClick={closeConfirmDialog}
+							className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : ''}
+						>
 							Cancel
 						</Button>
 						<Button
@@ -555,8 +602,12 @@ export default function ManagePlayersSection() {
 							}
 							className={
 								confirmDialog.action === 'promote'
-									? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-									: 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
+									? session?.user?.darkMode
+										? 'bg-gradient-to-r from-purple-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white'
+										: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
+									: session?.user?.darkMode
+										? 'bg-gradient-to-r from-orange-700 to-red-700 hover:from-orange-800 hover:to-red-800 text-white'
+										: 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
 							}
 						>
 							{(confirmDialog.action === 'promote' && promotingUserId === confirmDialog.user?.id) ||

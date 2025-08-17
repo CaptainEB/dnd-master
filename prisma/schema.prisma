@@ -11,7 +11,7 @@ model user {
   id               String   @id @default(auto()) @map("_id") @db.ObjectId
   avatarUrl        String?
   email            String   @unique
-  role             UserRole @default(PLAYER)
+  role             UserRole @default(USER)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   username         String?
@@ -41,6 +41,7 @@ model campaign {
   rules       Rule[]
   notes       Note[]
   quests      Quest[]
+  questTypes  QuestType[]
   creatures   Creature[]
 }
 
@@ -114,8 +115,23 @@ model Quest {
   difficulty  String?
   createdAt   DateTime    @default(now())
   campaignId  String      @db.ObjectId
+  questTypeId String?     @db.ObjectId
+
+  campaign  campaign   @relation(fields: [campaignId], references: [id])
+  questType QuestType? @relation(fields: [questTypeId], references: [id])
+}
+
+model QuestType {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  campaignId  String   @db.ObjectId
+  createdAt   DateTime @default(now())
 
   campaign campaign @relation(fields: [campaignId], references: [id])
+  quests   Quest[]
+
+  @@unique([campaignId, name])
 }
 
 model Creature {
@@ -178,8 +194,7 @@ enum QuestStatus {
 }
 
 enum UserRole {
-  PLAYER
-  DM
+  USER
   ADMIN
 }
 

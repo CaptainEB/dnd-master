@@ -16,7 +16,7 @@ import { createUser } from '../components/actions';
 
 const createUserSchema = z.object({
 	email: z.string().email('Invalid email address'),
-	role: z.enum(['PLAYER', 'DM', 'ADMIN'], {
+	role: z.enum(['USER', 'ADMIN'], {
 		required_error: 'Please select a role',
 	}),
 	username: z.string().min(1, 'Username is required').max(50, 'Username must be less than 50 characters'),
@@ -129,13 +129,10 @@ export default function CreateUserForm() {
 										</FormControl>
 										<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'}>
 											<SelectItem
-												value="PLAYER"
+												value="USER"
 												className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}
 											>
-												Player
-											</SelectItem>
-											<SelectItem value="DM" className={session?.user?.darkMode ? 'text-white hover:bg-gray-600' : 'text-gray-900 hover:bg-gray-100'}>
-												Dungeon Master
+												User
 											</SelectItem>
 											<SelectItem
 												value="ADMIN"

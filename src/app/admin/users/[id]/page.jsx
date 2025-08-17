@@ -1,55 +1,121 @@
+'use client';
+
 import { DateDisplay } from '@/components/DateDisplay';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, Calendar, FileText, Settings, Shield, StickyNote, Trash2, User, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { getUserById } from '../../components/actions';
 import CampaignMembershipManager from './CampaignMembershipManager';
 
-export default async function AdminUserDetail({ params }) {
-	const { id } = await params;
-	const result = await getUserById(id);
+export default function AdminUserDetail({ params }) {
+	const { data: session } = useSession();
+	const [user, setUser] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [avatarError, setAvatarError] = useState(false);
 
-	if (!result.success) {
+	useEffect(() => {
+		const loadUser = async () => {
+			try {
+				const resolvedParams = await params;
+				const { id } = resolvedParams;
+				const result = await getUserById(id);
+
+				if (result.success) {
+					setUser(result.data);
+				} else {
+					setError(result.error);
+				}
+			} catch (err) {
+				setError('Failed to load user');
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		loadUser();
+	}, [params]);
+
+	if (loading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pt-16">
+			<div
+				className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+			>
+				<div className="container mx-auto px-4 py-8">
+					<div className="text-center py-12">
+						<div className={`flex flex-col items-center gap-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+							<div
+								className={`animate-spin rounded-full h-8 w-8 border-b-2 ${session?.user?.darkMode ? 'border-cyan-400' : 'border-purple-600'}`}
+							></div>
+							Loading user details...
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div
+				className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+			>
 				<div className="container mx-auto px-4 py-8">
 					<div className="mb-8">
-						<Link href="/admin/users" className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-4">
+						<Link
+							href="/admin/users"
+							className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
+						>
 							<ArrowLeft size={20} />
 							Back to Users
 						</Link>
-						<h1 className="text-3xl font-bold text-gray-900 mb-2">User Details</h1>
+						<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>User Details</h1>
 					</div>
-					<Card className="p-6">
-						<p className="text-red-600">Error: {result.error}</p>
+					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+						<p className={session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}>Error: {error}</p>
 					</Card>
 				</div>
 			</div>
 		);
 	}
 
-	const user = result.data;
+	if (!user) {
+		return null;
+	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pt-16">
+		<div
+			className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
+		>
 			<div className="container mx-auto px-4 py-8">
 				<div className="mb-8">
-					<Link href="/admin/users" className="flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-4">
+					<Link
+						href="/admin/users"
+						className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
+					>
 						<ArrowLeft size={20} />
 						Back to Users
 					</Link>
 					<div className="flex items-start justify-between">
 						<div>
-							<h1 className="text-3xl font-bold text-gray-900 mb-2">{user.email}</h1>
-							<div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+							<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{user.email}</h1>
+							<div className={`flex items-center gap-4 text-sm mb-4 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 								<span
 									className={`px-3 py-1 rounded-full text-sm font-medium ${
 										user.role === 'ADMIN'
-											? 'bg-red-100 text-red-800'
+											? session?.user?.darkMode
+												? 'bg-red-800 text-red-300'
+												: 'bg-red-100 text-red-800'
 											: user.role === 'DM'
-												? 'bg-blue-100 text-blue-800'
-												: 'bg-green-100 text-green-800'
+												? session?.user?.darkMode
+													? 'bg-blue-800 text-blue-300'
+													: 'bg-blue-100 text-blue-800'
+												: session?.user?.darkMode
+													? 'bg-green-800 text-green-300'
+													: 'bg-green-100 text-green-800'
 									}`}
 								>
 									{user.role}
@@ -65,11 +131,13 @@ export default async function AdminUserDetail({ params }) {
 							</div>
 						</div>
 						<div className="flex items-center gap-2">
-							{user.avatarUrl ? (
-								<img src={user.avatarUrl} alt="Avatar" className="h-16 w-16 rounded-full" />
+							{user.avatarUrl && !avatarError ? (
+								<img src={user.avatarUrl} alt="Avatar" className="h-16 w-16 rounded-full" onError={() => setAvatarError(true)} />
 							) : (
-								<div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center">
-									<User size={24} className="text-purple-600" />
+								<div
+									className={`h-16 w-16 rounded-full flex items-center justify-center ${session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'}`}
+								>
+									<User size={24} className={session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'} />
 								</div>
 							)}
 						</div>
@@ -78,76 +146,89 @@ export default async function AdminUserDetail({ params }) {
 
 				{/* Statistics Grid */}
 				<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-					<Card className="p-6">
+					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-4">
-							<div className="p-3 bg-blue-100 rounded-lg">
-								<Shield className="h-6 w-6 text-blue-600" />
+							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
+								<Shield className={`h-6 w-6 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
 							</div>
 							<div>
-								<h3 className="font-semibold text-gray-900">Campaigns</h3>
-								<p className="text-2xl font-bold text-blue-600">{user._count.campaignMembers}</p>
+								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaigns</h3>
+								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{user._count.campaignMembers}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className="p-6">
+					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-4">
-							<div className="p-3 bg-purple-100 rounded-lg">
-								<FileText className="h-6 w-6 text-purple-600" />
+							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-purple-800' : 'bg-purple-100'}`}>
+								<FileText className={`h-6 w-6 ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-600'}`} />
 							</div>
 							<div>
-								<h3 className="font-semibold text-gray-900">Updates</h3>
-								<p className="text-2xl font-bold text-purple-600">{user._count.updates}</p>
+								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Updates</h3>
+								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`}>{user._count.updates}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className="p-6">
+					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-4">
-							<div className="p-3 bg-orange-100 rounded-lg">
-								<StickyNote className="h-6 w-6 text-orange-600" />
+							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-orange-800' : 'bg-orange-100'}`}>
+								<StickyNote className={`h-6 w-6 ${session?.user?.darkMode ? 'text-orange-300' : 'text-orange-600'}`} />
 							</div>
 							<div>
-								<h3 className="font-semibold text-gray-900">Notes</h3>
-								<p className="text-2xl font-bold text-orange-600">{user._count.notes}</p>
+								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Notes</h3>
+								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-600'}`}>{user._count.notes}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className="p-6">
+					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-4">
-							<div className="p-3 bg-green-100 rounded-lg">
-								<Users className="h-6 w-6 text-green-600" />
+							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'}`}>
+								<Users className={`h-6 w-6 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
 							</div>
 							<div>
-								<h3 className="font-semibold text-gray-900">DM Roles</h3>
-								<p className="text-2xl font-bold text-green-600">{user.campaignMembers?.filter((m) => m.role === 'DM').length || 0}</p>
+								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>DM Roles</h3>
+								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>
+									{user.campaignMembers?.filter((m) => m.role === 'DM').length || 0}
+								</p>
 							</div>
 						</div>
 					</Card>
 				</div>
 
 				{/* Campaign Memberships */}
-				<Card className="p-6 mb-8">
+				<Card className={`p-6 mb-8 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 					<div className="flex items-center justify-between mb-6">
-						<h3 className="text-lg font-semibold text-gray-900">Campaign Memberships</h3>
+						<h3 className={`text-lg font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Memberships</h3>
 						<CampaignMembershipManager userId={user.id} />
 					</div>
 					<div className="space-y-4">
 						{user.campaignMembers && user.campaignMembers.length > 0 ? (
 							user.campaignMembers.map((membership) => (
-								<div key={membership.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+								<div
+									key={membership.id}
+									className={`flex items-center justify-between p-4 rounded-lg ${session?.user?.darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}
+								>
 									<div className="flex items-center gap-4">
-										<div className="p-2 bg-blue-100 rounded-lg">
-											<Shield size={16} className="text-blue-600" />
+										<div className={`p-2 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
+											<Shield size={16} className={session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'} />
 										</div>
 										<div>
-											<h4 className="font-medium text-gray-900">{membership.campaign.name}</h4>
-											<p className="text-sm text-gray-600">{membership.campaign.description || 'No description'}</p>
-											<div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+											<h4 className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{membership.campaign.name}</h4>
+											<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+												{membership.campaign.description || 'No description'}
+											</p>
+											<div className={`flex items-center gap-4 text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 												<span
 													className={`px-2 py-1 rounded-full text-xs font-medium ${
-														membership.role === 'DM' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+														membership.role === 'DM'
+															? session?.user?.darkMode
+																? 'bg-blue-800 text-blue-300'
+																: 'bg-blue-100 text-blue-800'
+															: session?.user?.darkMode
+																? 'bg-green-800 text-green-300'
+																: 'bg-green-100 text-green-800'
 													}`}
 												>
 													{membership.role}
@@ -175,9 +256,9 @@ export default async function AdminUserDetail({ params }) {
 								</div>
 							))
 						) : (
-							<div className="text-center py-12 text-gray-500">
-								<Shield className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-								<h4 className="text-lg font-medium text-gray-900 mb-2">No campaign memberships</h4>
+							<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+								<Shield className={`h-16 w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+								<h4 className={`text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No campaign memberships</h4>
 								<p>This user is not a member of any campaigns yet</p>
 							</div>
 						)}

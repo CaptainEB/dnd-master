@@ -298,7 +298,13 @@ export default function RulesPage() {
 									variant={viewMode === 'read' ? 'default' : 'ghost'}
 									size="sm"
 									onClick={() => setViewMode('read')}
-									className={viewMode === 'read' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : ''}
+									className={
+										viewMode === 'read'
+											? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+											: session?.user?.darkMode
+												? 'text-gray-300 hover:text-white hover:bg-gray-700'
+												: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+									}
 								>
 									<Eye className="h-4 w-4 mr-2" />
 									Read
@@ -308,7 +314,13 @@ export default function RulesPage() {
 										variant={viewMode === 'edit' ? 'default' : 'ghost'}
 										size="sm"
 										onClick={() => setViewMode('edit')}
-										className={viewMode === 'edit' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : ''}
+										className={
+											viewMode === 'edit'
+												? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+												: session?.user?.darkMode
+													? 'text-gray-300 hover:text-white hover:bg-gray-700'
+													: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+										}
 									>
 										<Edit className="h-4 w-4 mr-2" />
 										Edit
@@ -320,7 +332,13 @@ export default function RulesPage() {
 							{canEdit && (
 								<Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
 									<DialogTrigger asChild>
-										<Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+										<Button
+											className={`${
+												session?.user?.darkMode
+													? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+													: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+											}`}
+										>
 											<Plus className="h-4 w-4 mr-2" />
 											Add Rule
 										</Button>
@@ -410,7 +428,11 @@ export default function RulesPage() {
 													<Button
 														type="button"
 														variant="outline"
-														className="border-gray-300 hover:bg-gray-50"
+														className={
+															session?.user?.darkMode
+																? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white'
+																: 'border-gray-300 hover:bg-gray-50 text-gray-700'
+														}
 														onClick={() => setCreateDialogOpen(false)}
 													>
 														Cancel
@@ -418,7 +440,7 @@ export default function RulesPage() {
 													<Button
 														type="submit"
 														disabled={createForm.formState.isSubmitting}
-														className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+														className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
 													>
 														{createForm.formState.isSubmitting ? (
 															<>
@@ -462,8 +484,10 @@ export default function RulesPage() {
 								onClick={() => setSelectedCategory(category)}
 								className={
 									selectedCategory === category
-										? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-										: 'border-purple-200 hover:bg-purple-50'
+										? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+										: session?.user?.darkMode
+											? 'border-gray-600 hover:bg-gray-700 hover:border-gray-500 text-gray-200 hover:text-white'
+											: 'border-purple-200 hover:bg-purple-50 text-gray-700 hover:text-gray-900'
 								}
 							>
 								{category === 'all' ? 'All Categories' : category}
@@ -548,7 +572,11 @@ export default function RulesPage() {
 																	variant="outline"
 																	size="sm"
 																	onClick={() => openEditDialog(rule)}
-																	className="border-purple-200 hover:bg-purple-50"
+																	className={
+																		session?.user?.darkMode
+																			? 'border-purple-400/50 hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
+																			: 'border-purple-200 hover:bg-purple-50 text-purple-600'
+																	}
 																>
 																	<Edit className="h-4 w-4" />
 																</Button>
@@ -556,7 +584,11 @@ export default function RulesPage() {
 																	variant="outline"
 																	size="sm"
 																	onClick={() => handleDeleteRule(rule.id)}
-																	className="border-red-200 hover:bg-red-50 text-red-600"
+																	className={
+																		session?.user?.darkMode
+																			? 'border-red-400/50 hover:bg-red-900/30 text-red-400 hover:text-red-300'
+																			: 'border-red-200 hover:bg-red-50 text-red-600'
+																	}
 																>
 																	<Trash2 className="h-4 w-4" />
 																</Button>
@@ -673,13 +705,22 @@ export default function RulesPage() {
 									<div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">{editForm.formState.errors.root.message}</div>
 								)}
 								<div className="flex justify-end gap-2 pt-4">
-									<Button type="button" variant="outline" className="border-gray-300 hover:bg-gray-50" onClick={() => setEditDialogOpen(false)}>
+									<Button
+										type="button"
+										variant="outline"
+										className={
+											session?.user?.darkMode
+												? 'border-gray-600 hover:bg-gray-700 text-gray-300 hover:text-white'
+												: 'border-gray-300 hover:bg-gray-50 text-gray-700'
+										}
+										onClick={() => setEditDialogOpen(false)}
+									>
 										Cancel
 									</Button>
 									<Button
 										type="submit"
 										disabled={editForm.formState.isSubmitting}
-										className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+										className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
 									>
 										{editForm.formState.isSubmitting ? (
 											<>

@@ -6,6 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, MoreHorizontal, Settings, Trash2, UserPlus, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -26,6 +27,7 @@ export default function CampaignMembershipManager({
 	campaignName = null,
 	mode = 'add', // 'add' or 'edit'
 }) {
+	const { data: session } = useSession();
 	const [open, setOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [campaigns, setCampaigns] = useState([]);
@@ -131,12 +133,18 @@ export default function CampaignMembershipManager({
 		return (
 			<div className="flex items-center gap-2">
 				{/* Role Toggle Buttons */}
-				<div className="flex bg-gray-100 rounded-lg p-1">
+				<div className={`flex rounded-lg p-1 ${session?.user?.darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
 					<button
 						onClick={() => handleChangeRole('PLAYER')}
 						disabled={isLoading || currentRole === 'PLAYER'}
 						className={`px-3 py-1 text-sm rounded transition-colors ${
-							currentRole === 'PLAYER' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-600 hover:text-green-700'
+							currentRole === 'PLAYER'
+								? session?.user?.darkMode
+									? 'bg-gray-600 text-green-400 shadow-sm'
+									: 'bg-white text-green-700 shadow-sm'
+								: session?.user?.darkMode
+									? 'text-gray-300 hover:text-green-400'
+									: 'text-gray-600 hover:text-green-700'
 						}`}
 					>
 						Player
@@ -145,7 +153,13 @@ export default function CampaignMembershipManager({
 						onClick={() => handleChangeRole('DM')}
 						disabled={isLoading || currentRole === 'DM'}
 						className={`px-3 py-1 text-sm rounded transition-colors ${
-							currentRole === 'DM' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-blue-700'
+							currentRole === 'DM'
+								? session?.user?.darkMode
+									? 'bg-gray-600 text-blue-400 shadow-sm'
+									: 'bg-white text-blue-700 shadow-sm'
+								: session?.user?.darkMode
+									? 'text-gray-300 hover:text-blue-400'
+									: 'text-gray-600 hover:text-blue-700'
 						}`}
 					>
 						DM
@@ -158,7 +172,11 @@ export default function CampaignMembershipManager({
 					size="sm"
 					onClick={handleRemoveMembership}
 					disabled={isLoading}
-					className="text-red-600 hover:text-red-700 hover:bg-red-50"
+					className={`${
+						session?.user?.darkMode
+							? 'text-red-400 hover:text-red-300 hover:bg-red-900/20 border-gray-600'
+							: 'text-red-600 hover:text-red-700 hover:bg-red-50'
+					}`}
 				>
 					{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
 				</Button>

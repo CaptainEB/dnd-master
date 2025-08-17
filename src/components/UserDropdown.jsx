@@ -243,7 +243,7 @@ export default function UserDropdown() {
 						<DropdownMenuSeparator />
 
 						<DropdownMenuItem
-							onClick={() => signOut()}
+							onClick={handleSignOut}
 							className={session?.user?.darkMode ? 'focus:bg-gray-700 hover:bg-gray-700' : 'focus:bg-gray-50 hover:bg-gray-50'}
 						>
 							<LogOut className="mr-2 h-4 w-4" />

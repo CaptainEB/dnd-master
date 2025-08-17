@@ -211,11 +211,11 @@ export default function DMDashboard() {
 
 						{/* Manage Players Section */}
 						<section id="manage-players">
-							<Card className="p-8">
+							<Card className={`p-8 ${session?.user?.darkMode ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white'}`}>
 								<div className="flex items-center justify-between mb-6">
 									<div>
-										<h3 className="text-2xl font-bold text-gray-900 mb-2">Manage Players</h3>
-										<p className="text-gray-600">Promote players to Dungeon Master role</p>
+										<h3 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Manage Players</h3>
+										<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Promote players to Dungeon Master role</p>
 									</div>
 								</div>
 
