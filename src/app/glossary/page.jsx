@@ -343,6 +343,61 @@ export default function GlossaryPage() {
 		);
 	};
 
+	// Generate full-width header image for detail modal
+	const getCreatureHeaderImage = (creature) => {
+		if (creature.avatarUrl) {
+			return (
+				<div className="relative w-full h-64 overflow-hidden rounded-t-lg">
+					<img
+						src={creature.avatarUrl}
+						alt={creature.name}
+						className="w-full h-full object-cover"
+						onError={(e) => {
+							e.target.style.display = 'none';
+							e.target.parentElement.classList.add('hidden');
+							e.target.parentElement.nextElementSibling.classList.remove('hidden');
+						}}
+					/>
+					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+					<div className="absolute bottom-4 left-6 right-6">
+						<h1 className="text-3xl font-bold text-white drop-shadow-lg">{creature.name}</h1>
+						<Badge variant="outline" className="mt-2 text-white border-white/60 bg-black/30 backdrop-blur-sm">
+							{creature.category}
+						</Badge>
+					</div>
+				</div>
+			);
+		}
+
+		// Default header with gradient background
+		const colors = [
+			'from-red-500 to-red-700',
+			'from-blue-500 to-blue-700',
+			'from-green-500 to-green-700',
+			'from-yellow-500 to-yellow-700',
+			'from-purple-500 to-purple-700',
+			'from-pink-500 to-pink-700',
+			'from-indigo-500 to-indigo-700',
+			'from-orange-500 to-orange-700',
+		];
+		const colorIndex = creature.name.charCodeAt(0) % colors.length;
+		const firstLetter = creature.name.charAt(0).toUpperCase();
+
+		return (
+			<div className={`relative w-full h-64 bg-gradient-to-br ${colors[colorIndex]} rounded-t-lg flex items-center justify-center`}>
+				<div className="text-center">
+					<div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-4 mx-auto">
+						<span className="text-4xl font-bold text-white">{firstLetter}</span>
+					</div>
+					<h1 className="text-3xl font-bold text-white drop-shadow-lg">{creature.name}</h1>
+					<Badge variant="outline" className="mt-2 text-white border-white/60 bg-black/30 backdrop-blur-sm">
+						{creature.category}
+					</Badge>
+				</div>
+			</div>
+		);
+	};
+
 	// Check if user can edit creature
 	const canEditCreature = (creature) => {
 		return session?.user?.role === 'ADMIN' || session?.user?.campaignRole === 'DM' || creature.creatorId === session?.user?.id;
@@ -950,361 +1005,364 @@ export default function GlossaryPage() {
 				{/* Creature Detail Modal */}
 				<Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
 					<DialogContent
-						className={`max-w-4xl max-h-[90vh] overflow-y-auto border-0 shadow-xl backdrop-blur-sm ${
+						className={`max-w-4xl max-h-[90vh] overflow-hidden border-0 shadow-xl backdrop-blur-sm p-0 ${
 							session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'
 						}`}
 					>
 						{selectedCreatureForDetail && (
-							<div className="space-y-6">
-								{/* Header with large avatar */}
-								<div className="text-center space-y-4">
-									{getLargeCreatureAvatar(selectedCreatureForDetail)}
-									<div className="hidden">{getLargeCreatureAvatar(selectedCreatureForDetail)}</div>
-									<div>
-										<DialogTitle className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-											{selectedCreatureForDetail.name}
-										</DialogTitle>
-										<Badge
-											variant="outline"
-											className={`text-lg px-4 py-1 ${
-												session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'
+							<div className="h-full flex flex-col relative">
+								{/* Custom Close Button */}
+								<button
+									onClick={() => setShowDetailModal(false)}
+									className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+									aria-label="Close modal"
+								>
+									<X size={16} className="text-white" />
+								</button>
+
+								{/* Full-width header image */}
+								{getCreatureHeaderImage(selectedCreatureForDetail)}
+
+								{/* Scrollable content area */}
+								<div className="flex-1 overflow-y-auto p-6 space-y-6">
+									{/* Description */}
+									{selectedCreatureForDetail.description && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode
+													? 'bg-gray-700/50 border-gray-600'
+													: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'
 											}`}
 										>
-											{selectedCreatureForDetail.category}
-										</Badge>
-									</div>
-								</div>
-
-								{/* Description */}
-								{selectedCreatureForDetail.description && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode
-												? 'bg-gray-700/50 border-gray-600'
-												: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Description</h3>
-										<p className={`leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-											{selectedCreatureForDetail.description}
-										</p>
-									</div>
-								)}
-
-								{/* Tags */}
-								{selectedCreatureForDetail.tags && selectedCreatureForDetail.tags.length > 0 && (
-									<div>
-										<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Tags</h3>
-										<div className="flex flex-wrap gap-2">
-											{selectedCreatureForDetail.tags.map((tag, index) => (
-												<Badge
-													key={index}
-													variant="secondary"
-													className={`${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
-												>
-													{tag}
-												</Badge>
-											))}
+											<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Description</h3>
+											<p className={`leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+												{selectedCreatureForDetail.description}
+											</p>
 										</div>
-									</div>
-								)}
+									)}
 
-								{/* Basic Combat Stats */}
-								{(selectedCreatureForDetail.armorClass ||
-									selectedCreatureForDetail.hitPoints ||
-									selectedCreatureForDetail.speed ||
-									selectedCreatureForDetail.challengeRating) && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-blue-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Combat Statistics</h3>
-										<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-											{selectedCreatureForDetail.armorClass && (
-												<div className="text-center">
-													<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Armor Class</div>
-													<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-														{selectedCreatureForDetail.armorClass}
-													</div>
-												</div>
-											)}
-											{selectedCreatureForDetail.hitPoints && (
-												<div className="text-center">
-													<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hit Points</div>
-													<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-														{selectedCreatureForDetail.hitPoints}
-													</div>
-												</div>
-											)}
-											{selectedCreatureForDetail.speed && (
-												<div className="text-center">
-													<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Speed</div>
-													<div className={`text-lg font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-														{selectedCreatureForDetail.speed}
-													</div>
-												</div>
-											)}
-											{selectedCreatureForDetail.challengeRating && (
-												<div className="text-center">
-													<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Challenge Rating</div>
-													<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-														{selectedCreatureForDetail.challengeRating}
-													</div>
-												</div>
-											)}
+									{/* Tags */}
+									{selectedCreatureForDetail.tags && selectedCreatureForDetail.tags.length > 0 && (
+										<div>
+											<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Tags</h3>
+											<div className="flex flex-wrap gap-2">
+												{selectedCreatureForDetail.tags.map((tag, index) => (
+													<Badge
+														key={index}
+														variant="secondary"
+														className={`${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+													>
+														{tag}
+													</Badge>
+												))}
+											</div>
 										</div>
-									</div>
-								)}
+									)}
 
-								{/* Ability Scores */}
-								{(selectedCreatureForDetail.strength ||
-									selectedCreatureForDetail.dexterity ||
-									selectedCreatureForDetail.constitution ||
-									selectedCreatureForDetail.intelligence ||
-									selectedCreatureForDetail.wisdom ||
-									selectedCreatureForDetail.charisma) && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode
-												? 'bg-gray-700/50 border-gray-600'
-												: 'bg-gradient-to-r from-green-50/50 to-emerald-50/50 border-green-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Ability Scores</h3>
-										<div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-											{[
-												{ key: 'strength', label: 'STR' },
-												{ key: 'dexterity', label: 'DEX' },
-												{ key: 'constitution', label: 'CON' },
-												{ key: 'intelligence', label: 'INT' },
-												{ key: 'wisdom', label: 'WIS' },
-												{ key: 'charisma', label: 'CHA' },
-											].map(
-												({ key, label }) =>
-													selectedCreatureForDetail[key] && (
-														<div key={key} className="text-center">
-															<div className={`text-sm font-medium ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
-															<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-																{selectedCreatureForDetail[key]}
-															</div>
-															<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-																{Math.floor((selectedCreatureForDetail[key] - 10) / 2) >= 0 ? '+' : ''}
-																{Math.floor((selectedCreatureForDetail[key] - 10) / 2)}
-															</div>
+									{/* Basic Combat Stats */}
+									{(selectedCreatureForDetail.armorClass ||
+										selectedCreatureForDetail.hitPoints ||
+										selectedCreatureForDetail.speed ||
+										selectedCreatureForDetail.challengeRating) && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode
+													? 'bg-gray-700/50 border-gray-600'
+													: 'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-blue-100'
+											}`}
+										>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Combat Statistics</h3>
+											<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+												{selectedCreatureForDetail.armorClass && (
+													<div className="text-center">
+														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Armor Class</div>
+														<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{selectedCreatureForDetail.armorClass}
 														</div>
-													)
+													</div>
+												)}
+												{selectedCreatureForDetail.hitPoints && (
+													<div className="text-center">
+														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hit Points</div>
+														<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{selectedCreatureForDetail.hitPoints}
+														</div>
+													</div>
+												)}
+												{selectedCreatureForDetail.speed && (
+													<div className="text-center">
+														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Speed</div>
+														<div className={`text-lg font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{selectedCreatureForDetail.speed}
+														</div>
+													</div>
+												)}
+												{selectedCreatureForDetail.challengeRating && (
+													<div className="text-center">
+														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Challenge Rating</div>
+														<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{selectedCreatureForDetail.challengeRating}
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Ability Scores */}
+									{(selectedCreatureForDetail.strength ||
+										selectedCreatureForDetail.dexterity ||
+										selectedCreatureForDetail.constitution ||
+										selectedCreatureForDetail.intelligence ||
+										selectedCreatureForDetail.wisdom ||
+										selectedCreatureForDetail.charisma) && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode
+													? 'bg-gray-700/50 border-gray-600'
+													: 'bg-gradient-to-r from-green-50/50 to-emerald-50/50 border-green-100'
+											}`}
+										>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Ability Scores</h3>
+											<div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+												{[
+													{ key: 'strength', label: 'STR' },
+													{ key: 'dexterity', label: 'DEX' },
+													{ key: 'constitution', label: 'CON' },
+													{ key: 'intelligence', label: 'INT' },
+													{ key: 'wisdom', label: 'WIS' },
+													{ key: 'charisma', label: 'CHA' },
+												].map(
+													({ key, label }) =>
+														selectedCreatureForDetail[key] && (
+															<div key={key} className="text-center">
+																<div className={`text-sm font-medium ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
+																<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+																	{selectedCreatureForDetail[key]}
+																</div>
+																<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+																	{Math.floor((selectedCreatureForDetail[key] - 10) / 2) >= 0 ? '+' : ''}
+																	{Math.floor((selectedCreatureForDetail[key] - 10) / 2)}
+																</div>
+															</div>
+														)
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Skills and Saves */}
+									{(selectedCreatureForDetail.skills || selectedCreatureForDetail.savingThrows || selectedCreatureForDetail.proficiencyBonus) && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode
+													? 'bg-gray-700/50 border-gray-600'
+													: 'bg-gradient-to-r from-yellow-50/50 to-orange-50/50 border-yellow-100'
+											}`}
+										>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+												Skills & Proficiencies
+											</h3>
+											<div className="space-y-2">
+												{selectedCreatureForDetail.proficiencyBonus && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Proficiency Bonus:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+															+{selectedCreatureForDetail.proficiencyBonus}
+														</span>
+													</div>
+												)}
+												{selectedCreatureForDetail.savingThrows && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Saving Throws:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.savingThrows}</span>
+													</div>
+												)}
+												{selectedCreatureForDetail.skills && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Skills:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.skills}</span>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Resistances and Immunities */}
+									{(selectedCreatureForDetail.damageResistances ||
+										selectedCreatureForDetail.damageImmunities ||
+										selectedCreatureForDetail.conditionImmunities) && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-red-50/50 to-pink-50/50 border-red-100'
+											}`}
+										>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+												Resistances & Immunities
+											</h3>
+											<div className="space-y-2">
+												{selectedCreatureForDetail.damageResistances && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Damage Resistances:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+															{selectedCreatureForDetail.damageResistances}
+														</span>
+													</div>
+												)}
+												{selectedCreatureForDetail.damageImmunities && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Damage Immunities:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+															{selectedCreatureForDetail.damageImmunities}
+														</span>
+													</div>
+												)}
+												{selectedCreatureForDetail.conditionImmunities && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+															Condition Immunities:
+														</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+															{selectedCreatureForDetail.conditionImmunities}
+														</span>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Senses and Languages */}
+									{(selectedCreatureForDetail.senses || selectedCreatureForDetail.languages) && (
+										<div
+											className={`p-4 rounded-lg border ${
+												session?.user?.darkMode
+													? 'bg-gray-700/50 border-gray-600'
+													: 'bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border-indigo-100'
+											}`}
+										>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Senses & Languages</h3>
+											<div className="space-y-2">
+												{selectedCreatureForDetail.senses && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Senses:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.senses}</span>
+													</div>
+												)}
+												{selectedCreatureForDetail.languages && (
+													<div>
+														<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Languages:</span>{' '}
+														<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.languages}</span>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Special Features */}
+									{(selectedCreatureForDetail.traits ||
+										selectedCreatureForDetail.actions ||
+										selectedCreatureForDetail.legendaryActions ||
+										selectedCreatureForDetail.lairActions ||
+										selectedCreatureForDetail.spellcasting) && (
+										<div className="space-y-4">
+											<h3 className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Special Features</h3>
+
+											{selectedCreatureForDetail.traits && (
+												<div
+													className={`p-4 rounded-lg border ${
+														session?.user?.darkMode
+															? 'bg-gray-700/50 border-gray-600'
+															: 'bg-gradient-to-r from-gray-50/50 to-slate-50/50 border-gray-100'
+													}`}
+												>
+													<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Traits</h4>
+													<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+														{selectedCreatureForDetail.traits}
+													</div>
+												</div>
+											)}
+
+											{selectedCreatureForDetail.actions && (
+												<div
+													className={`p-4 rounded-lg border ${
+														session?.user?.darkMode
+															? 'bg-gray-700/50 border-gray-600'
+															: 'bg-gradient-to-r from-gray-50/50 to-slate-50/50 border-gray-100'
+													}`}
+												>
+													<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Actions</h4>
+													<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+														{selectedCreatureForDetail.actions}
+													</div>
+												</div>
+											)}
+
+											{selectedCreatureForDetail.legendaryActions && (
+												<div
+													className={`p-4 rounded-lg border ${
+														session?.user?.darkMode
+															? 'bg-yellow-900/20 border-yellow-600'
+															: 'bg-gradient-to-r from-yellow-50/50 to-amber-50/50 border-yellow-200'
+													}`}
+												>
+													<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+														Legendary Actions
+													</h4>
+													<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+														{selectedCreatureForDetail.legendaryActions}
+													</div>
+												</div>
+											)}
+
+											{selectedCreatureForDetail.lairActions && (
+												<div
+													className={`p-4 rounded-lg border ${
+														session?.user?.darkMode
+															? 'bg-purple-900/20 border-purple-600'
+															: 'bg-gradient-to-r from-purple-50/50 to-violet-50/50 border-purple-200'
+													}`}
+												>
+													<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-800'}`}>
+														Lair Actions
+													</h4>
+													<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+														{selectedCreatureForDetail.lairActions}
+													</div>
+												</div>
+											)}
+
+											{selectedCreatureForDetail.spellcasting && (
+												<div
+													className={`p-4 rounded-lg border ${
+														session?.user?.darkMode
+															? 'bg-blue-900/20 border-blue-600'
+															: 'bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200'
+													}`}
+												>
+													<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-800'}`}>
+														Spellcasting
+													</h4>
+													<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+														{selectedCreatureForDetail.spellcasting}
+													</div>
+												</div>
 											)}
 										</div>
-									</div>
-								)}
+									)}
 
-								{/* Skills and Saves */}
-								{(selectedCreatureForDetail.skills || selectedCreatureForDetail.savingThrows || selectedCreatureForDetail.proficiencyBonus) && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode
-												? 'bg-gray-700/50 border-gray-600'
-												: 'bg-gradient-to-r from-yellow-50/50 to-orange-50/50 border-yellow-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-											Skills & Proficiencies
-										</h3>
-										<div className="space-y-2">
-											{selectedCreatureForDetail.proficiencyBonus && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Proficiency Bonus:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
-														+{selectedCreatureForDetail.proficiencyBonus}
-													</span>
-												</div>
-											)}
-											{selectedCreatureForDetail.savingThrows && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Saving Throws:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.savingThrows}</span>
-												</div>
-											)}
-											{selectedCreatureForDetail.skills && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Skills:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.skills}</span>
-												</div>
-											)}
+									{/* Creator Info */}
+									<div className={`text-center text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+										<div className="flex items-center justify-center gap-1">
+											<User size={14} />
+											<span>
+												Created by{' '}
+												{(selectedCreatureForDetail.creator?.campaignMembers &&
+													selectedCreatureForDetail.creator.campaignMembers[0]?.characterName) ||
+													selectedCreatureForDetail.creator?.username ||
+													selectedCreatureForDetail.creator?.email?.split('@')[0] ||
+													'Unknown User'}
+											</span>
 										</div>
-									</div>
-								)}
-
-								{/* Resistances and Immunities */}
-								{(selectedCreatureForDetail.damageResistances ||
-									selectedCreatureForDetail.damageImmunities ||
-									selectedCreatureForDetail.conditionImmunities) && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-red-50/50 to-pink-50/50 border-red-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-											Resistances & Immunities
-										</h3>
-										<div className="space-y-2">
-											{selectedCreatureForDetail.damageResistances && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Damage Resistances:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
-														{selectedCreatureForDetail.damageResistances}
-													</span>
-												</div>
-											)}
-											{selectedCreatureForDetail.damageImmunities && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Damage Immunities:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
-														{selectedCreatureForDetail.damageImmunities}
-													</span>
-												</div>
-											)}
-											{selectedCreatureForDetail.conditionImmunities && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Condition Immunities:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
-														{selectedCreatureForDetail.conditionImmunities}
-													</span>
-												</div>
-											)}
-										</div>
-									</div>
-								)}
-
-								{/* Senses and Languages */}
-								{(selectedCreatureForDetail.senses || selectedCreatureForDetail.languages) && (
-									<div
-										className={`p-4 rounded-lg border ${
-											session?.user?.darkMode
-												? 'bg-gray-700/50 border-gray-600'
-												: 'bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border-indigo-100'
-										}`}
-									>
-										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Senses & Languages</h3>
-										<div className="space-y-2">
-											{selectedCreatureForDetail.senses && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Senses:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.senses}</span>
-												</div>
-											)}
-											{selectedCreatureForDetail.languages && (
-												<div>
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Languages:</span>{' '}
-													<span className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>{selectedCreatureForDetail.languages}</span>
-												</div>
-											)}
-										</div>
-									</div>
-								)}
-
-								{/* Special Features */}
-								{(selectedCreatureForDetail.traits ||
-									selectedCreatureForDetail.actions ||
-									selectedCreatureForDetail.legendaryActions ||
-									selectedCreatureForDetail.lairActions ||
-									selectedCreatureForDetail.spellcasting) && (
-									<div className="space-y-4">
-										<h3 className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Special Features</h3>
-
-										{selectedCreatureForDetail.traits && (
-											<div
-												className={`p-4 rounded-lg border ${
-													session?.user?.darkMode
-														? 'bg-gray-700/50 border-gray-600'
-														: 'bg-gradient-to-r from-gray-50/50 to-slate-50/50 border-gray-100'
-												}`}
-											>
-												<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Traits</h4>
-												<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-													{selectedCreatureForDetail.traits}
-												</div>
-											</div>
-										)}
-
-										{selectedCreatureForDetail.actions && (
-											<div
-												className={`p-4 rounded-lg border ${
-													session?.user?.darkMode
-														? 'bg-gray-700/50 border-gray-600'
-														: 'bg-gradient-to-r from-gray-50/50 to-slate-50/50 border-gray-100'
-												}`}
-											>
-												<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Actions</h4>
-												<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-													{selectedCreatureForDetail.actions}
-												</div>
-											</div>
-										)}
-
-										{selectedCreatureForDetail.legendaryActions && (
-											<div
-												className={`p-4 rounded-lg border ${
-													session?.user?.darkMode
-														? 'bg-yellow-900/20 border-yellow-600'
-														: 'bg-gradient-to-r from-yellow-50/50 to-amber-50/50 border-yellow-200'
-												}`}
-											>
-												<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
-													Legendary Actions
-												</h4>
-												<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-													{selectedCreatureForDetail.legendaryActions}
-												</div>
-											</div>
-										)}
-
-										{selectedCreatureForDetail.lairActions && (
-											<div
-												className={`p-4 rounded-lg border ${
-													session?.user?.darkMode
-														? 'bg-purple-900/20 border-purple-600'
-														: 'bg-gradient-to-r from-purple-50/50 to-violet-50/50 border-purple-200'
-												}`}
-											>
-												<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-800'}`}>
-													Lair Actions
-												</h4>
-												<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-													{selectedCreatureForDetail.lairActions}
-												</div>
-											</div>
-										)}
-
-										{selectedCreatureForDetail.spellcasting && (
-											<div
-												className={`p-4 rounded-lg border ${
-													session?.user?.darkMode
-														? 'bg-blue-900/20 border-blue-600'
-														: 'bg-gradient-to-r from-blue-50/50 to-cyan-50/50 border-blue-200'
-												}`}
-											>
-												<h4 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-800'}`}>Spellcasting</h4>
-												<div className={`whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-													{selectedCreatureForDetail.spellcasting}
-												</div>
-											</div>
-										)}
-									</div>
-								)}
-
-								{/* Creator Info */}
-								<div className={`text-center text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-									<div className="flex items-center justify-center gap-1">
-										<User size={14} />
-										<span>
-											Created by{' '}
-											{(selectedCreatureForDetail.creator?.campaignMembers && selectedCreatureForDetail.creator.campaignMembers[0]?.characterName) ||
-												selectedCreatureForDetail.creator?.username ||
-												selectedCreatureForDetail.creator?.email?.split('@')[0] ||
-												'Unknown User'}
-										</span>
 									</div>
 								</div>
 							</div>
