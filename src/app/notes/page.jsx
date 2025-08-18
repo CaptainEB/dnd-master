@@ -1,6 +1,6 @@
 'use client';
 
-import { createPersonalNote, deletePersonalNote, getPersonalNotes, updatePersonalNote } from '@/app/admin/components/actions';
+import { createCampaignNote, deleteCampaignNote, getCampaignNotes, updateCampaignNote } from '@/app/admin/components/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +44,7 @@ export default function NotesPage() {
 
 		setLoading(true);
 		try {
-			const result = await getPersonalNotes(session.user.activeCampaignId, currentPage, 20, searchQuery, tagFilter);
+			const result = await getCampaignNotes(session.user.activeCampaignId, currentPage, 20, searchQuery, tagFilter);
 
 			if (result.success) {
 				setNotes(result.data.notes);
@@ -77,7 +77,7 @@ export default function NotesPage() {
 		}
 
 		try {
-			const result = await createPersonalNote(session.user.activeCampaignId, formData);
+			const result = await createCampaignNote(session.user.activeCampaignId, formData);
 
 			if (result.success) {
 				setFormData({ title: '', content: '', tags: [] });
@@ -102,7 +102,7 @@ export default function NotesPage() {
 		}
 
 		try {
-			const result = await updatePersonalNote(editingNote.id, formData);
+			const result = await updateCampaignNote(editingNote.id, formData);
 
 			if (result.success) {
 				setEditingNote(null);
@@ -122,7 +122,7 @@ export default function NotesPage() {
 		if (!confirm('Are you sure you want to delete this note?')) return;
 
 		try {
-			const result = await deletePersonalNote(noteId);
+			const result = await deleteCampaignNote(noteId);
 
 			if (result.success) {
 				setError('');
@@ -188,6 +188,28 @@ export default function NotesPage() {
 		}
 	};
 
+	// Check if current user can edit/delete a note
+	const canEditNote = (note) => {
+		if (!session?.user) return false;
+
+		// User is the note author
+		if (note.authorId === session.user.id) {
+			return true;
+		}
+
+		// User is a site admin
+		if (session.user.role === 'ADMIN') {
+			return true;
+		}
+
+		// User is a DM in the current campaign
+		if (session.user.campaignRole === 'DM') {
+			return true;
+		}
+
+		return false;
+	};
+
 	if (!mounted) {
 		return <div>Loading...</div>;
 	}
@@ -230,7 +252,7 @@ export default function NotesPage() {
 					<div>
 						<h1 className={`text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Campaign Notes</h1>
 						<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-							Your personal notes for{' '}
+							Campaign notes for{' '}
 							<span className={`font-semibold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
 								{session.user.activeCampaignName}
 							</span>
@@ -517,22 +539,26 @@ export default function NotesPage() {
 													</CardDescription>
 												</div>
 												<div className="flex gap-2">
-													<Button
-														variant="outline"
-														size="sm"
-														className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
-														onClick={() => startEditing(note)}
-													>
-														<Edit className="h-4 w-4" />
-													</Button>
-													<Button
-														variant="outline"
-														size="sm"
-														className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-														onClick={() => handleDeleteNote(note.id)}
-													>
-														<Trash2 className="h-4 w-4" />
-													</Button>
+													{canEditNote(note) && (
+														<>
+															<Button
+																variant="outline"
+																size="sm"
+																className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
+																onClick={() => startEditing(note)}
+															>
+																<Edit className="h-4 w-4" />
+															</Button>
+															<Button
+																variant="outline"
+																size="sm"
+																className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+																onClick={() => handleDeleteNote(note.id)}
+															>
+																<Trash2 className="h-4 w-4" />
+															</Button>
+														</>
+													)}
 												</div>
 											</div>
 										</CardHeader>

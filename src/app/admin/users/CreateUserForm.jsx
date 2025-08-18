@@ -22,7 +22,7 @@ const createUserSchema = z.object({
 	username: z.string().min(1, 'Username is required').max(50, 'Username must be less than 50 characters'),
 });
 
-export default function CreateUserForm() {
+export default function CreateUserForm({ onUserCreated }) {
 	const { data: session } = useSession();
 	const [open, setOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +45,10 @@ export default function CreateUserForm() {
 			if (result.success) {
 				form.reset();
 				setOpen(false);
-				router.refresh(); // Refresh the page to show new user
+				// Call the parent component's refresh function instead of router.refresh()
+				if (onUserCreated) {
+					onUserCreated();
+				}
 			} else {
 				form.setError('root', {
 					type: 'manual',

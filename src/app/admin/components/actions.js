@@ -391,12 +391,13 @@ export async function createUser(userData) {
 			data: {
 				email: userData.email.trim().toLowerCase(),
 				role: userRole,
-				// Note: username field needs to be added to schema
+				username: userData.username?.trim() || null,
 			},
 			select: {
 				id: true,
 				email: true,
 				role: true,
+				username: true,
 				createdAt: true,
 			},
 		});
@@ -1845,7 +1846,7 @@ export async function deleteCampaignRule(ruleId) {
 // ===== NOTES ACTIONS =====
 
 /**
- * Get personal notes for the current user in a campaign
+ * Get campaign notes for all members in a campaign
  * @param {string} campaignId
  * @param {number} page - Page number (default: 1)
  * @param {number} limit - Items per page (default: 20)
@@ -1853,7 +1854,7 @@ export async function deleteCampaignRule(ruleId) {
  * @param {string} tagFilter - Optional tag filter
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQuery = '', tagFilter = '') {
+export async function getCampaignNotes(campaignId, page = 1, limit = 20, searchQuery = '', tagFilter = '') {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -1884,7 +1885,7 @@ export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQ
 		// Build where clause for filtering
 		const where = {
 			campaignId: campaignId,
-			authorId: session.user.id, // Only get user's own notes
+			// Show all notes in the campaign, not just user's own notes
 		};
 
 		// Add search filter
@@ -1963,18 +1964,17 @@ export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQ
 
 		const totalPages = Math.ceil(totalCount / limit);
 
-		// Get all unique tags for this user in this campaign
-		const allUserNotes = await prisma.note.findMany({
+		// Get all unique tags for this campaign
+		const allCampaignNotes = await prisma.note.findMany({
 			where: {
 				campaignId: campaignId,
-				authorId: session.user.id,
 			},
 			select: {
 				tags: true,
 			},
 		});
 
-		const allTags = [...new Set(allUserNotes.flatMap((note) => note.tags))].sort();
+		const allTags = [...new Set(allCampaignNotes.flatMap((note) => note.tags))].sort();
 
 		return {
 			success: true,
@@ -2001,12 +2001,12 @@ export async function getPersonalNotes(campaignId, page = 1, limit = 20, searchQ
 }
 
 /**
- * Create a new personal note
+ * Create a new campaign note
  * @param {string} campaignId
  * @param {Object} noteData - {title?, content, tags?}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function createPersonalNote(campaignId, noteData) {
+export async function createCampaignNote(campaignId, noteData) {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -2073,12 +2073,12 @@ export async function createPersonalNote(campaignId, noteData) {
 }
 
 /**
- * Update a personal note - Users can only edit their own notes
+ * Update a campaign note - Users can edit their own notes, admins can edit any note
  * @param {string} noteId
  * @param {Object} noteData - {title?, content, tags?}
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function updatePersonalNote(noteId, noteData) {
+export async function updateCampaignNote(noteId, noteData) {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -2109,11 +2109,35 @@ export async function updatePersonalNote(noteId, noteData) {
 			};
 		}
 
-		// Check permissions: Users can only edit their own notes
-		if (existingNote.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+		// Check permissions: Users can edit their own notes, DMs can edit any notes in their campaign, admins can edit any notes
+		let canEdit = false;
+
+		// User is the author
+		if (existingNote.authorId === session.user.id) {
+			canEdit = true;
+		}
+		// User is a site admin
+		else if (session.user.role === 'ADMIN') {
+			canEdit = true;
+		}
+		// User is a DM in this campaign
+		else {
+			const dmMembership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingNote.campaignId,
+					role: 'DM',
+				},
+			});
+			if (dmMembership) {
+				canEdit = true;
+			}
+		}
+
+		if (!canEdit) {
 			return {
 				success: false,
-				error: 'Unauthorized - You can only edit your own notes',
+				error: 'Unauthorized - You can only edit your own notes unless you are a DM or admin',
 			};
 		}
 
@@ -2158,11 +2182,11 @@ export async function updatePersonalNote(noteId, noteData) {
 }
 
 /**
- * Delete a personal note - Users can only delete their own notes
+ * Delete a campaign note - Users can delete their own notes, admins can delete any note
  * @param {string} noteId
  * @returns {Promise<{success: boolean, error?: string}>}
  */
-export async function deletePersonalNote(noteId) {
+export async function deleteCampaignNote(noteId) {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -2185,11 +2209,35 @@ export async function deletePersonalNote(noteId) {
 			};
 		}
 
-		// Check permissions: Users can only delete their own notes
-		if (existingNote.authorId !== session.user.id && session.user.role !== 'ADMIN') {
+		// Check permissions: Users can delete their own notes, DMs can delete any notes in their campaign, admins can delete any notes
+		let canDelete = false;
+
+		// User is the author
+		if (existingNote.authorId === session.user.id) {
+			canDelete = true;
+		}
+		// User is a site admin
+		else if (session.user.role === 'ADMIN') {
+			canDelete = true;
+		}
+		// User is a DM in this campaign
+		else {
+			const dmMembership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingNote.campaignId,
+					role: 'DM',
+				},
+			});
+			if (dmMembership) {
+				canDelete = true;
+			}
+		}
+
+		if (!canDelete) {
 			return {
 				success: false,
-				error: 'Unauthorized - You can only delete your own notes',
+				error: 'Unauthorized - You can only delete your own notes unless you are a DM or admin',
 			};
 		}
 

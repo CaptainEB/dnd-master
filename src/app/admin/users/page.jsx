@@ -37,22 +37,28 @@ export default function AdminUsersPage() {
 		setAvatarErrors((prev) => ({ ...prev, [userId]: true }));
 	};
 
-	useEffect(() => {
-		const loadUsers = async () => {
-			try {
-				const result = await getAllUsers();
-				if (result.success) {
-					setUsers(result.data);
-				} else {
-					setError(result.error);
-				}
-			} catch (err) {
-				setError('Failed to load users');
-			} finally {
-				setLoading(false);
+	const loadUsers = async () => {
+		setLoading(true);
+		try {
+			const result = await getAllUsers();
+			if (result.success) {
+				setUsers(result.data);
+				setError(null);
+			} else {
+				setError(result.error);
 			}
-		};
+		} catch (err) {
+			setError('Failed to load users');
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	const refreshUsers = () => {
+		loadUsers();
+	};
+
+	useEffect(() => {
 		loadUsers();
 	}, []);
 
@@ -115,7 +121,7 @@ export default function AdminUsersPage() {
 							<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>User Management</h1>
 							<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Manage all users and their permissions</p>
 						</div>
-						<CreateUserForm />
+						<CreateUserForm onUserCreated={refreshUsers} />
 					</div>
 				</div>
 
