@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ClipboardList, FileText, Scroll, Users } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Map, Scroll, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -29,6 +29,11 @@ export default function SecondaryNavbar() {
 			name: 'Notes',
 			href: '/notes',
 			icon: FileText,
+		},
+		{
+			name: 'Map',
+			href: '/map',
+			icon: Map,
 		},
 		{
 			name: 'Quests',

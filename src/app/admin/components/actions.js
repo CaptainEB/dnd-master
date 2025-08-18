@@ -3850,3 +3850,347 @@ export async function deleteQuestType(questTypeId) {
 		};
 	}
 }
+
+// ============ MAP POST ACTIONS ============
+
+/**
+ * Create a new map post
+ * @param {Object} mapPostData - The map post data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createMapPost(mapPostData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Validate required fields
+		if (!mapPostData.title || !mapPostData.imageUrl || !mapPostData.campaignId) {
+			return {
+				success: false,
+				error: 'Title, image URL, and campaign ID are required',
+			};
+		}
+
+		// Check if user is DM/Admin for this campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: mapPostData.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Create the map post
+		const mapPost = await prisma.mapPost.create({
+			data: {
+				title: mapPostData.title,
+				description: mapPostData.description || '',
+				imageUrl: mapPostData.imageUrl,
+				authorId: session.user.id,
+				campaignId: mapPostData.campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+						campaignMembers: {
+							where: {
+								campaignId: mapPostData.campaignId,
+							},
+							select: {
+								characterName: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: mapPost,
+		};
+	} catch (error) {
+		console.error('Error creating map post:', error);
+		return {
+			success: false,
+			error: 'Failed to create map post',
+		};
+	}
+}
+
+/**
+ * Get all map posts for a campaign
+ * @param {string} campaignId - The campaign ID
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getMapPosts(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		if (!campaignId) {
+			return {
+				success: false,
+				error: 'Campaign ID is required',
+			};
+		}
+
+		// Check if user is a member of this campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be a campaign member',
+			};
+		}
+
+		// Get all map posts for the campaign, ordered by creation date (newest first)
+		const mapPosts = await prisma.mapPost.findMany({
+			where: {
+				campaignId: campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+						campaignMembers: {
+							where: {
+								campaignId: campaignId,
+							},
+							select: {
+								characterName: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				createdAt: 'desc',
+			},
+		});
+
+		return {
+			success: true,
+			data: mapPosts,
+		};
+	} catch (error) {
+		console.error('Error fetching map posts:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch map posts',
+		};
+	}
+}
+
+/**
+ * Update a map post
+ * @param {string} mapPostId - The map post ID
+ * @param {Object} mapPostData - The updated map post data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateMapPost(mapPostId, mapPostData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		if (!mapPostId) {
+			return {
+				success: false,
+				error: 'Map post ID is required',
+			};
+		}
+
+		// Validate required fields
+		if (!mapPostData.title || !mapPostData.imageUrl) {
+			return {
+				success: false,
+				error: 'Title and image URL are required',
+			};
+		}
+
+		// Get the existing map post to check permissions
+		const existingMapPost = await prisma.mapPost.findUnique({
+			where: { id: mapPostId },
+		});
+
+		if (!existingMapPost) {
+			return {
+				success: false,
+				error: 'Map post not found',
+			};
+		}
+
+		// Check if user is the author, DM, or Admin
+		let hasPermission = session.user.role === 'ADMIN' || existingMapPost.authorId === session.user.id;
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingMapPost.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be the author, DM, or Admin',
+			};
+		}
+
+		// Update the map post
+		const updatedMapPost = await prisma.mapPost.update({
+			where: { id: mapPostId },
+			data: {
+				title: mapPostData.title,
+				description: mapPostData.description || '',
+				imageUrl: mapPostData.imageUrl,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+						campaignMembers: {
+							where: {
+								campaignId: existingMapPost.campaignId,
+							},
+							select: {
+								characterName: true,
+							},
+						},
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedMapPost,
+		};
+	} catch (error) {
+		console.error('Error updating map post:', error);
+		return {
+			success: false,
+			error: 'Failed to update map post',
+		};
+	}
+}
+
+/**
+ * Delete a map post
+ * @param {string} mapPostId - The map post ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteMapPost(mapPostId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		if (!mapPostId) {
+			return {
+				success: false,
+				error: 'Map post ID is required',
+			};
+		}
+
+		// Get the existing map post to check permissions
+		const existingMapPost = await prisma.mapPost.findUnique({
+			where: { id: mapPostId },
+		});
+
+		if (!existingMapPost) {
+			return {
+				success: false,
+				error: 'Map post not found',
+			};
+		}
+
+		// Check if user is the author, DM, or Admin
+		let hasPermission = session.user.role === 'ADMIN' || existingMapPost.authorId === session.user.id;
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingMapPost.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be the author, DM, or Admin',
+			};
+		}
+
+		// Delete the map post
+		await prisma.mapPost.delete({
+			where: { id: mapPostId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting map post:', error);
+		return {
+			success: false,
+			error: 'Failed to delete map post',
+		};
+	}
+}
