@@ -1852,9 +1852,10 @@ export async function deleteCampaignRule(ruleId) {
  * @param {number} limit - Items per page (default: 20)
  * @param {string} searchQuery - Optional search query
  * @param {string} tagFilter - Optional tag filter
+ * @param {string} authorFilter - Optional author filter (user ID)
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
  */
-export async function getCampaignNotes(campaignId, page = 1, limit = 20, searchQuery = '', tagFilter = '') {
+export async function getCampaignNotes(campaignId, page = 1, limit = 20, searchQuery = '', tagFilter = '', authorFilter = '') {
 	try {
 		const session = await getServerSession(authOptions);
 
@@ -1911,6 +1912,11 @@ export async function getCampaignNotes(campaignId, page = 1, limit = 20, searchQ
 			where.tags = {
 				has: tagFilter,
 			};
+		}
+
+		// Add author filter
+		if (authorFilter) {
+			where.authorId = authorFilter;
 		}
 
 		// Get notes with pagination

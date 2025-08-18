@@ -1,6 +1,6 @@
 'use client';
 
-import { createCampaignNote, deleteCampaignNote, getCampaignNotes, updateCampaignNote } from '@/app/admin/components/actions';
+import { createCampaignNote, deleteCampaignNote, getCampaignMembers, getCampaignNotes, updateCampaignNote } from '@/app/admin/components/actions';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,9 @@ export default function NotesPage() {
 	const [error, setError] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [tagFilter, setTagFilter] = useState('');
+	const [authorFilter, setAuthorFilter] = useState('');
 	const [availableTags, setAvailableTags] = useState([]);
+	const [campaignMembers, setCampaignMembers] = useState([]);
 	const [pagination, setPagination] = useState({});
 	const [currentPage, setCurrentPage] = useState(1);
 
@@ -44,7 +46,7 @@ export default function NotesPage() {
 
 		setLoading(true);
 		try {
-			const result = await getCampaignNotes(session.user.activeCampaignId, currentPage, 20, searchQuery, tagFilter);
+			const result = await getCampaignNotes(session.user.activeCampaignId, currentPage, 20, searchQuery, tagFilter, authorFilter);
 
 			if (result.success) {
 				setNotes(result.data.notes);
@@ -60,13 +62,27 @@ export default function NotesPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, [session?.user?.activeCampaignId, currentPage, searchQuery, tagFilter]);
+	}, [session?.user?.activeCampaignId, currentPage, searchQuery, tagFilter, authorFilter]);
 
 	useEffect(() => {
 		if (mounted && session?.user?.activeCampaignId) {
 			loadNotes();
+			loadCampaignMembers();
 		}
 	}, [mounted, loadNotes]);
+
+	const loadCampaignMembers = async () => {
+		if (!session?.user?.activeCampaignId) return;
+
+		try {
+			const result = await getCampaignMembers(session.user.activeCampaignId);
+			if (result.success) {
+				setCampaignMembers(result.data);
+			}
+		} catch (err) {
+			console.error('Error loading campaign members:', err);
+		}
+	};
 
 	const handleCreateNote = async (e) => {
 		e.preventDefault();
@@ -288,7 +304,7 @@ export default function NotesPage() {
 						<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Search & Filter</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="flex flex-col md:flex-row gap-4">
+						<div className="flex flex-col lg:flex-row gap-4">
 							<div className="flex-1">
 								<Label htmlFor="search" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Search notes
@@ -330,6 +346,30 @@ export default function NotesPage() {
 										{availableTags.map((tag) => (
 											<SelectItem key={tag} value={tag}>
 												{tag}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="flex-1">
+								<Label htmlFor="authorFilter" className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+									Filter by author
+								</Label>
+								<Select
+									value={authorFilter || 'all'}
+									onValueChange={(value) => {
+										setAuthorFilter(value === 'all' ? '' : value);
+										setCurrentPage(1);
+									}}
+								>
+									<SelectTrigger className="w-full mt-1">
+										<SelectValue placeholder="All authors" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All authors</SelectItem>
+										{campaignMembers.map((member) => (
+											<SelectItem key={member.user.id} value={member.user.id}>
+												{member.characterName || 'Player'}
 											</SelectItem>
 										))}
 									</SelectContent>
@@ -432,10 +472,12 @@ export default function NotesPage() {
 							<div className="text-center py-8">
 								<Tag className="h-12 w-12 text-purple-400 mx-auto mb-4" />
 								<h3 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-									{searchQuery || tagFilter ? 'No Notes Found' : 'No Notes Yet'}
+									{searchQuery || tagFilter || authorFilter ? 'No Notes Found' : 'No Notes Yet'}
 								</h3>
 								<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-									{searchQuery || tagFilter ? 'No notes found matching your search criteria.' : 'Create your first note to get started!'}
+									{searchQuery || tagFilter || authorFilter
+										? 'No notes found matching your filter criteria.'
+										: 'Create your first note to get started!'}
 								</p>
 							</div>
 						</CardContent>
