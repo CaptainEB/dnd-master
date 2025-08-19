@@ -53,17 +53,62 @@ export default function DMDashboard() {
 				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-purple-50 to-blue-50'
 			}`}
 		>
-			<div className="container mx-auto px-4 py-8">
-				<div className="mb-8">
-					<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Dungeon Master Dashboard</h1>
+			<div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+				<div className="mb-6 sm:mb-8">
+					<h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+						Dungeon Master Dashboard
+					</h1>
 					<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 						Welcome back, DM {session?.user?.characterName || session?.user?.email?.split('@')[0]}! Ready to guide your players on epic adventures?
 					</p>
 				</div>
 
-				<div className="flex gap-8">
-					{/* Side Navigation */}
-					<div className="w-64 flex-shrink-0">
+				{/* Mobile Navigation */}
+				<div className="lg:hidden mb-6">
+					<Card className={`p-3 ${session?.user?.darkMode ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white'}`}>
+						<h3 className={`font-semibold mb-3 text-sm ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Quick Navigation</h3>
+						<div className="flex gap-2 overflow-x-auto">
+							<button
+								onClick={() => scrollToSection('campaigns')}
+								className={`flex-shrink-0 px-3 py-2 rounded-lg transition-colors text-xs ${
+									activeSection === 'campaigns'
+										? session?.user?.darkMode
+											? 'bg-cyan-800 text-cyan-200 font-medium'
+											: 'bg-purple-100 text-purple-800 font-medium'
+										: session?.user?.darkMode
+											? 'text-gray-300 hover:bg-gray-700'
+											: 'text-gray-600 hover:bg-gray-100'
+								}`}
+							>
+								<div className="flex items-center gap-1">
+									<Scroll size={14} />
+									My Campaigns
+								</div>
+							</button>
+							<button
+								onClick={() => scrollToSection('manage-players')}
+								className={`flex-shrink-0 px-3 py-2 rounded-lg transition-colors text-xs ${
+									activeSection === 'manage-players'
+										? session?.user?.darkMode
+											? 'bg-cyan-800 text-cyan-200 font-medium'
+											: 'bg-purple-100 text-purple-800 font-medium'
+										: session?.user?.darkMode
+											? 'text-gray-300 hover:bg-gray-700'
+											: 'text-gray-600 hover:bg-gray-100'
+								}`}
+							>
+								<div className="flex items-center gap-1">
+									<UserPlus size={14} />
+									Manage Players
+								</div>
+							</button>
+						</div>
+					</Card>
+				</div>
+
+				<div className="lg:flex lg:gap-8">
+					{/* Desktop Side Navigation */}
+					<div className="hidden lg:block w-64 flex-shrink-0">
 						<Card className={`p-4 sticky top-24 ${session?.user?.darkMode ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white'}`}>
 							<h3 className={`font-semibold mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Quick Navigation</h3>
 							<nav className="space-y-2">
@@ -106,16 +151,20 @@ export default function DMDashboard() {
 					</div>
 
 					{/* Main Content */}
-					<div className="flex-1 space-y-8">
+					<div className="flex-1 space-y-6 sm:space-y-8">
 						{/* My Campaigns Section */}
 						<section id="campaigns">
-							<Card className={`p-8 ${session?.user?.darkMode ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white'}`}>
-								<div className="flex items-center justify-between mb-6">
+							<Card className={`p-4 sm:p-6 lg:p-8 ${session?.user?.darkMode ? 'bg-gray-800/80 backdrop-blur-sm' : 'bg-white'}`}>
+								<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
 									<div>
-										<h3 className={`text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>My Campaigns</h3>
-										<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Manage and oversee your D&D campaigns</p>
+										<h3 className={`text-xl sm:text-2xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>My Campaigns</h3>
+										<p className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+											Manage and oversee your D&D campaigns
+										</p>
 									</div>
-									<CreateCampaignForm />
+									<div className="flex-shrink-0">
+										<CreateCampaignForm />
+									</div>
 								</div>
 
 								{isLoading ? (
@@ -166,35 +215,37 @@ export default function DMDashboard() {
 														</div>
 													</div>
 
-													<div className={`grid md:grid-cols-3 gap-4 p-4 rounded-lg ${session?.user?.darkMode ? 'bg-gray-700/50' : 'bg-white/50'}`}>
-														<div className="flex items-center gap-3">
-															<div className={`p-2 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
-																<Users className={`h-5 w-5 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
+													<div
+														className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg ${session?.user?.darkMode ? 'bg-gray-700/50' : 'bg-white/50'}`}
+													>
+														<div className="flex items-center gap-2 sm:gap-3">
+															<div className={`p-1.5 sm:p-2 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'} flex-shrink-0`}>
+																<Users className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
 															</div>
-															<div>
-																<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+															<div className="min-w-0">
+																<p className={`text-xs sm:text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 																	{campaign.memberCount || 0} Members
 																</p>
 																<p className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total players</p>
 															</div>
 														</div>
-														<div className="flex items-center gap-3">
-															<div className={`p-2 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'}`}>
-																<Calendar className={`h-5 w-5 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
+														<div className="flex items-center gap-2 sm:gap-3">
+															<div className={`p-1.5 sm:p-2 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'} flex-shrink-0`}>
+																<Calendar className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
 															</div>
-															<div>
-																<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+															<div className="min-w-0">
+																<p className={`text-xs sm:text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 																	<DateDisplay date={campaign.createdAt} />
 																</p>
 																<p className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Created</p>
 															</div>
 														</div>
-														<div className="flex items-center gap-3">
-															<div className={`p-2 rounded-lg ${session?.user?.darkMode ? 'bg-orange-800' : 'bg-orange-100'}`}>
-																<Scroll className={`h-5 w-5 ${session?.user?.darkMode ? 'text-orange-300' : 'text-orange-600'}`} />
+														<div className="flex items-center gap-2 sm:gap-3">
+															<div className={`p-1.5 sm:p-2 rounded-lg ${session?.user?.darkMode ? 'bg-orange-800' : 'bg-orange-100'} flex-shrink-0`}>
+																<Scroll className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-orange-300' : 'text-orange-600'}`} />
 															</div>
-															<div>
-																<p className={`text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+															<div className="min-w-0">
+																<p className={`text-xs sm:text-sm font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 																	<DateDisplay date={campaign.updatedAt} />
 																</p>
 																<p className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Last updated</p>

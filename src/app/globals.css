@@ -119,6 +119,12 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+
+	/* Prevent horizontal scroll on small screens */
+	html,
+	body {
+		overflow-x: hidden;
+	}
 }
 
 /* Custom animations for D&D app */
@@ -151,4 +157,36 @@
 
 .animation-delay-1000 {
 	animation-delay: 1s;
+}
+
+/* Additional responsive utilities for very small screens */
+@media (max-width: 480px) {
+	.container {
+		padding-left: 0.75rem;
+		padding-right: 0.75rem;
+	}
+}
+
+/* Custom breakpoint for extra small screens */
+@media (min-width: 480px) {
+	.xs\:block {
+		display: block;
+	}
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+	-ms-overflow-style: none; /* Internet Explorer 10+ */
+	scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none; /* Safari and Chrome */
+}
+
+/* Mobile navigation improvements */
+@media (max-width: 640px) {
+	.mobile-nav-item {
+		min-width: 2.5rem;
+		justify-content: center;
+	}
 }

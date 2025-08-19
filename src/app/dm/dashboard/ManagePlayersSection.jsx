@@ -199,24 +199,25 @@ export default function ManagePlayersSection() {
 	}
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-6 sm:space-y-8">
 			{/* Invite Player Section */}
 			<div
-				className={`rounded-xl p-6 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'}`}
+				className={`rounded-xl p-4 sm:p-6 ${session?.user?.darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gradient-to-r from-blue-50 to-purple-50'}`}
 			>
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
 					<div>
-						<h4 className={`text-lg font-bold mb-1 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Invite New Player</h4>
-						<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Add players to your campaigns by email</p>
+						<h4 className={`text-base sm:text-lg font-bold mb-1 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Invite New Player</h4>
+						<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Add players to your campaigns by email</p>
 					</div>
 					<Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
 						<DialogTrigger asChild>
-							<Button className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-								<UserPlus className="h-4 w-4 mr-2" />
-								Invite Player
+							<Button className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+								<UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+								<span className="hidden sm:inline">Invite Player</span>
+								<span className="sm:hidden">Invite</span>
 							</Button>
 						</DialogTrigger>
-						<DialogContent className={`sm:max-w-[500px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+						<DialogContent className={`mx-3 sm:mx-0 sm:max-w-[500px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 							<DialogHeader>
 								<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Invite Player to Campaign</DialogTitle>
 								<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
@@ -377,44 +378,48 @@ export default function ManagePlayersSection() {
 
 			{/* Campaign Members Section */}
 			<div>
-				<h4 className={`text-lg font-bold mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Members</h4>
+				<h4 className={`text-base sm:text-lg font-bold mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Members</h4>
 
 				{campaignMembers.length === 0 ? (
-					<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-						<UserCheck className={`h-16 w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-						<h4 className={`text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No Campaign Members</h4>
-						<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Invite players to your campaigns to see them here.</p>
+					<div className={`text-center py-8 sm:py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+						<UserCheck className={`h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+						<h4 className={`text-base sm:text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+							No Campaign Members
+						</h4>
+						<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+							Invite players to your campaigns to see them here.
+						</p>
 					</div>
 				) : (
-					<div className="space-y-4">
+					<div className="space-y-3 sm:space-y-4">
 						{campaignMembers.map((member) => (
 							<Card
 								key={member.id}
-								className={`p-6 hover:shadow-md transition-shadow ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}`}
+								className={`p-4 sm:p-6 hover:shadow-md transition-shadow ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}`}
 							>
-								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-4">
+								<div className="flex flex-col sm:flex-row sm:items-start gap-4">
+									<div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
 										<div
-											className={`w-12 h-12 rounded-full flex items-center justify-center ${
+											className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
 												session?.user?.darkMode ? 'bg-gradient-to-br from-gray-600 to-gray-700' : 'bg-gradient-to-br from-blue-100 to-purple-100'
 											}`}
 										>
 											{member.role === 'DM' ? (
-												<Crown className={`h-6 w-6 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+												<Crown className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
 											) : (
-												<Users className={`h-6 w-6 ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+												<Users className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
 											)}
 										</div>
-										<div>
-											<h4 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+										<div className="min-w-0 flex-1">
+											<h4 className={`font-semibold text-sm sm:text-base truncate ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 												{member.characterName || member.user.email}
 												{member.user.username && ` (${member.user.username})`}
 											</h4>
-											<div className={`flex items-center gap-4 text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-												<div className="flex items-center gap-2">
+											<div className={`flex flex-col gap-2 text-xs sm:text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+												<div className="flex flex-wrap gap-2">
 													<Badge
 														variant="secondary"
-														className={
+														className={`text-xs ${
 															member.role === 'DM'
 																? session?.user?.darkMode
 																	? 'bg-purple-900/30 text-purple-400 border-purple-800'
@@ -422,13 +427,13 @@ export default function ManagePlayersSection() {
 																: session?.user?.darkMode
 																	? 'bg-green-900/30 text-green-400 border-green-800'
 																	: 'bg-green-100 text-green-800'
-														}
+														}`}
 													>
 														{member.role} in {member.campaign.name}
 													</Badge>
 													<Badge
 														variant="outline"
-														className={
+														className={`text-xs ${
 															member.user.role === 'ADMIN'
 																? session?.user?.darkMode
 																	? 'bg-red-900/30 text-red-400 border-red-800'
@@ -436,39 +441,44 @@ export default function ManagePlayersSection() {
 																: session?.user?.darkMode
 																	? 'bg-gray-700 text-gray-300 border-gray-600'
 																	: 'bg-gray-100 text-gray-800'
-														}
+														}`}
 													>
 														Global: {member.user.role}
 													</Badge>
 												</div>
-												<div className="flex items-center gap-1">
-													<Calendar size={14} />
-													Joined: <DateDisplay date={member.joinedAt} />
+												<div className="flex items-center gap-1 text-xs">
+													<Calendar size={12} />
+													<span>
+														Joined: <DateDisplay date={member.joinedAt} />
+													</span>
 												</div>
 											</div>
 										</div>
 									</div>
-									<div className="flex gap-2">
+									<div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
 										{/* Promote to DM button - only show for PLAYER role in campaign */}
 										{member.role === 'PLAYER' && (
 											<Button
 												onClick={() => openConfirmDialog(member.user, 'promote', member.campaign.id)}
 												disabled={promotingUserId === member.user.id}
-												className={
+												size="sm"
+												className={`text-xs ${
 													session?.user?.darkMode
 														? 'bg-gradient-to-r from-purple-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white'
 														: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-												}
+												}`}
 											>
 												{promotingUserId === member.user.id ? (
 													<>
-														<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-														Promoting...
+														<Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+														<span className="hidden sm:inline">Promoting...</span>
+														<span className="sm:hidden">...</span>
 													</>
 												) : (
 													<>
-														<Crown className="h-4 w-4 mr-2" />
-														Promote to DM
+														<Crown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+														<span className="hidden sm:inline">Promote to DM</span>
+														<span className="sm:hidden">Promote</span>
 													</>
 												)}
 											</Button>
@@ -480,21 +490,24 @@ export default function ManagePlayersSection() {
 												onClick={() => openConfirmDialog(member.user, 'demote', member.campaign.id)}
 												disabled={demotingCampaignId === member.campaign.id || !canCurrentUserDemote(member.campaign.id)}
 												variant="outline"
-												className={
+												size="sm"
+												className={`text-xs ${
 													session?.user?.darkMode
 														? 'border-orange-600 text-orange-400 hover:bg-orange-900/20 bg-gray-800'
 														: 'border-orange-300 text-orange-700 hover:bg-orange-50'
-												}
+												}`}
 											>
 												{demotingCampaignId === member.campaign.id ? (
 													<>
-														<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-														Stepping down...
+														<Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+														<span className="hidden sm:inline">Stepping down...</span>
+														<span className="sm:hidden">...</span>
 													</>
 												) : (
 													<>
-														<UserMinus className="h-4 w-4 mr-2" />
-														{canCurrentUserDemote(member.campaign.id) ? 'Step Down' : 'Cannot Step Down'}
+														<UserMinus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+														<span className="hidden sm:inline">{canCurrentUserDemote(member.campaign.id) ? 'Step Down' : 'Cannot Step Down'}</span>
+														<span className="sm:hidden">{canCurrentUserDemote(member.campaign.id) ? 'Step Down' : 'Cannot'}</span>
 													</>
 												)}
 											</Button>
@@ -503,11 +516,12 @@ export default function ManagePlayersSection() {
 										{/* DM indicator for other DMs */}
 										{member.role === 'DM' && member.user.id !== currentUser?.id && (
 											<div
-												className={`flex items-center gap-2 px-3 py-2 rounded-lg ${session?.user?.darkMode ? 'bg-purple-900/30' : 'bg-purple-50'}`}
+												className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg ${session?.user?.darkMode ? 'bg-purple-900/30' : 'bg-purple-50'}`}
 											>
-												<Shield className={`h-4 w-4 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-												<span className={`text-sm font-medium ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-													Dungeon Master
+												<Shield className={`h-3 w-3 sm:h-4 sm:w-4 ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
+												<span className={`text-xs sm:text-sm font-medium ${session?.user?.darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
+													<span className="hidden sm:inline">Dungeon Master</span>
+													<span className="sm:hidden">DM</span>
 												</span>
 											</div>
 										)}

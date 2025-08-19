@@ -68,14 +68,15 @@ export default function CreateUserForm({ onUserCreated }) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
-					<UserPlus className="h-4 w-4 mr-2" />
-					Add User
+				<Button className={`text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+					<UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+					<span className="hidden sm:inline">Add User</span>
+					<span className="sm:hidden">Add</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className={`sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+			<DialogContent className={`mx-3 sm:mx-0 sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 				<DialogHeader>
-					<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Create New User</DialogTitle>
+					<DialogTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Create New User</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -156,7 +157,7 @@ export default function CreateUserForm({ onUserCreated }) {
 							</div>
 						)}
 
-						<div className="flex justify-end gap-3 pt-4">
+						<div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
 							<Button
 								type="button"
 								variant="outline"
@@ -165,26 +166,30 @@ export default function CreateUserForm({ onUserCreated }) {
 									setOpen(false);
 								}}
 								disabled={isLoading}
-								className={
+								size="sm"
+								className={`text-sm ${
 									session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-								}
+								}`}
 							>
 								Cancel
 							</Button>
 							<Button
 								type="submit"
 								disabled={isLoading}
-								className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+								size="sm"
+								className={`text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-blue-600 hover:bg-blue-700'}`}
 							>
 								{isLoading ? (
 									<>
-										<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-										Creating...
+										<Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+										<span className="hidden sm:inline">Creating...</span>
+										<span className="sm:hidden">...</span>
 									</>
 								) : (
 									<>
-										<UserPlus className="h-4 w-4 mr-2" />
-										Create User
+										<UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+										<span className="hidden sm:inline">Create User</span>
+										<span className="sm:hidden">Create</span>
 									</>
 								)}
 							</Button>

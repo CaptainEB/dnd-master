@@ -195,10 +195,15 @@ export default function MapPage() {
 
 	if (loading) {
 		return (
-			<div className={`min-h-screen ${session?.user?.darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-				<div className="container mx-auto px-4 py-8">
-					<div className="flex items-center justify-center h-64">
-						<div className={`text-lg ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading maps...</div>
+			<div className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+				<div className="container mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
+					<div className="flex items-center justify-center h-48 sm:h-64">
+						<div className={`flex flex-col items-center gap-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+							<div
+								className={`animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 ${session?.user?.darkMode ? 'border-purple-400' : 'border-purple-600'}`}
+							></div>
+							<span className="text-sm sm:text-lg">Loading maps...</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -206,63 +211,67 @@ export default function MapPage() {
 	}
 
 	return (
-		<div className={`min-h-screen ${session?.user?.darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-			<div className="container mx-auto px-4 py-8">
+		<div className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+			<div className="container mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
 				{/* Header */}
-				<div className="flex items-center justify-between mb-8">
-					<div>
-						<h1 className={`text-3xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Maps</h1>
-						<p className={`mt-2 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>View and manage campaign maps and updates</p>
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+					<div className="min-w-0 flex-1">
+						<h1 className={`text-2xl sm:text-3xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Maps</h1>
+						<p className={`mt-1 sm:mt-2 text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+							View and manage campaign maps and updates
+						</p>
 					</div>
 					{canCreate() && (
 						<Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
 							<DialogTrigger asChild>
-								<Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-									<Plus size={20} className="mr-2" />
+								<Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto">
+									<Plus size={16} className="sm:w-5 sm:h-5 mr-2" />
 									Add Map
 								</Button>
 							</DialogTrigger>
-							<DialogContent className={`max-w-2xl ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-								<DialogHeader>
-									<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Add New Map</DialogTitle>
+							<DialogContent
+								className={`max-w-[95vw] sm:max-w-2xl ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+							>
+								<DialogHeader className="space-y-2">
+									<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Add New Map</DialogTitle>
 								</DialogHeader>
-								<form onSubmit={handleCreateMapPost} className="space-y-6">
-									{error && <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg">{error}</div>}
+								<form onSubmit={handleCreateMapPost} className="space-y-4 sm:space-y-6">
+									{error && <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">{error}</div>}
 
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Title *</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Title *</Label>
 										<Input
 											value={formData.title}
 											onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+											className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 											placeholder="Map title..."
 											required
 										/>
 									</div>
 
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Image URL *</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Image URL *</Label>
 										<Input
 											value={formData.imageUrl}
 											onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+											className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 											placeholder="https://..."
 											required
 										/>
 									</div>
 
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Description</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Description</Label>
 										<Textarea
 											value={formData.description}
 											onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+											className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 											placeholder="Map description or notes..."
 											rows={3}
 										/>
 									</div>
 
-									<div className="flex justify-end gap-2">
+									<div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-2">
 										<Button
 											type="button"
 											variant="outline"
@@ -271,11 +280,14 @@ export default function MapPage() {
 												resetForm();
 												setError('');
 											}}
-											className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}
+											className={`w-full sm:w-auto ${session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
 										>
 											Cancel
 										</Button>
-										<Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+										<Button
+											type="submit"
+											className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto"
+										>
 											Create Map Post
 										</Button>
 									</div>
@@ -286,44 +298,54 @@ export default function MapPage() {
 				</div>
 
 				{/* Error Display */}
-				{error && <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">{error}</div>}
+				{error && (
+					<div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm sm:text-base">{error}</div>
+				)}
 
 				{/* Map Posts */}
 				{mapPosts.length === 0 ? (
 					<Card className={session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}>
-						<CardContent className="flex flex-col items-center justify-center py-12">
-							<ImageIcon size={48} className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-400'} />
-							<h3 className={`mt-4 text-lg font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}`}>No maps yet</h3>
-							<p className={`mt-2 text-center ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+						<CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+							<ImageIcon size={40} className={`sm:w-12 sm:h-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
+							<h3 className={`mt-3 sm:mt-4 text-base sm:text-lg font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+								No maps yet
+							</h3>
+							<p className={`mt-2 text-center text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
 								{canCreate() ? 'Create your first map post to get started!' : 'No maps have been shared yet.'}
 							</p>
 						</CardContent>
 					</Card>
 				) : (
-					<div className="grid gap-6">
+					<div className="space-y-4 sm:space-y-6">
 						{mapPosts.map((mapPost) => (
 							<Card
 								key={mapPost.id}
 								className={`overflow-hidden ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
 							>
-								<CardHeader className="pb-4">
-									<div className="flex items-start justify-between">
-										<div className="flex-1">
-											<CardTitle className={`text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{mapPost.title}</CardTitle>
-											<div className={`flex items-center gap-2 mt-2 text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-												<User size={14} />
-												<span>
-													{(mapPost.author?.campaignMembers && mapPost.author.campaignMembers[0]?.characterName) ||
-														mapPost.author?.username ||
-														mapPost.author?.email?.split('@')[0] ||
-														'Unknown User'}
-												</span>
-												<span>•</span>
+								<CardHeader className="pb-3 sm:pb-4">
+									<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+										<div className="min-w-0 flex-1">
+											<CardTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+												{mapPost.title}
+											</CardTitle>
+											<div
+												className={`flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mt-2 text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+											>
+												<div className="flex items-center gap-1">
+													<User size={12} className="sm:w-3.5 sm:h-3.5" />
+													<span>
+														{(mapPost.author?.campaignMembers && mapPost.author.campaignMembers[0]?.characterName) ||
+															mapPost.author?.username ||
+															mapPost.author?.email?.split('@')[0] ||
+															'Unknown User'}
+													</span>
+												</div>
+												<span className="hidden sm:inline">•</span>
 												<span>{new Date(mapPost.createdAt).toLocaleDateString()}</span>
 											</div>
 										</div>
 										{canEditDelete(mapPost) && (
-											<div className="flex gap-2">
+											<div className="flex gap-2 shrink-0">
 												<Button
 													variant="outline"
 													size="sm"
@@ -332,7 +354,8 @@ export default function MapPage() {
 														session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'
 													}`}
 												>
-													<Edit size={16} />
+													<Edit size={14} className="sm:w-4 sm:h-4" />
+													<span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
 												</Button>
 												<Button
 													variant="outline"
@@ -340,7 +363,8 @@ export default function MapPage() {
 													onClick={() => handleDeleteMapPost(mapPost.id)}
 													className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
 												>
-													<Trash2 size={16} />
+													<Trash2 size={14} className="sm:w-4 sm:h-4" />
+													<span className="sr-only sm:not-sr-only sm:ml-1">Delete</span>
 												</Button>
 											</div>
 										)}
@@ -348,18 +372,20 @@ export default function MapPage() {
 								</CardHeader>
 								<CardContent className="pt-0">
 									{mapPost.description && (
-										<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{mapPost.description}</p>
+										<p className={`mb-3 sm:mb-4 text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+											{mapPost.description}
+										</p>
 									)}
 									<div
 										className="relative cursor-pointer rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-200"
 										onClick={() => openImageModal(mapPost)}
 									>
-										<div className="w-full h-96 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+										<div className="w-full h-48 sm:h-64 lg:h-96 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
 											{mapPost.imageUrl && <img src={mapPost.imageUrl} alt={mapPost.title} className="w-full h-full object-cover" />}
 										</div>
 										{/* Removed the black overlay that was covering the image */}
 										<div className="absolute inset-0 bg-transparent hover:bg-black hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
-											<div className="opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg pointer-events-auto">
+											<div className="opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 text-white px-3 sm:px-4 py-2 rounded-lg pointer-events-auto text-xs sm:text-sm">
 												Click to enlarge
 											</div>
 										</div>
@@ -372,47 +398,49 @@ export default function MapPage() {
 
 				{/* Edit Dialog */}
 				<Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-					<DialogContent className={`max-w-2xl ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-						<DialogHeader>
-							<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Edit Map Post</DialogTitle>
+					<DialogContent
+						className={`max-w-[95vw] sm:max-w-2xl ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
+					>
+						<DialogHeader className="space-y-2">
+							<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Edit Map Post</DialogTitle>
 						</DialogHeader>
-						<form onSubmit={handleEditMapPost} className="space-y-6">
-							{error && <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg">{error}</div>}
+						<form onSubmit={handleEditMapPost} className="space-y-4 sm:space-y-6">
+							{error && <div className="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">{error}</div>}
 
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Title *</Label>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Title *</Label>
 								<Input
 									value={formData.title}
 									onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+									className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 									placeholder="Map title..."
 									required
 								/>
 							</div>
 
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Image URL *</Label>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Image URL *</Label>
 								<Input
 									value={formData.imageUrl}
 									onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+									className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 									placeholder="https://..."
 									required
 								/>
 							</div>
 
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Description</Label>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Description</Label>
 								<Textarea
 									value={formData.description}
 									onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}
+									className={`mt-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
 									placeholder="Map description or notes..."
 									rows={3}
 								/>
 							</div>
 
-							<div className="flex justify-end gap-2">
+							<div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-2">
 								<Button
 									type="button"
 									variant="outline"
@@ -422,11 +450,14 @@ export default function MapPage() {
 										resetForm();
 										setError('');
 									}}
-									className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}
+									className={`w-full sm:w-auto ${session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
 								>
 									Cancel
 								</Button>
-								<Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+								<Button
+									type="submit"
+									className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full sm:w-auto"
+								>
 									Update Map Post
 								</Button>
 							</div>
@@ -436,27 +467,27 @@ export default function MapPage() {
 
 				{/* Image Modal */}
 				<Dialog open={showImageModal} onOpenChange={setShowImageModal}>
-					<DialogContent className="max-w-[98vw] max-h-[98vh] p-4 border-0 bg-transparent flex items-center justify-center">
+					<DialogContent className="max-w-[98vw] max-h-[98vh] p-2 sm:p-4 border-0 bg-transparent flex items-center justify-center">
 						<DialogHeader className="sr-only">
 							<DialogTitle>View Map Image</DialogTitle>
 						</DialogHeader>
 						{selectedImage && (
-							<div className="relative flex items-center justify-center">
+							<div className="relative flex items-center justify-center w-full h-full">
 								<button
 									onClick={() => setShowImageModal(false)}
-									className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+									className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
 									aria-label="Close modal"
 								>
-									<X size={20} className="text-white" />
+									<X size={16} className="sm:w-5 sm:h-5 text-white" />
 								</button>
 								{selectedImage.imageUrl ? (
 									<img
 										src={selectedImage.imageUrl}
 										alt={selectedImage.title}
-										className="object-contain rounded-lg mx-auto"
+										className="object-contain rounded-lg mx-auto max-w-full max-h-full"
 										style={{
-											minWidth: '80vw',
-											minHeight: '70vh',
+											minWidth: '90vw',
+											minHeight: '60vh',
 											maxWidth: '95vw',
 											maxHeight: '90vh',
 											width: 'auto',
@@ -468,7 +499,7 @@ export default function MapPage() {
 										}}
 									/>
 								) : null}
-								<div className="hidden w-full h-96 bg-gray-800 rounded-lg">{getFallbackImage(selectedImage.title)}</div>
+								<div className="hidden w-full h-64 sm:h-96 bg-gray-800 rounded-lg">{getFallbackImage(selectedImage.title)}</div>
 							</div>
 						)}
 					</DialogContent>

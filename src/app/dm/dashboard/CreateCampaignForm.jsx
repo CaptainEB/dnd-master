@@ -56,12 +56,13 @@ export default function CreateCampaignForm() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
-					<Plus className="h-4 w-4 mr-2" />
-					Create Campaign
+				<Button className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
+					<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+					<span className="hidden sm:inline">Create Campaign</span>
+					<span className="sm:hidden">Create</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className={`sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+			<DialogContent className={`mx-3 sm:mx-0 sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 				<DialogHeader>
 					<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Create New Campaign</DialogTitle>
 					<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>

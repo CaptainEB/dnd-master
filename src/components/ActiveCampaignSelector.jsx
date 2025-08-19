@@ -68,13 +68,13 @@ export default function ActiveCampaignSelector() {
 	}
 
 	return (
-		<div className="flex items-center gap-2 px-3 py-2">
-			<Shield size={16} className="text-purple-600" />
+		<div className="flex items-center gap-1 sm:gap-2 px-1 sm:px-3 py-2">
+			<Shield size={14} className="text-purple-600 sm:w-4 sm:h-4" />
 			<Select value={activeCampaign || 'none'} onValueChange={handleCampaignChange} disabled={loading}>
 				<SelectTrigger
-					className={`w-48 h-8 ${session?.user?.darkMode ? 'border-purple-500 bg-gray-800/50 text-white' : 'border-purple-200 bg-white/50'}`}
+					className={`w-32 sm:w-40 md:w-48 h-8 text-xs sm:text-sm ${session?.user?.darkMode ? 'border-purple-500 bg-gray-800/50 text-white' : 'border-purple-200 bg-white/50'}`}
 				>
-					<SelectValue placeholder={loading ? 'Loading...' : 'Select Campaign'} />
+					<SelectValue placeholder={loading ? 'Loading...' : 'Select Campaign'} className="truncate" />
 				</SelectTrigger>
 				<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : ''}>
 					<SelectItem value="none" className={session?.user?.darkMode ? 'text-gray-400 focus:bg-gray-700' : ''}>

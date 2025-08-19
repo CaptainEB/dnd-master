@@ -82,9 +82,9 @@ export default function PlayerDashboard() {
 				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-purple-50 to-blue-50'
 			}`}
 		>
-			<div className="container mx-auto px-4 py-8">
-				<div className="mb-8">
-					<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Player Dashboard</h1>
+			<div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+				<div className="mb-6 sm:mb-8">
+					<h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Player Dashboard</h1>
 					<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Welcome back, {session?.user?.email?.split('@')[0]}!</p>
 				</div>
 

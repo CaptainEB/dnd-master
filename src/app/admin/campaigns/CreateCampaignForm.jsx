@@ -56,15 +56,18 @@ export default function CreateCampaignForm() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
-					<Plus className="h-4 w-4 mr-2" />
-					Create Campaign
+				<Button className={`text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}>
+					<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+					<span className="hidden sm:inline">Create Campaign</span>
+					<span className="sm:hidden">Create</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className={`sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
+			<DialogContent className={`mx-3 sm:mx-0 sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 				<DialogHeader>
-					<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Create New Campaign</DialogTitle>
-					<DialogDescription className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
+					<DialogTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+						Create New Campaign
+					</DialogTitle>
+					<DialogDescription className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
 						Create a new D&D campaign. You can add members and content later.
 					</DialogDescription>
 				</DialogHeader>
@@ -106,26 +109,31 @@ export default function CreateCampaignForm() {
 							)}
 						/>
 						{form.formState.errors.root && (
-							<div className={`text-sm ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>{form.formState.errors.root.message}</div>
+							<div className={`text-sm p-2 sm:p-3 rounded-md ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20' : 'text-red-600 bg-red-50'}`}>
+								{form.formState.errors.root.message}
+							</div>
 						)}
-						<DialogFooter>
+						<DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
 							<Button
 								type="button"
 								variant="outline"
 								onClick={() => setOpen(false)}
 								disabled={isLoading}
-								className={
+								size="sm"
+								className={`text-sm ${
 									session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-								}
+								}`}
 							>
 								Cancel
 							</Button>
 							<Button
 								type="submit"
 								disabled={isLoading}
-								className={`${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+								size="sm"
+								className={`text-sm ${session?.user?.darkMode ? 'bg-cyan-600 hover:bg-cyan-700' : 'bg-purple-600 hover:bg-purple-700'}`}
 							>
-								{isLoading ? 'Creating...' : 'Create Campaign'}
+								{isLoading ? <span className="hidden sm:inline">Creating...</span> : <span className="hidden sm:inline">Create Campaign</span>}
+								{isLoading ? <span className="sm:hidden">...</span> : <span className="sm:hidden">Create</span>}
 							</Button>
 						</DialogFooter>
 					</form>

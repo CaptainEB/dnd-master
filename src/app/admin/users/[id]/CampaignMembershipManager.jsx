@@ -131,13 +131,13 @@ export default function CampaignMembershipManager({
 
 	if (mode === 'edit') {
 		return (
-			<div className="flex items-center gap-2">
+			<div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-6">
 				{/* Role Toggle Buttons */}
 				<div className={`flex rounded-lg p-1 ${session?.user?.darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
 					<button
 						onClick={() => handleChangeRole('PLAYER')}
 						disabled={isLoading || currentRole === 'PLAYER'}
-						className={`px-3 py-1 text-sm rounded transition-colors ${
+						className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${
 							currentRole === 'PLAYER'
 								? session?.user?.darkMode
 									? 'bg-gray-600 text-green-400 shadow-sm'
@@ -152,7 +152,7 @@ export default function CampaignMembershipManager({
 					<button
 						onClick={() => handleChangeRole('DM')}
 						disabled={isLoading || currentRole === 'DM'}
-						className={`px-3 py-1 text-sm rounded transition-colors ${
+						className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded transition-colors ${
 							currentRole === 'DM'
 								? session?.user?.darkMode
 									? 'bg-gray-600 text-blue-400 shadow-sm'
@@ -166,20 +166,22 @@ export default function CampaignMembershipManager({
 					</button>
 				</div>
 
-				{/* Remove Button */}
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={handleRemoveMembership}
-					disabled={isLoading}
-					className={`${
-						session?.user?.darkMode
-							? 'text-red-400 hover:text-red-300 hover:bg-red-900/20 border-gray-600'
-							: 'text-red-600 hover:text-red-700 hover:bg-red-50'
-					}`}
-				>
-					{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-				</Button>
+				{/* Remove Button - with additional spacing on mobile */}
+				<div className="mt-2 sm:mt-0">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleRemoveMembership}
+						disabled={isLoading}
+						className={`text-xs sm:text-sm ${
+							session?.user?.darkMode
+								? 'text-red-400 hover:text-red-300 hover:bg-red-900/20 border-gray-600'
+								: 'text-red-600 hover:text-red-700 hover:bg-red-50'
+						}`}
+					>
+						{isLoading ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" /> : <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />}
+					</Button>
+				</div>
 			</div>
 		);
 	}
@@ -188,14 +190,17 @@ export default function CampaignMembershipManager({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button className="bg-blue-600 hover:bg-blue-700" onClick={loadCampaigns}>
-					<UserPlus className="h-4 w-4 mr-2" />
-					Add to Campaign
+				<Button className="text-sm bg-blue-600 hover:bg-blue-700" onClick={loadCampaigns}>
+					<UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+					<span className="hidden sm:inline">Add to Campaign</span>
+					<span className="sm:hidden">Add</span>
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className={`mx-3 sm:mx-0 sm:max-w-[425px] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white'}`}>
 				<DialogHeader>
-					<DialogTitle>Add User to Campaign</DialogTitle>
+					<DialogTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+						Add User to Campaign
+					</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

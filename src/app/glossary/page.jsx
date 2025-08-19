@@ -431,16 +431,18 @@ export default function GlossaryPage() {
 
 	return (
 		<div
-			className={`min-h-screen pt-28 p-8 ${
+			className={`min-h-screen pt-20 sm:pt-24 lg:pt-28 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 ${
 				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
 			}`}
 		>
 			<div className="max-w-6xl mx-auto">
 				{/* Header */}
-				<div className="flex justify-between items-center mb-8">
+				<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
 					<div>
-						<h1 className={`text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Campaign Glossary</h1>
-						<p className={`${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+						<h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+							Campaign Glossary
+						</h1>
+						<p className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 							NPCs, monsters, and creatures for{' '}
 							<span className={`font-semibold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-700'}`}>
 								{session.user.activeCampaign?.name}
@@ -457,7 +459,7 @@ export default function GlossaryPage() {
 										resetForm();
 										setShowCreateDialog(true);
 									}}
-									className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg"
+									className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg w-full sm:w-auto text-sm sm:text-base"
 								>
 									<Plus size={16} className="mr-2" />
 									Add Creature
@@ -468,17 +470,17 @@ export default function GlossaryPage() {
 				</div>
 
 				{/* Search and Filters */}
-				<Card className={`mb-8 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-					<CardContent className="pt-6">
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<Card className={`mb-6 sm:mb-8 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+					<CardContent className="pt-4 sm:pt-6">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 							{/* Search */}
 							<div className="relative">
-								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
 								<Input
 									placeholder="Search creatures..."
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									className={`pl-10 ${
+									className={`pl-10 text-sm sm:text-base ${
 										session?.user?.darkMode
 											? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
 											: 'border-purple-200 focus:border-purple-500'
@@ -489,9 +491,9 @@ export default function GlossaryPage() {
 							{/* Category Filter */}
 							<Select value={selectedCategory} onValueChange={setSelectedCategory}>
 								<SelectTrigger
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200 focus:border-purple-500'}
+									className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200 focus:border-purple-500'}`}
 								>
-									<Filter size={16} className="mr-2" />
+									<Filter size={16} className="mr-2 flex-shrink-0" />
 									<SelectValue placeholder="All Categories" />
 								</SelectTrigger>
 								<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : ''}>
@@ -505,16 +507,16 @@ export default function GlossaryPage() {
 							</Select>
 
 							{/* Tag Filter */}
-							<div className="relative">
+							<div className="relative sm:col-span-2 lg:col-span-1">
 								<Input
 									placeholder="Filter by tags..."
 									value={tagFilter}
 									onChange={(e) => setTagFilter(e.target.value)}
-									className={
+									className={`text-sm sm:text-base ${
 										session?.user?.darkMode
 											? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
 											: 'border-purple-200 focus:border-purple-500'
-									}
+									}`}
 								/>
 							</div>
 						</div>
@@ -523,8 +525,8 @@ export default function GlossaryPage() {
 
 				{/* Error Display */}
 				{error && (
-					<Card className={`mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-red-900/80' : 'bg-red-50/80'}`}>
-						<CardContent className="pt-6">
+					<Card className={`mb-4 sm:mb-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-red-900/80' : 'bg-red-50/80'}`}>
+						<CardContent className="pt-4 sm:pt-6">
 							<p className={`text-sm ${session?.user?.darkMode ? 'text-red-300' : 'text-red-600'}`}>{error}</p>
 						</CardContent>
 					</Card>
@@ -532,21 +534,21 @@ export default function GlossaryPage() {
 
 				{/* Creatures List */}
 				{loading ? (
-					<div className="text-center py-12">
+					<div className="text-center py-8 sm:py-12">
 						<div className={`flex flex-col items-center gap-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-							Loading creatures...
+							<div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600"></div>
+							<span className="text-sm sm:text-base">Loading creatures...</span>
 						</div>
 					</div>
 				) : filteredCreatures.length === 0 ? (
 					<Card className={`border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<CardContent className="pt-6">
-							<div className="text-center py-8">
-								<Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-								<h3 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+						<CardContent className="pt-4 sm:pt-6">
+							<div className="text-center py-6 sm:py-8">
+								<Users className="h-10 w-10 sm:h-12 sm:w-12 text-purple-400 mx-auto mb-3 sm:mb-4" />
+								<h3 className={`text-lg sm:text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 									{creatures.length === 0 ? 'No Creatures Yet' : 'No Results Found'}
 								</h3>
-								<p className={`mb-4 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+								<p className={`mb-4 text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 									{creatures.length === 0
 										? canManageCreatures
 											? 'Start building your campaign glossary by adding creatures, NPCs, and monsters!'
@@ -557,7 +559,7 @@ export default function GlossaryPage() {
 						</CardContent>
 					</Card>
 				) : (
-					<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
 						{filteredCreatures.map((creature) => (
 							<Card
 								key={creature.id}
@@ -566,27 +568,29 @@ export default function GlossaryPage() {
 								}`}
 								onClick={() => handleViewCreature(creature)}
 							>
-								<CardHeader className="pb-3">
-									<div className="flex items-start justify-between">
-										<div className="flex items-center gap-3">
+								<CardHeader className="pb-2 sm:pb-3">
+									<div className="flex items-start justify-between gap-2">
+										<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
 											{getCreatureAvatar(creature)}
 											<div className="hidden">{getCreatureAvatar(creature)}</div>
-											<div>
-												<CardTitle className={`text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{creature.name}</CardTitle>
+											<div className="min-w-0 flex-1">
+												<CardTitle className={`text-base sm:text-lg truncate ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+													{creature.name}
+												</CardTitle>
 												<Badge
 													variant="outline"
-													className={`mt-1 ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
+													className={`mt-1 text-xs ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
 												>
 													{creature.category}
 												</Badge>
 											</div>
 										</div>
 										{canEditCreature(creature) && (
-											<div className="flex gap-2">
+											<div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
 												<Button
 													variant="outline"
 													size="sm"
-													className={`h-8 w-8 p-0 ${
+													className={`h-7 w-7 sm:h-8 sm:w-8 p-0 ${
 														session?.user?.darkMode
 															? 'border-gray-600 text-gray-300 hover:bg-gray-700'
 															: 'border-purple-200 text-purple-600 hover:bg-purple-50'
@@ -596,12 +600,12 @@ export default function GlossaryPage() {
 														handleEdit(creature);
 													}}
 												>
-													<Edit size={14} />
+													<Edit size={12} className="sm:w-3.5 sm:h-3.5" />
 												</Button>
 												<Button
 													variant="outline"
 													size="sm"
-													className={`h-8 w-8 p-0 ${
+													className={`h-7 w-7 sm:h-8 sm:w-8 p-0 ${
 														session?.user?.darkMode
 															? 'border-red-600 text-red-400 hover:bg-red-900/50'
 															: 'border-red-200 text-red-600 hover:bg-red-50'
@@ -611,7 +615,7 @@ export default function GlossaryPage() {
 														handleDelete(creature.id);
 													}}
 												>
-													<Trash2 size={14} />
+													<Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
 												</Button>
 											</div>
 										)}
@@ -621,13 +625,13 @@ export default function GlossaryPage() {
 									{/* Description */}
 									{creature.description && (
 										<div
-											className={`p-3 rounded-lg border mb-3 ${
+											className={`p-2 sm:p-3 rounded-lg border mb-3 ${
 												session?.user?.darkMode
 													? 'bg-gray-700/50 border-gray-600'
 													: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'
 											}`}
 										>
-											<p className={`text-sm leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+											<p className={`text-xs sm:text-sm leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
 												{creature.description}
 											</p>
 										</div>
@@ -639,19 +643,25 @@ export default function GlossaryPage() {
 											{creature.armorClass && (
 												<div className="text-center">
 													<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>AC</div>
-													<div className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{creature.armorClass}</div>
+													<div className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														{creature.armorClass}
+													</div>
 												</div>
 											)}
 											{creature.hitPoints && (
 												<div className="text-center">
 													<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>HP</div>
-													<div className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{creature.hitPoints}</div>
+													<div className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														{creature.hitPoints}
+													</div>
 												</div>
 											)}
 											{creature.challengeRating && (
 												<div className="text-center">
 													<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>CR</div>
-													<div className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>{creature.challengeRating}</div>
+													<div className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														{creature.challengeRating}
+													</div>
 												</div>
 											)}
 										</div>
@@ -660,7 +670,7 @@ export default function GlossaryPage() {
 									{/* Tags */}
 									{creature.tags && creature.tags.length > 0 && (
 										<div className="flex flex-wrap gap-1 mb-3">
-											{creature.tags.map((tag, index) => (
+											{creature.tags.slice(0, 3).map((tag, index) => (
 												<Badge
 													key={index}
 													variant="secondary"
@@ -669,13 +679,21 @@ export default function GlossaryPage() {
 													{tag}
 												</Badge>
 											))}
+											{creature.tags.length > 3 && (
+												<Badge
+													variant="secondary"
+													className={`text-xs ${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+												>
+													+{creature.tags.length - 3}
+												</Badge>
+											)}
 										</div>
 									)}
 
 									{/* Creator Info */}
 									<div className={`text-xs flex items-center gap-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-										<User size={12} />
-										<span>
+										<User size={10} className="sm:w-3 sm:h-3 flex-shrink-0" />
+										<span className="truncate">
 											Created by{' '}
 											{(creature.creator.campaignMembers && creature.creator.campaignMembers[0]?.characterName) ||
 												creature.creator.username ||
@@ -703,69 +721,69 @@ export default function GlossaryPage() {
 					}}
 				>
 					<DialogContent
-						className={`max-w-4xl max-h-[90vh] overflow-y-auto border-0 shadow-xl backdrop-blur-sm ${
+						className={`max-w-4xl max-h-[95vh] w-[95vw] sm:w-full overflow-y-auto border-0 shadow-xl backdrop-blur-sm ${
 							session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'
 						}`}
 					>
 						<DialogHeader>
-							<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-800'}>
+							<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 								{editingCreature ? 'Edit Creature' : 'Create New Creature'}
 							</DialogTitle>
 						</DialogHeader>
 
-						<form onSubmit={handleSubmit} className="space-y-6">
+						<form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
 							{/* Basic Information */}
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 								<div>
-									<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Name *</Label>
+									<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Name *</Label>
 									<Input
 										value={formData.name}
 										onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-										className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+										className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										placeholder="Creature name"
 										required
 									/>
 								</div>
 								<div>
-									<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Category</Label>
+									<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Category</Label>
 									<Input
 										value={formData.category}
 										onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-										className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+										className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										placeholder="NPC, Monster, Human, etc."
 									/>
 								</div>
 							</div>
 
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Description</Label>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Description</Label>
 								<Textarea
 									value={formData.description}
 									onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+									className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 									placeholder="Describe the creature..."
 									rows={3}
 								/>
 							</div>
 
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Avatar URL</Label>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Avatar URL</Label>
 								<Input
 									value={formData.avatarUrl}
 									onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-									className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+									className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 									placeholder="https://example.com/image.jpg"
 								/>
 							</div>
 
 							{/* Tags */}
 							<div>
-								<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Tags</Label>
-								<div className="flex gap-2 mb-2">
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Tags</Label>
+								<div className="flex flex-col sm:flex-row gap-2 mb-2">
 									<Input
 										value={tagInput}
 										onChange={(e) => setTagInput(e.target.value)}
-										className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+										className={`flex-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										placeholder="Add a tag..."
 										onKeyPress={(e) => {
 											if (e.key === 'Enter') {
@@ -774,7 +792,7 @@ export default function GlossaryPage() {
 											}
 										}}
 									/>
-									<Button type="button" onClick={addTag} variant="outline">
+									<Button type="button" onClick={addTag} variant="outline" className="w-full sm:w-auto">
 										Add
 									</Button>
 								</div>
@@ -794,149 +812,153 @@ export default function GlossaryPage() {
 							</div>
 
 							{/* D&D Stats */}
-							<div className="space-y-4">
-								<h3 className={`text-lg font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>D&D Statistics</h3>
+							<div className="space-y-3 sm:space-y-4">
+								<h3 className={`text-base sm:text-lg font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>D&D Statistics</h3>
 
 								{/* Basic Combat Stats */}
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Armor Class</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Armor Class</Label>
 										<Input
 											type="number"
 											value={formData.armorClass}
 											onChange={(e) => setFormData({ ...formData, armorClass: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Hit Points</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Hit Points</Label>
 										<Input
 											type="number"
 											value={formData.hitPoints}
 											onChange={(e) => setFormData({ ...formData, hitPoints: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										/>
 									</div>
-									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Speed</Label>
+									<div className="sm:col-span-2 lg:col-span-1">
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Speed</Label>
 										<Input
 											value={formData.speed}
 											onChange={(e) => setFormData({ ...formData, speed: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="30 ft., fly 60 ft."
 										/>
 									</div>
 								</div>
 
 								{/* Ability Scores */}
-								<div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+								<div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
 									{['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map((ability) => (
 										<div key={ability}>
-											<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>
+											<Label className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
 												{ability.charAt(0).toUpperCase() + ability.slice(1, 3).toUpperCase()}
 											</Label>
 											<Input
 												type="number"
 												value={formData[ability]}
 												onChange={(e) => setFormData({ ...formData, [ability]: e.target.value })}
-												className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+												className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											/>
 										</div>
 									))}
 								</div>
 
 								{/* Additional Stats */}
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Challenge Rating</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Challenge Rating</Label>
 										<Input
 											value={formData.challengeRating}
 											onChange={(e) => setFormData({ ...formData, challengeRating: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="1/4, 1, 5, 15, etc."
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Proficiency Bonus</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Proficiency Bonus</Label>
 										<Input
 											type="number"
 											value={formData.proficiencyBonus}
 											onChange={(e) => setFormData({ ...formData, proficiencyBonus: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 										/>
 									</div>
 								</div>
 
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Senses</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Senses</Label>
 										<Input
 											value={formData.senses}
 											onChange={(e) => setFormData({ ...formData, senses: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="darkvision 60 ft., passive Perception 12"
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Languages</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Languages</Label>
 										<Input
 											value={formData.languages}
 											onChange={(e) => setFormData({ ...formData, languages: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Common, Draconic"
 										/>
 									</div>
 								</div>
 
 								{/* Resistances and Immunities */}
-								<div className="grid grid-cols-1 gap-4">
+								<div className="grid grid-cols-1 gap-3 sm:gap-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Damage Resistances</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+											Damage Resistances
+										</Label>
 										<Input
 											value={formData.damageResistances}
 											onChange={(e) => setFormData({ ...formData, damageResistances: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="fire, cold"
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Damage Immunities</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Damage Immunities</Label>
 										<Input
 											value={formData.damageImmunities}
 											onChange={(e) => setFormData({ ...formData, damageImmunities: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="poison, necrotic"
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Condition Immunities</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+											Condition Immunities
+										</Label>
 										<Input
 											value={formData.conditionImmunities}
 											onChange={(e) => setFormData({ ...formData, conditionImmunities: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="charmed, frightened"
 										/>
 									</div>
 								</div>
 
 								{/* Skills and Saves */}
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Skills</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Skills</Label>
 										<Textarea
 											value={formData.skills}
 											onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Perception +5, Stealth +3"
 											rows={2}
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Saving Throws</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Saving Throws</Label>
 										<Textarea
 											value={formData.savingThrows}
 											onChange={(e) => setFormData({ ...formData, savingThrows: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Dex +6, Wis +4"
 											rows={2}
 										/>
@@ -944,33 +966,33 @@ export default function GlossaryPage() {
 								</div>
 
 								{/* Features */}
-								<div className="space-y-4">
+								<div className="space-y-3 sm:space-y-4">
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Traits</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Traits</Label>
 										<Textarea
 											value={formData.traits}
 											onChange={(e) => setFormData({ ...formData, traits: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Special traits and abilities..."
 											rows={3}
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Actions</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Actions</Label>
 										<Textarea
 											value={formData.actions}
 											onChange={(e) => setFormData({ ...formData, actions: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Combat actions and attacks..."
 											rows={3}
 										/>
 									</div>
 									<div>
-										<Label className={session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}>Legendary Actions</Label>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Legendary Actions</Label>
 										<Textarea
 											value={formData.legendaryActions}
 											onChange={(e) => setFormData({ ...formData, legendaryActions: e.target.value })}
-											className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200'}`}
 											placeholder="Legendary actions (if any)..."
 											rows={3}
 										/>
@@ -979,10 +1001,11 @@ export default function GlossaryPage() {
 							</div>
 
 							{/* Form Actions */}
-							<div className="flex justify-end gap-2 pt-4">
+							<div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
 								<Button
 									type="button"
 									variant="outline"
+									className={`w-full sm:w-auto ${session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
 									onClick={() => {
 										setShowCreateDialog(false);
 										setShowEditDialog(false);
@@ -990,11 +1013,13 @@ export default function GlossaryPage() {
 										resetForm();
 										setError('');
 									}}
-									className={session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}
 								>
 									Cancel
 								</Button>
-								<Button type="submit" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white">
+								<Button
+									type="submit"
+									className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+								>
 									{editingCreature ? 'Update Creature' : 'Create Creature'}
 								</Button>
 							</div>
@@ -1005,16 +1030,16 @@ export default function GlossaryPage() {
 				{/* Creature Detail Modal */}
 				<Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
 					<DialogContent
-						className={`max-w-4xl max-h-[90vh] overflow-hidden border-0 shadow-xl backdrop-blur-sm p-0 ${
+						className={`max-w-3xl max-h-[95vh] w-[95vw] sm:w-full border-0 shadow-xl backdrop-blur-sm p-0 flex flex-col ${
 							session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'
 						}`}
 					>
 						{selectedCreatureForDetail && (
-							<div className="h-full flex flex-col relative">
+							<div className="h-full flex flex-col relative min-h-0">
 								{/* Custom Close Button */}
 								<button
 									onClick={() => setShowDetailModal(false)}
-									className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+									className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
 									aria-label="Close modal"
 								>
 									<X size={16} className="text-white" />
@@ -1024,18 +1049,20 @@ export default function GlossaryPage() {
 								{getCreatureHeaderImage(selectedCreatureForDetail)}
 
 								{/* Scrollable content area */}
-								<div className="flex-1 overflow-y-auto p-6 space-y-6">
+								<div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 min-h-0">
 									{/* Description */}
 									{selectedCreatureForDetail.description && (
 										<div
-											className={`p-4 rounded-lg border ${
+											className={`p-3 sm:p-4 rounded-lg border ${
 												session?.user?.darkMode
 													? 'bg-gray-700/50 border-gray-600'
 													: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'
 											}`}
 										>
-											<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Description</h3>
-											<p className={`leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+											<h3 className={`text-base sm:text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+												Description
+											</h3>
+											<p className={`text-sm sm:text-base leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
 												{selectedCreatureForDetail.description}
 											</p>
 										</div>
@@ -1044,13 +1071,13 @@ export default function GlossaryPage() {
 									{/* Tags */}
 									{selectedCreatureForDetail.tags && selectedCreatureForDetail.tags.length > 0 && (
 										<div>
-											<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Tags</h3>
-											<div className="flex flex-wrap gap-2">
+											<h3 className={`text-base sm:text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Tags</h3>
+											<div className="flex flex-wrap gap-1 sm:gap-2">
 												{selectedCreatureForDetail.tags.map((tag, index) => (
 													<Badge
 														key={index}
 														variant="secondary"
-														className={`${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+														className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
 													>
 														{tag}
 													</Badge>
@@ -1065,26 +1092,28 @@ export default function GlossaryPage() {
 										selectedCreatureForDetail.speed ||
 										selectedCreatureForDetail.challengeRating) && (
 										<div
-											className={`p-4 rounded-lg border ${
+											className={`p-3 sm:p-4 rounded-lg border ${
 												session?.user?.darkMode
 													? 'bg-gray-700/50 border-gray-600'
 													: 'bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-blue-100'
 											}`}
 										>
-											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Combat Statistics</h3>
-											<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+											<h3 className={`text-base sm:text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+												Combat Statistics
+											</h3>
+											<div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 												{selectedCreatureForDetail.armorClass && (
 													<div className="text-center">
-														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Armor Class</div>
-														<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														<div className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Armor Class</div>
+														<div className={`text-lg sm:text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 															{selectedCreatureForDetail.armorClass}
 														</div>
 													</div>
 												)}
 												{selectedCreatureForDetail.hitPoints && (
 													<div className="text-center">
-														<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hit Points</div>
-														<div className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+														<div className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hit Points</div>
+														<div className={`text-lg sm:text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 															{selectedCreatureForDetail.hitPoints}
 														</div>
 													</div>

@@ -107,104 +107,115 @@ export default function AdminUsersPage() {
 		<div
 			className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
 		>
-			<div className="container mx-auto px-4 py-8">
-				<div className="mb-8">
+			<div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+				<div className="mb-6 sm:mb-8">
 					<Link
 						href="/admin/dashboard"
-						className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
+						className={`flex items-center gap-2 mb-4 text-sm sm:text-base ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
 					>
-						<ArrowLeft size={20} />
+						<ArrowLeft size={16} className="sm:w-5 sm:h-5" />
 						Back to Dashboard
 					</Link>
-					<div className="flex items-center justify-between mb-4">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
 						<div>
-							<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>User Management</h1>
-							<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>Manage all users and their permissions</p>
+							<h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>User Management</h1>
+							<p className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+								Manage all users and their permissions
+							</p>
 						</div>
 						<CreateUserForm onUserCreated={refreshUsers} />
 					</div>
 				</div>
 
 				{/* Statistics Grid */}
-				<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<div className="flex items-center gap-4">
-							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-red-800' : 'bg-red-100'}`}>
-								<Shield className={`h-6 w-6 ${session?.user?.darkMode ? 'text-red-300' : 'text-red-600'}`} />
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+						<div className="flex items-center gap-3 sm:gap-4">
+							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-red-800' : 'bg-red-100'}`}>
+								<Shield className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-red-300' : 'text-red-600'}`} />
 							</div>
 							<div>
-								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Admins</h3>
-								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>{adminCount}</p>
+								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Admins</h3>
+								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-red-400' : 'text-red-600'}`}>{adminCount}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<div className="flex items-center gap-4">
-							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
-								<User className={`h-6 w-6 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
+					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+						<div className="flex items-center gap-3 sm:gap-4">
+							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
+								<User className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
 							</div>
 							<div>
-								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>DMs</h3>
-								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{dmCount}</p>
+								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>DMs</h3>
+								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{dmCount}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<div className="flex items-center gap-4">
-							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'}`}>
-								<Users className={`h-6 w-6 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
+					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+						<div className="flex items-center gap-3 sm:gap-4">
+							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'}`}>
+								<Users className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
 							</div>
 							<div>
-								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Players</h3>
-								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>{playerCount}</p>
+								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Players</h3>
+								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>{playerCount}</p>
 							</div>
 						</div>
 					</Card>
 
-					<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<div className="flex items-center gap-4">
-							<div className={`p-3 rounded-lg ${session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'}`}>
-								<Users className={`h-6 w-6 ${session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'}`} />
+					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+						<div className="flex items-center gap-3 sm:gap-4">
+							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'}`}>
+								<Users className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'}`} />
 							</div>
 							<div>
-								<h3 className={`font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Total Users</h3>
-								<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>{users.length}</p>
+								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Total Users</h3>
+								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>{users.length}</p>
 							</div>
 						</div>
 					</Card>
 				</div>
 
 				{/* Users List */}
-				<Card className={`p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-					<h3 className={`text-lg font-semibold mb-6 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>All Users</h3>
-					<div className="space-y-4">
+				<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
+					<h3 className={`text-base sm:text-lg font-semibold mb-4 sm:mb-6 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>All Users</h3>
+					<div className="flex flex-col gap-4 sm:gap-6">
 						{users.length > 0 ? (
 							users.map((user) => (
 								<Link key={user.id} href={`/admin/users/${user.id}`}>
 									<div
-										className={`flex items-center justify-between p-4 rounded-lg transition-colors cursor-pointer ${
+										className={`flex flex-col sm:flex-row sm:items-center gap-4 p-3 sm:p-4 rounded-lg transition-colors cursor-pointer ${
 											session?.user?.darkMode ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
 										}`}
 									>
-										<div className="flex items-center gap-4">
+										<div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
 											{user.avatarUrl && !avatarErrors[user.id] ? (
-												<img src={user.avatarUrl} alt="Avatar" className="h-12 w-12 rounded-full" onError={() => handleAvatarError(user.id)} />
+												<img
+													src={user.avatarUrl}
+													alt="Avatar"
+													className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex-shrink-0"
+													onError={() => handleAvatarError(user.id)}
+												/>
 											) : (
 												<div
-													className={`h-12 w-12 rounded-full flex items-center justify-center ${
+													className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center flex-shrink-0 ${
 														session?.user?.darkMode ? 'bg-cyan-800' : 'bg-purple-100'
 													}`}
 												>
-													<User size={20} className={session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'} />
+													<User size={16} className={`sm:w-5 sm:h-5 ${session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'}`} />
 												</div>
 											)}
-											<div>
-												<h4 className={`font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{user.email}</h4>
-												<div className={`flex items-center gap-4 text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+											<div className="min-w-0 flex-1">
+												<h4 className={`font-medium text-sm sm:text-base truncate ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+													{user.email}
+												</h4>
+												<div
+													className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+												>
 													<span
-														className={`px-2 py-1 rounded-full text-xs font-medium ${
+														className={`px-2 py-1 rounded-full text-xs font-medium w-fit ${
 															user.role === 'ADMIN'
 																? session?.user?.darkMode
 																	? 'bg-red-800 text-red-300'
@@ -227,43 +238,50 @@ export default function AdminUsersPage() {
 												</div>
 											</div>
 										</div>
-										<div className={`flex items-center gap-6 text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+										<div
+											className={`flex items-center justify-between sm:justify-end gap-4 sm:gap-6 text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+										>
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
-													<Users size={14} />
+													<Users size={12} className="sm:w-3.5 sm:h-3.5" />
 													<span className={`font-medium ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
 														{user._count.campaignMembers}
 													</span>
 												</div>
-												<span>Campaigns</span>
+												<span className="hidden sm:inline">Campaigns</span>
+												<span className="sm:hidden">Camps</span>
 											</div>
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
-													<FileText size={14} />
+													<FileText size={12} className="sm:w-3.5 sm:h-3.5" />
 													<span className={`font-medium ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
 														{user._count.updates}
 													</span>
 												</div>
-												<span>Updates</span>
+												<span className="hidden sm:inline">Updates</span>
+												<span className="sm:hidden">Updates</span>
 											</div>
 											<div className="text-center">
 												<div className="flex items-center gap-1 mb-1">
-													<StickyNote size={14} />
+													<StickyNote size={12} className="sm:w-3.5 sm:h-3.5" />
 													<span className={`font-medium ${session?.user?.darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
 														{user._count.notes}
 													</span>
 												</div>
-												<span>Notes</span>
+												<span className="hidden sm:inline">Notes</span>
+												<span className="sm:hidden">Notes</span>
 											</div>
 										</div>
 									</div>
 								</Link>
 							))
 						) : (
-							<div className={`text-center py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-								<User className={`h-16 w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-								<h4 className={`text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No users found</h4>
-								<p>Create your first user to get started</p>
+							<div className={`text-center py-8 sm:py-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+								<User className={`h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+								<h4 className={`text-base sm:text-lg font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+									No users found
+								</h4>
+								<p className="text-sm">Create your first user to get started</p>
 							</div>
 						)}
 					</div>

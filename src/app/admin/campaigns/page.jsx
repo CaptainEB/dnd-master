@@ -97,19 +97,21 @@ export default function AdminCampaigns() {
 		<div
 			className={`min-h-screen pt-16 ${session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 to-blue-50'}`}
 		>
-			<div className="container mx-auto px-4 py-8">
-				<div className="mb-8">
+			<div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+				<div className="mb-6 sm:mb-8">
 					<Link
 						href="/admin/dashboard"
-						className={`flex items-center gap-2 mb-4 ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
+						className={`flex items-center gap-2 mb-4 text-sm sm:text-base ${session?.user?.darkMode ? 'text-cyan-400 hover:text-cyan-300' : 'text-purple-600 hover:text-purple-700'}`}
 					>
-						<ArrowLeft size={20} />
+						<ArrowLeft size={16} className="sm:w-5 sm:h-5" />
 						Back to Dashboard
 					</Link>
-					<div className="flex items-center justify-between">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 						<div>
-							<h1 className={`text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Campaign Management</h1>
-							<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>
+							<h1 className={`text-2xl sm:text-3xl font-bold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+								Campaign Management
+							</h1>
+							<p className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 								Manage all campaigns across the platform ({campaigns.length} total)
 							</p>
 						</div>
@@ -117,12 +119,16 @@ export default function AdminCampaigns() {
 					</div>
 				</div>
 
-				<div className="grid gap-6">
+				<div className="grid gap-4 sm:gap-6">
 					{campaigns.length === 0 ? (
-						<Card className={`p-8 text-center border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-							<Shield className={`h-12 w-12 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
-							<h3 className={`text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>No Campaigns Found</h3>
-							<p className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}>No campaigns have been created yet.</p>
+						<Card
+							className={`p-6 sm:p-8 text-center border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
+						>
+							<Shield className={`h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 ${session?.user?.darkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+							<h3 className={`text-base sm:text-lg font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+								No Campaigns Found
+							</h3>
+							<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>No campaigns have been created yet.</p>
 						</Card>
 					) : (
 						campaigns.map((campaign) => {
@@ -132,52 +138,64 @@ export default function AdminCampaigns() {
 							return (
 								<Link key={campaign.id} href={`/admin/campaigns/${campaign.id}`}>
 									<Card
-										className={`p-6 transition-all duration-200 cursor-pointer border-0 shadow-lg backdrop-blur-sm hover:shadow-xl ${
+										className={`p-4 sm:p-6 transition-all duration-200 cursor-pointer border-0 shadow-lg backdrop-blur-sm hover:shadow-xl ${
 											session?.user?.darkMode ? 'bg-gray-800/80 hover:bg-gray-800/90' : 'bg-white/80 hover:bg-gray-50'
 										}`}
 									>
-										<div className="flex items-start justify-between mb-4">
+										<div className="flex flex-col gap-4 mb-4">
 											<div>
-												<h3 className={`text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>{campaign.name}</h3>
-												<p className={`mb-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+												<h3 className={`text-lg sm:text-xl font-semibold mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+													{campaign.name}
+												</h3>
+												<p className={`mb-3 text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 													{campaign.description || 'No description provided'}
 												</p>
-												<div className={`flex items-center gap-4 text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+												<div
+													className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+												>
 													<div className="flex items-center gap-1">
-														<Calendar size={16} />
+														<Calendar size={14} className="sm:w-4 sm:h-4" />
 														Created: <DateDisplay date={campaign.createdAt} />
 													</div>
 													<div className="flex items-center gap-1">
-														<Users size={16} />
+														<Users size={14} className="sm:w-4 sm:h-4" />
 														{campaign._count.members} members
 													</div>
 												</div>
 											</div>
 										</div>
 
-										<div className="grid md:grid-cols-3 gap-4 mt-4">
-											<div className={`p-4 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800/50' : 'bg-blue-50'}`}>
+										<div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
+											<div className={`p-3 sm:p-4 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800/50' : 'bg-blue-50'}`}>
 												<div className="flex items-center gap-2 mb-2">
-													<Shield className={`h-5 w-5 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-blue-200' : 'text-blue-900'}`}>DMs</span>
+													<Shield className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
+													<span className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-blue-200' : 'text-blue-900'}`}>
+														DMs
+													</span>
 												</div>
-												<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{dmCount}</p>
+												<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{dmCount}</p>
 											</div>
 
-											<div className={`p-4 rounded-lg ${session?.user?.darkMode ? 'bg-green-800/50' : 'bg-green-50'}`}>
+											<div className={`p-3 sm:p-4 rounded-lg ${session?.user?.darkMode ? 'bg-green-800/50' : 'bg-green-50'}`}>
 												<div className="flex items-center gap-2 mb-2">
-													<Users className={`h-5 w-5 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-green-200' : 'text-green-900'}`}>Players</span>
+													<Users className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
+													<span className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-green-200' : 'text-green-900'}`}>
+														Players
+													</span>
 												</div>
-												<p className={`text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>{playerCount}</p>
+												<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>
+													{playerCount}
+												</p>
 											</div>
 
-											<div className={`p-4 rounded-lg ${session?.user?.darkMode ? 'bg-cyan-800/50' : 'bg-purple-50'}`}>
+											<div className={`p-3 sm:p-4 rounded-lg ${session?.user?.darkMode ? 'bg-cyan-800/50' : 'bg-purple-50'}`}>
 												<div className="flex items-center gap-2 mb-2">
-													<Calendar className={`h-5 w-5 ${session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'}`} />
-													<span className={`font-medium ${session?.user?.darkMode ? 'text-cyan-200' : 'text-purple-900'}`}>Content</span>
+													<Calendar className={`h-4 w-4 sm:h-5 sm:w-5 ${session?.user?.darkMode ? 'text-cyan-300' : 'text-purple-600'}`} />
+													<span className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-cyan-200' : 'text-purple-900'}`}>
+														Content
+													</span>
 												</div>
-												<div className={`text-sm ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
+												<div className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'text-cyan-400' : 'text-purple-600'}`}>
 													<div>{campaign._count.updates || 0} updates</div>
 													<div>{campaign._count.quests || 0} quests</div>
 												</div>
@@ -186,8 +204,10 @@ export default function AdminCampaigns() {
 
 										{campaign.members && campaign.members.length > 0 && (
 											<div className={`mt-4 pt-4 border-t ${session?.user?.darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-												<h4 className={`font-medium mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Recent Members</h4>
-												<div className="flex flex-wrap gap-2">
+												<h4 className={`font-medium mb-2 text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+													Recent Members
+												</h4>
+												<div className="flex flex-wrap gap-1 sm:gap-2">
 													{campaign.members.slice(0, 5).map((member, index) => (
 														<span
 															key={index}
