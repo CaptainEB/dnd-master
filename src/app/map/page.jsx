@@ -7,14 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, ImageIcon, Plus, Trash2, User, X } from 'lucide-react';
+import { Edit, ImageIcon, Plus, Search, Trash2, User, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
 export default function MapPage() {
 	const { data: session } = useSession();
 	const [mapPosts, setMapPosts] = useState([]);
+	const [filteredMapPosts, setFilteredMapPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -22,6 +24,10 @@ export default function MapPage() {
 	const [showImageModal, setShowImageModal] = useState(false);
 	const [selectedImage, setSelectedImage] = useState(null);
 	const [editingMapPost, setEditingMapPost] = useState(null);
+
+	// Search and filtering states
+	const [searchTerm, setSearchTerm] = useState('');
+	const [tagFilter, setTagFilter] = useState('all');
 
 	// State for tracking image load status
 	const [imageLoadStatus, setImageLoadStatus] = useState({});
@@ -31,7 +37,10 @@ export default function MapPage() {
 		title: '',
 		description: '',
 		imageUrl: '',
+		tags: [],
 	});
+
+	const [tagInput, setTagInput] = useState('');
 
 	// Load map posts
 	const loadMapPosts = useCallback(async () => {
@@ -44,6 +53,7 @@ export default function MapPage() {
 
 			if (response.success) {
 				setMapPosts(response.data || []);
+				setFilteredMapPosts(response.data || []);
 			} else {
 				setError(response.error || 'Failed to load map posts');
 			}
@@ -54,6 +64,37 @@ export default function MapPage() {
 			setLoading(false);
 		}
 	}, [session?.user?.activeCampaignId]);
+
+	// Filter map posts based on search and tags
+	useEffect(() => {
+		let filtered = mapPosts;
+
+		// Search filter
+		if (searchTerm) {
+			filtered = filtered.filter(
+				(mapPost) =>
+					mapPost.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+					mapPost.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+					mapPost.tags?.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+			);
+		}
+
+		// Tag filter
+		if (tagFilter && tagFilter !== 'all') {
+			filtered = filtered.filter((mapPost) => mapPost.tags?.some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase())));
+		}
+
+		setFilteredMapPosts(filtered);
+	}, [mapPosts, searchTerm, tagFilter]);
+
+	// Get all unique tags from all map posts
+	const getAllTags = () => {
+		const allTags = new Set();
+		mapPosts.forEach((mapPost) => {
+			mapPost.tags?.forEach((tag) => allTags.add(tag));
+		});
+		return Array.from(allTags).sort();
+	};
 
 	// Load data on mount and when session changes
 	useEffect(() => {
@@ -68,6 +109,27 @@ export default function MapPage() {
 			title: '',
 			description: '',
 			imageUrl: '',
+			tags: [],
+		});
+		setTagInput('');
+	};
+
+	// Add tag
+	const addTag = () => {
+		if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+			setFormData({
+				...formData,
+				tags: [...formData.tags, tagInput.trim()],
+			});
+			setTagInput('');
+		}
+	};
+
+	// Remove tag
+	const removeTag = (tagToRemove) => {
+		setFormData({
+			...formData,
+			tags: formData.tags.filter((tag) => tag !== tagToRemove),
 		});
 	};
 
@@ -145,6 +207,7 @@ export default function MapPage() {
 			title: mapPost.title,
 			description: mapPost.description || '',
 			imageUrl: mapPost.imageUrl,
+			tags: mapPost.tags || [],
 		});
 		setShowEditDialog(true);
 	};
@@ -271,6 +334,43 @@ export default function MapPage() {
 										/>
 									</div>
 
+									{/* Tags Section */}
+									<div>
+										<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Tags</Label>
+										<div className="mt-1 space-y-2">
+											<div className="flex flex-col sm:flex-row gap-2">
+												<Input
+													value={tagInput}
+													onChange={(e) => setTagInput(e.target.value)}
+													placeholder="Add a tag..."
+													className={`flex-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
+													onKeyPress={(e) => {
+														if (e.key === 'Enter') {
+															e.preventDefault();
+															addTag();
+														}
+													}}
+												/>
+												<Button type="button" onClick={addTag} variant="outline" className="w-full sm:w-auto">
+													Add
+												</Button>
+											</div>
+											<div className="flex flex-wrap gap-1">
+												{formData.tags.map((tag, index) => (
+													<Badge
+														key={index}
+														variant="secondary"
+														className={`text-xs cursor-pointer ${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+														onClick={() => removeTag(tag)}
+													>
+														{tag}
+														<X size={12} className="ml-1" />
+													</Badge>
+												))}
+											</div>
+										</div>
+									</div>
+
 									<div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-2">
 										<Button
 											type="button"
@@ -302,22 +402,100 @@ export default function MapPage() {
 					<div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm sm:text-base">{error}</div>
 				)}
 
+				{/* Search and Filter Controls */}
+				<div className="mb-6 sm:mb-8 space-y-4">
+					<div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+						{/* Search Input */}
+						<div className="flex-1">
+							<div className="relative">
+								<Search
+									size={16}
+									className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}
+								/>
+								<Input
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									placeholder="Search maps by title, description, or tags..."
+									className={`pl-10 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500'}`}
+								/>
+							</div>
+						</div>
+
+						{/* Tag Filter Dropdown */}
+						<div className="w-full sm:w-48">
+							<Select value={tagFilter} onValueChange={setTagFilter}>
+								<SelectTrigger
+									className={`text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-800 border-gray-600 text-white' : 'border-gray-300'}`}
+								>
+									<SelectValue placeholder="Filter by tag" />
+								</SelectTrigger>
+								<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}>
+									<SelectItem value="all" className={session?.user?.darkMode ? 'text-white hover:bg-gray-700' : 'hover:bg-gray-50'}>
+										All tags
+									</SelectItem>
+									{getAllTags().map((tag) => (
+										<SelectItem key={tag} value={tag} className={session?.user?.darkMode ? 'text-white hover:bg-gray-700' : 'hover:bg-gray-50'}>
+											{tag}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+
+					{/* Active Filters */}
+					{(searchTerm || (tagFilter && tagFilter !== 'all')) && (
+						<div className="flex flex-wrap items-center gap-2">
+							<span className={`text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Active filters:</span>
+							{searchTerm && (
+								<Badge
+									variant="secondary"
+									className={`text-xs cursor-pointer ${session?.user?.darkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+									onClick={() => setSearchTerm('')}
+								>
+									Search: "{searchTerm}"
+									<X size={12} className="ml-1" />
+								</Badge>
+							)}
+							{tagFilter && tagFilter !== 'all' && (
+								<Badge
+									variant="secondary"
+									className={`text-xs cursor-pointer ${session?.user?.darkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+									onClick={() => setTagFilter('all')}
+								>
+									Tag: {tagFilter}
+									<X size={12} className="ml-1" />
+								</Badge>
+							)}
+						</div>
+					)}
+
+					{/* Results count */}
+					<div className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+						Showing {filteredMapPosts.length} of {mapPosts.length} maps
+					</div>
+				</div>
+
 				{/* Map Posts */}
-				{mapPosts.length === 0 ? (
+				{filteredMapPosts.length === 0 ? (
 					<Card className={session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}>
 						<CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
 							<ImageIcon size={40} className={`sm:w-12 sm:h-12 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
 							<h3 className={`mt-3 sm:mt-4 text-base sm:text-lg font-medium ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-900'}`}>
-								No maps yet
+								{mapPosts.length === 0 ? 'No maps yet' : 'No maps found'}
 							</h3>
 							<p className={`mt-2 text-center text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-								{canCreate() ? 'Create your first map post to get started!' : 'No maps have been shared yet.'}
+								{mapPosts.length === 0
+									? canCreate()
+										? 'Create your first map post to get started!'
+										: 'No maps have been shared yet.'
+									: 'Try adjusting your search or filter criteria.'}
 							</p>
 						</CardContent>
 					</Card>
 				) : (
 					<div className="space-y-4 sm:space-y-6">
-						{mapPosts.map((mapPost) => (
+						{filteredMapPosts.map((mapPost) => (
 							<Card
 								key={mapPost.id}
 								className={`overflow-hidden ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
@@ -376,18 +554,31 @@ export default function MapPage() {
 											{mapPost.description}
 										</p>
 									)}
+
+									{/* Tags */}
+									{mapPost.tags && mapPost.tags.length > 0 && (
+										<div className="mb-3 sm:mb-4">
+											<div className="flex flex-wrap gap-1 sm:gap-2">
+												{mapPost.tags.map((tag, index) => (
+													<Badge
+														key={index}
+														variant="secondary"
+														className={`text-xs cursor-pointer ${session?.user?.darkMode ? 'bg-blue-900/50 text-blue-200 hover:bg-blue-800/50' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+														onClick={() => setTagFilter(tag)}
+													>
+														{tag}
+													</Badge>
+												))}
+											</div>
+										</div>
+									)}
+
 									<div
-										className="relative cursor-pointer rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-200"
+										className="relative cursor-pointer rounded-lg overflow-hidden shadow-lg transition-shadow duration-200"
 										onClick={() => openImageModal(mapPost)}
 									>
 										<div className="w-full h-48 sm:h-64 lg:h-96 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
 											{mapPost.imageUrl && <img src={mapPost.imageUrl} alt={mapPost.title} className="w-full h-full object-cover" />}
-										</div>
-										{/* Removed the black overlay that was covering the image */}
-										<div className="absolute inset-0 bg-transparent hover:bg-black hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center pointer-events-none">
-											<div className="opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 text-white px-3 sm:px-4 py-2 rounded-lg pointer-events-auto text-xs sm:text-sm">
-												Click to enlarge
-											</div>
 										</div>
 									</div>
 								</CardContent>
@@ -440,6 +631,43 @@ export default function MapPage() {
 								/>
 							</div>
 
+							{/* Tags Section */}
+							<div>
+								<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Tags</Label>
+								<div className="mt-1 space-y-2">
+									<div className="flex flex-col sm:flex-row gap-2">
+										<Input
+											value={tagInput}
+											onChange={(e) => setTagInput(e.target.value)}
+											placeholder="Add a tag..."
+											className={`flex-1 text-sm sm:text-base ${session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-blue-200'}`}
+											onKeyPress={(e) => {
+												if (e.key === 'Enter') {
+													e.preventDefault();
+													addTag();
+												}
+											}}
+										/>
+										<Button type="button" onClick={addTag} variant="outline" className="w-full sm:w-auto">
+											Add
+										</Button>
+									</div>
+									<div className="flex flex-wrap gap-1">
+										{formData.tags.map((tag, index) => (
+											<Badge
+												key={index}
+												variant="secondary"
+												className={`text-xs cursor-pointer ${session?.user?.darkMode ? 'bg-gray-600 text-gray-200' : 'bg-gray-100 text-gray-700'}`}
+												onClick={() => removeTag(tag)}
+											>
+												{tag}
+												<X size={12} className="ml-1" />
+											</Badge>
+										))}
+									</div>
+								</div>
+							</div>
+
 							<div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-2 pt-2">
 								<Button
 									type="button"
@@ -467,40 +695,48 @@ export default function MapPage() {
 
 				{/* Image Modal */}
 				<Dialog open={showImageModal} onOpenChange={setShowImageModal}>
-					<DialogContent className="max-w-[98vw] max-h-[98vh] p-2 sm:p-4 border-0 bg-transparent flex items-center justify-center">
+					<DialogContent className="!fixed !inset-0 !z-50 !max-w-none !max-h-none !w-screen !h-screen !p-0 !m-0 !border-0 !bg-black/60 !flex !items-center !justify-center !translate-x-0 !translate-y-0 !top-0 !left-0 !rounded-none !gap-0">
 						<DialogHeader className="sr-only">
 							<DialogTitle>View Map Image</DialogTitle>
 						</DialogHeader>
 						{selectedImage && (
-							<div className="relative flex items-center justify-center w-full h-full">
+							<>
+								{/* Close button - fixed position */}
 								<button
 									onClick={() => setShowImageModal(false)}
-									className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
+									className="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-black/70 backdrop-blur-sm flex items-center justify-center hover:bg-black/90 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
 									aria-label="Close modal"
 								>
-									<X size={16} className="sm:w-5 sm:h-5 text-white" />
+									<X size={20} className="text-white" />
 								</button>
-								{selectedImage.imageUrl ? (
-									<img
-										src={selectedImage.imageUrl}
-										alt={selectedImage.title}
-										className="object-contain rounded-lg mx-auto max-w-full max-h-full"
-										style={{
-											minWidth: '90vw',
-											minHeight: '60vh',
-											maxWidth: '95vw',
-											maxHeight: '90vh',
-											width: 'auto',
-											height: 'auto',
-										}}
-										onError={(e) => {
-											e.target.style.display = 'none';
-											e.target.nextSibling.style.display = 'flex';
-										}}
-									/>
-								) : null}
-								<div className="hidden w-full h-64 sm:h-96 bg-gray-800 rounded-lg">{getFallbackImage(selectedImage.title)}</div>
-							</div>
+
+								{/* Backdrop - full screen, clicking closes the modal */}
+								<div
+									className="fixed inset-0 cursor-pointer bg-black/90 flex items-center justify-center"
+									onClick={() => setShowImageModal(false)}
+									aria-label="Close modal"
+								>
+									{/* Image - natural sizing within viewport */}
+									{selectedImage.imageUrl ? (
+										<img
+											src={selectedImage.imageUrl}
+											alt={selectedImage.title}
+											className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl cursor-zoom-out"
+											onClick={(e) => {
+												e.stopPropagation();
+												setShowImageModal(false);
+											}}
+											onError={(e) => {
+												e.target.style.display = 'none';
+												e.target.nextSibling.style.display = 'flex';
+											}}
+										/>
+									) : null}
+									<div className="hidden max-w-md h-64 bg-gray-800 rounded-lg shadow-2xl items-center justify-center">
+										{getFallbackImage(selectedImage.title)}
+									</div>
+								</div>
+							</>
 						)}
 					</DialogContent>
 				</Dialog>

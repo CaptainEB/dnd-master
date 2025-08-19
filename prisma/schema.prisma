@@ -113,6 +113,7 @@ model MapPost {
   title       String
   description String?
   imageUrl    String // URL to the map image
+  tags        String[] // Array of tags for categorization and searching
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   authorId    String   @db.ObjectId

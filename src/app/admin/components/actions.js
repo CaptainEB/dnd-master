@@ -3904,6 +3904,7 @@ export async function createMapPost(mapPostData) {
 				title: mapPostData.title,
 				description: mapPostData.description || '',
 				imageUrl: mapPostData.imageUrl,
+				tags: mapPostData.tags || [],
 				authorId: session.user.id,
 				campaignId: mapPostData.campaignId,
 			},
@@ -4089,6 +4090,7 @@ export async function updateMapPost(mapPostId, mapPostData) {
 				title: mapPostData.title,
 				description: mapPostData.description || '',
 				imageUrl: mapPostData.imageUrl,
+				tags: mapPostData.tags || [],
 			},
 			include: {
 				author: {
