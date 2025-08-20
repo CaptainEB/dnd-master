@@ -533,7 +533,7 @@ export default function RulesPage() {
 					<div className="relative">
 						{/* Fixed Table of Contents - Only visible on large screens */}
 						{toc.length > 0 && (
-							<div className="hidden lg:block fixed lg:left-10 xl:left-10 2xl:left-60 top-90 w-72 z-40">
+							<div className="hidden lg:block fixed lg:left-10 top-80 w-72 z-40">
 								<Card
 									className={`backdrop-blur-sm max-h-[calc(100vh-2rem)] flex flex-col shadow-lg ${
 										session?.user?.darkMode ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-purple-200'
