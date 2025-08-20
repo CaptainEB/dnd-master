@@ -643,14 +643,12 @@ export default function RulesPage() {
 													</div>
 												</CardHeader>
 												<CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-													<div className="prose prose-sm max-w-none">
-														<div
-															className={`p-3 sm:p-4 rounded-lg text-sm sm:text-base ${
-																session?.user?.darkMode
-																	? 'bg-gray-700/50 text-gray-200'
-																	: 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 text-gray-700'
-															}`}
-														>
+													<div
+														className={`p-3 sm:p-4 rounded-lg ${
+															session?.user?.darkMode ? 'bg-gray-700/50' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50'
+														}`}
+													>
+														<div className={`prose prose-sm max-w-none ${session?.user?.darkMode ? 'prose-invert prose-gray' : 'prose-gray'}`}>
 															<ReactMarkdown remarkPlugins={[remarkGfm]}>{rule.content}</ReactMarkdown>
 														</div>
 													</div>
