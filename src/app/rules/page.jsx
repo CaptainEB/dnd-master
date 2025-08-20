@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { BookOpen, Edit, Eye, Loader2, Plus, Save, Search, Trash2 } from 'lucide-react';
+import { ArrowUp, BookOpen, Edit, Eye, Loader2, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -530,34 +530,58 @@ export default function RulesPage() {
 						</CardContent>
 					</Card>
 				) : (
-					<div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-						{/* Table of Contents */}
+					<div className="relative">
+						{/* Fixed Table of Contents - Only visible on large screens */}
 						{toc.length > 0 && (
-							<div className="lg:col-span-1 order-2 lg:order-1">
+							<div className="hidden lg:block fixed lg:left-10 xl:left-10 2xl:left-60 top-90 w-72 z-40">
 								<Card
-									className={`lg:sticky lg:top-32 backdrop-blur-sm ${
-										session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'
+									className={`backdrop-blur-sm max-h-[calc(100vh-2rem)] flex flex-col shadow-lg ${
+										session?.user?.darkMode ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-purple-200'
 									}`}
 								>
-									<CardHeader className="pb-3 sm:pb-4">
-										<CardTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+									<CardHeader className="pb-3 flex-shrink-0">
+										<CardTitle className={`text-lg flex items-center justify-between ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 											Table of Contents
+											<button
+												onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+												className={`p-1 rounded-full transition-colors ${
+													session?.user?.darkMode
+														? 'hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
+														: 'hover:bg-purple-100 text-purple-600 hover:text-purple-700'
+												}`}
+												title="Scroll to top"
+											>
+												<ArrowUp className="h-4 w-4" />
+											</button>
 										</CardTitle>
 									</CardHeader>
-									<CardContent className="space-y-2 sm:space-y-3 px-3 sm:px-6 pb-4 sm:pb-6">
+									<CardContent className="overflow-y-auto flex-1 px-4 pb-4 space-y-2">
 										{toc.map((categoryGroup) => (
 											<div key={categoryGroup.category}>
 												<h4
-													className={`font-semibold mb-1 sm:mb-2 text-sm sm:text-base ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-700'}`}
+													className={`font-semibold mb-1 text-sm sticky top-0 bg-inherit py-1 border-b ${
+														session?.user?.darkMode ? 'text-purple-400 border-gray-600' : 'text-purple-700 border-purple-100'
+													}`}
 												>
 													{categoryGroup.category}
 												</h4>
-												<ul className="space-y-0.5 sm:space-y-1 ml-2">
+												<ul className="space-y-0.5 ml-2 mb-3">
 													{categoryGroup.rules.map((rule) => (
 														<li key={rule.id}>
 															<a
 																href={`#rule-${rule.id}`}
-																className={`text-xs sm:text-sm block py-0.5 sm:py-1 transition-colors ${session?.user?.darkMode ? 'text-gray-300 hover:text-purple-400' : 'text-gray-600 hover:text-purple-600'}`}
+																className={`text-sm block py-1.5 px-2 rounded transition-all duration-200 hover:translate-x-1 ${
+																	session?.user?.darkMode
+																		? 'text-gray-300 hover:text-purple-400 hover:bg-purple-900/20'
+																		: 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
+																}`}
+																onClick={(e) => {
+																	e.preventDefault();
+																	document.getElementById(`rule-${rule.id}`)?.scrollIntoView({
+																		behavior: 'smooth',
+																		block: 'start',
+																	});
+																}}
 															>
 																{rule.title}
 															</a>
@@ -571,8 +595,61 @@ export default function RulesPage() {
 							</div>
 						)}
 
+						{/* Mobile TOC - Collapsible */}
+						{toc.length > 0 && (
+							<div className="lg:hidden mb-6">
+								<Card className={`backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/90 border-gray-700' : 'bg-white/90 border-purple-200'}`}>
+									<CardHeader className="pb-3">
+										<CardTitle className={`text-lg flex items-center justify-between ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+											Quick Navigation
+											<button
+												onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+												className={`p-1 rounded-full transition-colors ${
+													session?.user?.darkMode
+														? 'hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
+														: 'hover:bg-purple-100 text-purple-600 hover:text-purple-700'
+												}`}
+												title="Scroll to top"
+											>
+												<ArrowUp className="h-4 w-4" />
+											</button>
+										</CardTitle>
+									</CardHeader>
+									<CardContent className="space-y-2 px-4 pb-4">
+										{toc.map((categoryGroup) => (
+											<div key={categoryGroup.category}>
+												<h4 className={`font-semibold mb-1 text-sm ${session?.user?.darkMode ? 'text-purple-400' : 'text-purple-700'}`}>
+													{categoryGroup.category}
+												</h4>
+												<div className="flex flex-wrap gap-1 ml-2 mb-3">
+													{categoryGroup.rules.map((rule) => (
+														<button
+															key={rule.id}
+															onClick={() => {
+																document.getElementById(`rule-${rule.id}`)?.scrollIntoView({
+																	behavior: 'smooth',
+																	block: 'start',
+																});
+															}}
+															className={`text-xs px-2 py-1 rounded transition-colors ${
+																session?.user?.darkMode
+																	? 'text-gray-300 hover:text-purple-400 hover:bg-purple-900/20 border border-gray-600'
+																	: 'text-gray-600 hover:text-purple-600 hover:bg-purple-50 border border-purple-200'
+															}`}
+														>
+															{rule.title}
+														</button>
+													))}
+												</div>
+											</div>
+										))}
+									</CardContent>
+								</Card>
+							</div>
+						)}
+
 						{/* Rules Content */}
-						<div className={`${toc.length > 0 ? 'lg:col-span-3 order-1 lg:order-2' : 'lg:col-span-4'} space-y-4 sm:space-y-6`}>
+						<div className={`${toc.length > 0 ? 'lg:ml-80' : ''} space-y-4 sm:space-y-6`}>
 							{Object.keys(groupedRules).map((category) => (
 								<div key={category}>
 									<h2
