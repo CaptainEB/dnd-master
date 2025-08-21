@@ -290,20 +290,8 @@ export default function RulesPage() {
 					>
 						{/* Sidebar Header */}
 						<div className="flex-shrink-0 p-6 border-b border-current border-opacity-20">
-							<div className="flex items-center justify-between">
-								<h2 className={`text-lg font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Table of Contents</h2>
-								<button
-									onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-									className={`p-2 rounded-full transition-colors ${
-										session?.user?.darkMode
-											? 'hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
-											: 'hover:bg-purple-100 text-purple-600 hover:text-purple-700'
-									}`}
-									title="Scroll to top"
-								>
-									<ArrowUp className="h-4 w-4" />
-								</button>
-							</div>
+							<h2 className={`text-lg font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Table of Contents</h2>
+							<p className={`text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Campaign Rules</p>
 						</div>
 
 						{/* Scrollable TOC Content */}
@@ -342,6 +330,21 @@ export default function RulesPage() {
 									</ul>
 								</div>
 							))}
+						</div>
+
+						{/* Footer with Back to Top Button */}
+						<div className="p-4 border-t border-current border-opacity-20">
+							<button
+								onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+								className={`w-full py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+									session?.user?.darkMode
+										? 'hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
+										: 'hover:bg-purple-100 text-purple-600 hover:text-purple-700'
+								}`}
+							>
+								<ArrowUp className="h-4 w-4" />
+								Back to Top
+							</button>
 						</div>
 					</div>
 				</aside>

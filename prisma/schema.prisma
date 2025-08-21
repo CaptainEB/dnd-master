@@ -23,6 +23,7 @@ model user {
   campaignMembers CampaignMember[]
   updates         Update[]
   rules           Rule[]
+  infos           Info[]
   notes           Note[]
   creatures       Creature[]
   mapPosts        MapPost[]
@@ -40,6 +41,7 @@ model campaign {
   members     CampaignMember[]
   updates     Update[]
   rules       Rule[]
+  infos       Info[]
   notes       Note[]
   quests      Quest[]
   questTypes  QuestType[]
@@ -85,6 +87,24 @@ model Rule {
   updatedAt  DateTime @updatedAt
   authorId   String   @db.ObjectId
   campaignId String   @db.ObjectId
+
+  author   user     @relation(fields: [authorId], references: [id])
+  campaign campaign @relation(fields: [campaignId], references: [id])
+
+  @@index([campaignId, category, order])
+}
+
+model Info {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String // Brief description of the info
+  body        String // Markdown content for the main body
+  category    String? // For organizing info into sections (e.g., "World Lore", "Character Creation")
+  order       Int      @default(0) // For manual ordering within categories
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    String   @db.ObjectId
+  campaignId  String   @db.ObjectId
 
   author   user     @relation(fields: [authorId], references: [id])
   campaign campaign @relation(fields: [campaignId], references: [id])

@@ -71,7 +71,13 @@ const RuleCard = ({ rule, session, viewMode, canEdit, onEdit, onDelete, formatDa
 			</CardHeader>
 			<CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
 				<div className={`p-3 sm:p-4 rounded-lg ${session?.user?.darkMode ? 'bg-gray-700/50' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50'}`}>
-					<div className={`prose prose-sm max-w-none ${session?.user?.darkMode ? 'prose-invert prose-gray' : 'prose-gray'}`}>
+					<div
+						className={`prose prose-sm max-w-none ${
+							session?.user?.darkMode
+								? 'prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-code:text-purple-300 prose-pre:bg-gray-900 prose-blockquote:border-purple-500 prose-li:text-gray-300 prose-ul:text-gray-300 prose-ol:text-gray-300'
+								: 'prose-headings:text-gray-800 prose-p:text-gray-700 prose-strong:text-gray-800 prose-code:text-purple-600 prose-blockquote:border-purple-300'
+						}`}
+					>
 						<ReactMarkdown remarkPlugins={[remarkGfm]}>{rule.content}</ReactMarkdown>
 					</div>
 				</div>

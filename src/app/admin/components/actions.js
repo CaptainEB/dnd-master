@@ -1843,6 +1843,326 @@ export async function deleteCampaignRule(ruleId) {
 	}
 }
 
+// ===== INFO ACTIONS =====
+
+/**
+ * Get all campaign info entries
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignInfos(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Get all info entries for the campaign, ordered by category and order
+		const infos = await prisma.info.findMany({
+			where: { campaignId },
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+			orderBy: [{ category: 'asc' }, { order: 'asc' }, { createdAt: 'asc' }],
+		});
+
+		// Get character names for info authors
+		const authorIds = [...new Set(infos.map((info) => info.authorId))];
+		const campaignMembers = await prisma.campaignMember.findMany({
+			where: {
+				campaignId: campaignId,
+				userId: { in: authorIds },
+			},
+			select: {
+				userId: true,
+				characterName: true,
+			},
+		});
+
+		// Create character name map
+		const characterNameMap = {};
+		campaignMembers.forEach((member) => {
+			characterNameMap[member.userId] = member.characterName;
+		});
+
+		// Add character names to infos
+		const infosWithCharacterNames = infos.map((info) => ({
+			...info,
+			author: {
+				...info.author,
+				characterName: characterNameMap[info.authorId] || null,
+			},
+		}));
+
+		return {
+			success: true,
+			data: infosWithCharacterNames,
+		};
+	} catch (error) {
+		console.error('Error fetching campaign infos:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch info entries',
+		};
+	}
+}
+
+/**
+ * Create a new info entry - DM/Admin only
+ * @param {string} campaignId
+ * @param {Object} infoData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createCampaignInfo(campaignId, infoData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can create info entries',
+			};
+		}
+
+		// Create the info entry
+		const info = await prisma.info.create({
+			data: {
+				title: infoData.title,
+				description: infoData.description,
+				body: infoData.body,
+				category: infoData.category || 'General',
+				order: infoData.order || 0,
+				authorId: session.user.id,
+				campaignId: campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: info,
+		};
+	} catch (error) {
+		console.error('Error creating info:', error);
+		return {
+			success: false,
+			error: 'Failed to create info entry',
+		};
+	}
+}
+
+/**
+ * Update an existing info entry - DM/Admin only
+ * @param {string} infoId
+ * @param {Object} infoData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCampaignInfo(infoId, infoData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing info with campaign info
+		const existingInfo = await prisma.info.findUnique({
+			where: { id: infoId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingInfo) {
+			return {
+				success: false,
+				error: 'Info entry not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingInfo.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can edit info entries',
+			};
+		}
+
+		// Update the info entry
+		const updatedInfo = await prisma.info.update({
+			where: { id: infoId },
+			data: {
+				title: infoData.title,
+				description: infoData.description,
+				body: infoData.body,
+				category: infoData.category,
+				order: infoData.order,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedInfo,
+		};
+	} catch (error) {
+		console.error('Error updating info:', error);
+		return {
+			success: false,
+			error: 'Failed to update info entry',
+		};
+	}
+}
+
+/**
+ * Delete an info entry - DM/Admin only
+ * @param {string} infoId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteCampaignInfo(infoId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the existing info with campaign info
+		const existingInfo = await prisma.info.findUnique({
+			where: { id: infoId },
+			include: {
+				campaign: {
+					include: {
+						members: {
+							where: { userId: session.user.id },
+							select: { role: true },
+						},
+					},
+				},
+			},
+		});
+
+		if (!existingInfo) {
+			return {
+				success: false,
+				error: 'Info entry not found',
+			};
+		}
+
+		// Check permissions: Admin or DM in the campaign
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = existingInfo.campaign.members.find((m) => m.role === 'DM');
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can delete info entries',
+			};
+		}
+
+		// Delete the info entry
+		await prisma.info.delete({
+			where: { id: infoId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting info:', error);
+		return {
+			success: false,
+			error: 'Failed to delete info entry',
+		};
+	}
+}
+
 // ===== NOTES ACTIONS =====
 
 /**
