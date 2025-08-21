@@ -1,6 +1,13 @@
 'use client';
 
-import { createCampaignInfo, deleteCampaignInfo, getCampaignInfos, updateCampaignInfo } from '@/app/admin/components/actions';
+import {
+	createCampaignInfo,
+	deleteCampaignInfo,
+	getCampaignBackground,
+	getCampaignInfos,
+	updateCampaignBackground,
+	updateCampaignInfo,
+} from '@/app/admin/components/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowUp, BookOpen, Edit, Eye, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowUp, BookOpen, Edit, Eye, Image, Plus, Search, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -17,6 +24,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import CreateInfoDialog from './components/CreateInfoDialog';
 import InfoCard from './components/InfoCard';
+import SetBackgroundDialog from './components/SetBackgroundDialog';
 
 export default function InfoPage() {
 	const { data: session, status } = useSession();
@@ -30,6 +38,10 @@ export default function InfoPage() {
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 	const [editingInfo, setEditingInfo] = useState(null);
+	const [backgroundDialogOpen, setBackgroundDialogOpen] = useState(false);
+
+	// Background state
+	const [backgroundUrl, setBackgroundUrl] = useState('');
 
 	// Form setup
 	const createForm = useForm({
@@ -49,6 +61,12 @@ export default function InfoPage() {
 			body: '',
 			category: 'General',
 			order: 0,
+		},
+	});
+
+	const backgroundForm = useForm({
+		defaultValues: {
+			backgroundUrl: '',
 		},
 	});
 
@@ -76,6 +94,25 @@ export default function InfoPage() {
 
 		fetchInfos();
 	}, [session?.user?.activeCampaignId]);
+
+	// Fetch campaign background
+	useEffect(() => {
+		async function fetchBackground() {
+			if (!session?.user?.activeCampaignId) return;
+
+			try {
+				const result = await getCampaignBackground(session.user.activeCampaignId);
+				if (result.success) {
+					setBackgroundUrl(result.data || '');
+					backgroundForm.setValue('backgroundUrl', result.data || '');
+				}
+			} catch (error) {
+				console.error('Error fetching background:', error);
+			}
+		}
+
+		fetchBackground();
+	}, [session?.user?.activeCampaignId, backgroundForm]);
 
 	// Filter infos
 	const filteredInfos = infos.filter((info) => {
@@ -171,6 +208,41 @@ export default function InfoPage() {
 		}
 	};
 
+	// Handle background submission
+	const handleBackgroundSubmit = async (data) => {
+		if (!session?.user?.activeCampaignId) return;
+
+		try {
+			const result = await updateCampaignBackground(session.user.activeCampaignId, data.backgroundUrl);
+			if (result.success) {
+				setBackgroundUrl(data.backgroundUrl);
+				setBackgroundDialogOpen(false);
+			} else {
+				console.error('Failed to update background:', result.error);
+			}
+		} catch (error) {
+			console.error('Error updating background:', error);
+		}
+	};
+
+	// Handle clearing background
+	const handleClearBackground = async () => {
+		if (!session?.user?.activeCampaignId) return;
+
+		try {
+			const result = await updateCampaignBackground(session.user.activeCampaignId, '');
+			if (result.success) {
+				setBackgroundUrl('');
+				backgroundForm.setValue('backgroundUrl', '');
+				setBackgroundDialogOpen(false);
+			} else {
+				console.error('Failed to clear background:', result.error);
+			}
+		} catch (error) {
+			console.error('Error clearing background:', error);
+		}
+	};
+
 	// Handle delete info
 	const handleDeleteInfo = async (infoId) => {
 		if (!confirm('Are you sure you want to delete this info entry?')) return;
@@ -228,13 +300,25 @@ export default function InfoPage() {
 
 	return (
 		<>
+			{/* Background Image */}
+			{backgroundUrl && (
+				<div
+					className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+					style={{
+						backgroundImage: `url(${backgroundUrl})`,
+						opacity: 0.3,
+						zIndex: -10,
+					}}
+				/>
+			)}
+
 			{/* Desktop Full-Screen Sidebar - Fixed to left edge, full height */}
 			{toc.length > 0 && (
 				<aside className="hidden lg:block fixed left-0 top-0 h-screen w-80 z-50">
 					<div
 						className={`h-full flex flex-col ${
-							session?.user?.darkMode ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-purple-200'
-						} backdrop-blur-sm border-r shadow-lg`}
+							session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'
+						} border-r shadow-lg`}
 					>
 						<div className="p-6 border-b border-inherit">
 							<h2 className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Information</h2>
@@ -295,11 +379,12 @@ export default function InfoPage() {
 
 			{/* Main Content Area with Left Margin for Sidebar */}
 			<div
-				className={`min-h-screen pt-28 px-3 sm:px-4 lg:px-8 py-6 sm:py-8 ${toc.length > 0 ? 'lg:ml-80' : ''} ${
-					session?.user?.darkMode
-						? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
-						: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
-				}`}
+				className={`min-h-screen pt-28 px-3 sm:px-4 lg:px-8 py-6 sm:py-8 ${toc.length > 0 ? 'lg:ml-80' : ''}`}
+				style={{
+					background: session?.user?.darkMode
+						? 'linear-gradient(to bottom right, rgba(17, 24, 39, 0.7), rgba(31, 41, 55, 0.7), rgba(17, 24, 39, 0.7))'
+						: 'linear-gradient(to bottom right, rgba(243, 232, 255, 0.7), rgba(255, 255, 255, 0.7), rgba(239, 246, 255, 0.7))',
+				}}
 			>
 				<div className="max-w-7xl mx-auto">
 					{/* Header */}
@@ -355,17 +440,32 @@ export default function InfoPage() {
 
 								{/* Add Info Button */}
 								{canEdit && (
-									<Button
-										onClick={() => setCreateDialogOpen(true)}
-										className={`w-full sm:w-auto text-xs sm:text-sm px-3 sm:px-4 ${
-											session?.user?.darkMode
-												? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-												: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-										}`}
-									>
-										<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-										Add Info
-									</Button>
+									<div className="flex gap-2">
+										<Button
+											onClick={() => setCreateDialogOpen(true)}
+											className={`text-xs sm:text-sm px-3 sm:px-4 ${
+												session?.user?.darkMode
+													? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+													: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+											}`}
+										>
+											<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+											Add Info
+										</Button>
+										<Button
+											onClick={() => setBackgroundDialogOpen(true)}
+											variant="outline"
+											size="sm"
+											className={`text-xs sm:text-sm px-3 sm:px-4 ${
+												session?.user?.darkMode
+													? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white'
+													: 'border-purple-200 text-purple-600 hover:bg-purple-50'
+											}`}
+										>
+											<Image className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+											Background
+										</Button>
+									</div>
 								)}
 							</div>
 						</div>
@@ -626,6 +726,16 @@ export default function InfoPage() {
 						onOpenChange={setCreateDialogOpen}
 						form={createForm}
 						onSubmit={onCreateSubmit}
+						session={session}
+					/>
+
+					{/* Set Background Dialog */}
+					<SetBackgroundDialog
+						open={backgroundDialogOpen}
+						onOpenChange={setBackgroundDialogOpen}
+						form={backgroundForm}
+						onSubmit={handleBackgroundSubmit}
+						onClear={handleClearBackground}
 						session={session}
 					/>
 				</div>

@@ -30,11 +30,12 @@ model user {
 }
 
 model campaign {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  description       String?
+  infoBackgroundUrl String? // URL for custom background image on info page
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
   activeUsers user[]           @relation("UserActiveCampaign")

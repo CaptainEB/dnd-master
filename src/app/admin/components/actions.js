@@ -2163,6 +2163,124 @@ export async function deleteCampaignInfo(infoId) {
 	}
 }
 
+// ===== CAMPAIGN BACKGROUND ACTIONS =====
+
+/**
+ * Update campaign background image URL - DM/Admin only
+ * @param {string} campaignId
+ * @param {string} backgroundUrl
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCampaignBackground(campaignId, backgroundUrl) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Only DMs and Admins can change campaign background',
+			};
+		}
+
+		// Update the campaign background
+		const updatedCampaign = await prisma.campaign.update({
+			where: { id: campaignId },
+			data: {
+				infoBackgroundUrl: backgroundUrl || null, // Allow clearing by passing empty string
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedCampaign,
+		};
+	} catch (error) {
+		console.error('Error updating campaign background:', error);
+		return {
+			success: false,
+			error: 'Failed to update campaign background',
+		};
+	}
+}
+
+/**
+ * Get campaign background image URL
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: string, error?: string}>}
+ */
+export async function getCampaignBackground(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership && session.user.role !== 'ADMIN') {
+			return {
+				success: false,
+				error: 'Unauthorized - You must be a member of this campaign',
+			};
+		}
+
+		// Get the campaign background URL
+		const campaign = await prisma.campaign.findUnique({
+			where: { id: campaignId },
+			select: { infoBackgroundUrl: true },
+		});
+
+		if (!campaign) {
+			return {
+				success: false,
+				error: 'Campaign not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: campaign.infoBackgroundUrl,
+		};
+	} catch (error) {
+		console.error('Error fetching campaign background:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch campaign background',
+		};
+	}
+}
+
 // ===== NOTES ACTIONS =====
 
 /**
