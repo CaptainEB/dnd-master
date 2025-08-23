@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowUp, BookOpen, Edit, Eye, Loader2, Plus, Save, Search, Trash2 } from 'lucide-react';
+import { ArrowUp, BookOpen, Loader2, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -47,7 +47,6 @@ export default function RulesPage() {
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 	const [editingRule, setEditingRule] = useState(null);
-	const [viewMode, setViewMode] = useState('read'); // 'read' or 'edit'
 
 	// Handle client-side mounting to avoid hydration issues
 	useEffect(() => {
@@ -370,46 +369,6 @@ export default function RulesPage() {
 							</div>
 
 							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-								{/* View Mode Toggle */}
-								<div
-									className={`flex rounded-lg p-1 backdrop-blur-sm w-full sm:w-auto ${
-										session?.user?.darkMode ? 'bg-gray-800/80 border border-gray-700' : 'bg-white/80 border border-purple-200'
-									}`}
-								>
-									<Button
-										variant={viewMode === 'read' ? 'default' : 'ghost'}
-										size="sm"
-										onClick={() => setViewMode('read')}
-										className={`flex-1 sm:flex-initial text-xs sm:text-sm ${
-											viewMode === 'read'
-												? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-												: session?.user?.darkMode
-													? 'text-gray-300 hover:text-white hover:bg-gray-700'
-													: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-										}`}
-									>
-										<Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-										Read
-									</Button>
-									{canEdit && (
-										<Button
-											variant={viewMode === 'edit' ? 'default' : 'ghost'}
-											size="sm"
-											onClick={() => setViewMode('edit')}
-											className={`flex-1 sm:flex-initial text-xs sm:text-sm ${
-												viewMode === 'edit'
-													? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-													: session?.user?.darkMode
-														? 'text-gray-300 hover:text-white hover:bg-gray-700'
-														: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-											}`}
-										>
-											<Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-											Edit
-										</Button>
-									)}
-								</div>
-
 								{/* Add Rule Button */}
 								{canEdit && (
 									<Button
@@ -547,7 +506,6 @@ export default function RulesPage() {
 													key={rule.id}
 													rule={rule}
 													session={session}
-													viewMode={viewMode}
 													canEdit={canEdit}
 													onEdit={openEditDialog}
 													onDelete={handleDeleteRule}

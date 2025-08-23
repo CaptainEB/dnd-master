@@ -3,7 +3,7 @@
 import { DateDisplay } from '@/components/DateDisplay';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Calendar, FileText, Shield, StickyNote, User, UserPlus, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Shield, StickyNote, UserPlus, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -100,8 +100,6 @@ export default function AdminUsersPage() {
 	}
 
 	const adminCount = users.filter((user) => user.role === 'ADMIN').length;
-	const dmCount = users.filter((user) => user.role === 'DM').length;
-	const playerCount = users.filter((user) => user.role === 'PLAYER').length;
 
 	return (
 		<div
@@ -128,7 +126,7 @@ export default function AdminUsersPage() {
 				</div>
 
 				{/* Statistics Grid */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-6 sm:mb-8">
 					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-3 sm:gap-4">
 							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-red-800' : 'bg-red-100'}`}>
@@ -144,23 +142,13 @@ export default function AdminUsersPage() {
 					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 						<div className="flex items-center gap-3 sm:gap-4">
 							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-blue-800' : 'bg-blue-100'}`}>
-								<User className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
+								<Users className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
 							</div>
 							<div>
-								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>DMs</h3>
-								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>{dmCount}</p>
-							</div>
-						</div>
-					</Card>
-
-					<Card className={`p-4 sm:p-6 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-						<div className="flex items-center gap-3 sm:gap-4">
-							<div className={`p-2 sm:p-3 rounded-lg ${session?.user?.darkMode ? 'bg-green-800' : 'bg-green-100'}`}>
-								<Users className={`h-5 w-5 sm:h-6 sm:w-6 ${session?.user?.darkMode ? 'text-green-300' : 'text-green-600'}`} />
-							</div>
-							<div>
-								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Players</h3>
-								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-green-400' : 'text-green-600'}`}>{playerCount}</p>
+								<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>Regular Users</h3>
+								<p className={`text-xl sm:text-2xl font-bold ${session?.user?.darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+									{users.length - adminCount}
+								</p>
 							</div>
 						</div>
 					</Card>

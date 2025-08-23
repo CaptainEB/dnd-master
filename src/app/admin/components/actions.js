@@ -4634,3 +4634,829 @@ export async function deleteMapPost(mapPostId) {
 		};
 	}
 }
+
+// =============================================
+// MERCHANT ACTIONS
+// =============================================
+
+/**
+ * Get all merchants for a campaign
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignMerchants(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is part of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership) {
+			return {
+				success: false,
+				error: 'Unauthorized - Not a member of this campaign',
+			};
+		}
+
+		const merchants = await prisma.merchant.findMany({
+			where: { campaignId },
+			include: {
+				author: {
+					select: {
+						username: true,
+						email: true,
+					},
+				},
+				stockItems: {
+					include: {
+						currency: true,
+					},
+					orderBy: [{ type: 'asc' }, { itemName: 'asc' }],
+				},
+			},
+			orderBy: [{ city: 'asc' }, { name: 'asc' }],
+		});
+
+		// Filter out stock items without currencies on the server side
+		const merchantsWithValidStock = merchants.map(merchant => ({
+			...merchant,
+			stockItems: merchant.stockItems.filter(item => item.currencyId && item.currency)
+		}));
+
+		return {
+			success: true,
+			data: merchantsWithValidStock,
+		};
+	} catch (error) {
+		console.error('Error fetching merchants:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch merchants',
+		};
+	}
+}
+
+/**
+ * Create a new merchant - DM/Admin only
+ * @param {string} campaignId
+ * @param {object} merchantData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createMerchant(campaignId, merchantData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const merchant = await prisma.merchant.create({
+			data: {
+				...merchantData,
+				authorId: session.user.id,
+				campaignId,
+			},
+			include: {
+				author: {
+					select: {
+						username: true,
+						email: true,
+					},
+				},
+				stockItems: true,
+			},
+		});
+
+		return {
+			success: true,
+			data: merchant,
+		};
+	} catch (error) {
+		console.error('Error creating merchant:', error);
+		return {
+			success: false,
+			error: 'Failed to create merchant',
+		};
+	}
+}
+
+/**
+ * Update merchant - DM/Admin only
+ * @param {string} merchantId
+ * @param {object} merchantData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateMerchant(merchantId, merchantData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get existing merchant
+		const existingMerchant = await prisma.merchant.findUnique({
+			where: { id: merchantId },
+		});
+
+		if (!existingMerchant) {
+			return {
+				success: false,
+				error: 'Merchant not found',
+			};
+		}
+
+		// Check permissions
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingMerchant.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const merchant = await prisma.merchant.update({
+			where: { id: merchantId },
+			data: merchantData,
+			include: {
+				author: {
+					select: {
+						username: true,
+						email: true,
+					},
+				},
+				stockItems: {
+					orderBy: [{ type: 'asc' }, { itemName: 'asc' }],
+				},
+			},
+		});
+
+		return {
+			success: true,
+			data: merchant,
+		};
+	} catch (error) {
+		console.error('Error updating merchant:', error);
+		return {
+			success: false,
+			error: 'Failed to update merchant',
+		};
+	}
+}
+
+/**
+ * Delete merchant - DM/Admin only
+ * @param {string} merchantId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteMerchant(merchantId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get existing merchant
+		const existingMerchant = await prisma.merchant.findUnique({
+			where: { id: merchantId },
+		});
+
+		if (!existingMerchant) {
+			return {
+				success: false,
+				error: 'Merchant not found',
+			};
+		}
+
+		// Check permissions
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingMerchant.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		// Delete merchant (stock items will be deleted due to cascade)
+		await prisma.merchant.delete({
+			where: { id: merchantId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting merchant:', error);
+		return {
+			success: false,
+			error: 'Failed to delete merchant',
+		};
+	}
+}
+
+/**
+ * Create stock item for a merchant - DM/Admin only
+ * @param {string} merchantId
+ * @param {object} stockData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createStockItem(merchantId, stockData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get merchant to verify campaign membership
+		const merchant = await prisma.merchant.findUnique({
+			where: { id: merchantId },
+		});
+
+		if (!merchant) {
+			return {
+				success: false,
+				error: 'Merchant not found',
+			};
+		}
+
+		// Check permissions
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: merchant.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const stockItem = await prisma.stockItem.create({
+			data: {
+				...stockData,
+				merchantId,
+			},
+		});
+
+		return {
+			success: true,
+			data: stockItem,
+		};
+	} catch (error) {
+		console.error('Error creating stock item:', error);
+		return {
+			success: false,
+			error: 'Failed to create stock item',
+		};
+	}
+}
+
+/**
+ * Update stock item - DM/Admin only
+ * @param {string} stockItemId
+ * @param {object} stockData
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateStockItem(stockItemId, stockData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get stock item and merchant
+		const existingStockItem = await prisma.stockItem.findUnique({
+			where: { id: stockItemId },
+			include: { merchant: true },
+		});
+
+		if (!existingStockItem) {
+			return {
+				success: false,
+				error: 'Stock item not found',
+			};
+		}
+
+		// Check permissions
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingStockItem.merchant.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const stockItem = await prisma.stockItem.update({
+			where: { id: stockItemId },
+			data: stockData,
+		});
+
+		return {
+			success: true,
+			data: stockItem,
+		};
+	} catch (error) {
+		console.error('Error updating stock item:', error);
+		return {
+			success: false,
+			error: 'Failed to update stock item',
+		};
+	}
+}
+
+/**
+ * Delete stock item - DM/Admin only
+ * @param {string} stockItemId
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteStockItem(stockItemId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get stock item and merchant
+		const existingStockItem = await prisma.stockItem.findUnique({
+			where: { id: stockItemId },
+			include: { merchant: true },
+		});
+
+		if (!existingStockItem) {
+			return {
+				success: false,
+				error: 'Stock item not found',
+			};
+		}
+
+		// Check permissions
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingStockItem.merchant.campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		await prisma.stockItem.delete({
+			where: { id: stockItemId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting stock item:', error);
+		return {
+			success: false,
+			error: 'Failed to delete stock item',
+		};
+	}
+}
+
+// ====================================
+// Currency Management Functions
+// ====================================
+
+/**
+ * Get all currencies for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getCampaignCurrencies(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is a member of the campaign
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be a member of this campaign',
+			};
+		}
+
+		const currencies = await prisma.currency.findMany({
+			where: { campaignId },
+			orderBy: { name: 'asc' },
+		});
+
+		return {
+			success: true,
+			data: currencies,
+		};
+	} catch (error) {
+		console.error('Error fetching currencies:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch currencies',
+		};
+	}
+}
+
+/**
+ * Create a new currency for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @param {string} name - Currency name
+ * @param {string} abbreviation - Currency abbreviation
+ * @param {string} description - Currency description (optional)
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createCurrency(campaignId, name, abbreviation, description = '') {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is DM or Admin
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership || (membership.role !== 'DM' && session.user.role !== 'ADMIN')) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const currency = await prisma.currency.create({
+			data: {
+				name,
+				abbreviation,
+				description,
+				campaignId,
+			},
+		});
+
+		return {
+			success: true,
+			data: currency,
+		};
+	} catch (error) {
+		console.error('Error creating currency:', error);
+		if (error.code === 'P2002') {
+			return {
+				success: false,
+				error: 'Currency abbreviation already exists in this campaign',
+			};
+		}
+		return {
+			success: false,
+			error: 'Failed to create currency',
+		};
+	}
+}
+
+/**
+ * Update a currency
+ * @param {string} currencyId - Currency ID
+ * @param {string} name - Currency name
+ * @param {string} abbreviation - Currency abbreviation
+ * @param {string} description - Currency description (optional)
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateCurrency(currencyId, name, abbreviation, description = '') {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the currency and verify permissions
+		const currency = await prisma.currency.findUnique({
+			where: { id: currencyId },
+		});
+
+		if (!currency) {
+			return {
+				success: false,
+				error: 'Currency not found',
+			};
+		}
+
+		// Verify user is DM or Admin
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: currency.campaignId,
+			},
+		});
+
+		if (!membership || (membership.role !== 'DM' && session.user.role !== 'ADMIN')) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		const updatedCurrency = await prisma.currency.update({
+			where: { id: currencyId },
+			data: {
+				name,
+				abbreviation,
+				description,
+			},
+		});
+
+		return {
+			success: true,
+			data: updatedCurrency,
+		};
+	} catch (error) {
+		console.error('Error updating currency:', error);
+		if (error.code === 'P2002') {
+			return {
+				success: false,
+				error: 'Currency abbreviation already exists in this campaign',
+			};
+		}
+		return {
+			success: false,
+			error: 'Failed to update currency',
+		};
+	}
+}
+
+/**
+ * Delete a currency
+ * @param {string} currencyId - Currency ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteCurrency(currencyId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get the currency and verify permissions
+		const currency = await prisma.currency.findUnique({
+			where: { id: currencyId },
+			include: {
+				stockItems: true,
+			},
+		});
+
+		if (!currency) {
+			return {
+				success: false,
+				error: 'Currency not found',
+			};
+		}
+
+		// Check if currency is in use
+		if (currency.stockItems.length > 0) {
+			return {
+				success: false,
+				error: 'Cannot delete currency that is in use by stock items',
+			};
+		}
+
+		// Verify user is DM or Admin
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: currency.campaignId,
+			},
+		});
+
+		if (!membership || (membership.role !== 'DM' && session.user.role !== 'ADMIN')) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		await prisma.currency.delete({
+			where: { id: currencyId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting currency:', error);
+		return {
+			success: false,
+			error: 'Failed to delete currency',
+		};
+	}
+}
+
+/**
+ * Initialize default currencies for a campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function initializeDefaultCurrencies(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Verify user is DM or Admin
+		const membership = await prisma.campaignMember.findFirst({
+			where: {
+				userId: session.user.id,
+				campaignId: campaignId,
+			},
+		});
+
+		if (!membership || (membership.role !== 'DM' && session.user.role !== 'ADMIN')) {
+			return {
+				success: false,
+				error: 'Unauthorized - Must be DM or Admin',
+			};
+		}
+
+		// Check if currencies already exist
+		const existingCurrencies = await prisma.currency.findMany({
+			where: { campaignId },
+		});
+
+		if (existingCurrencies.length > 0) {
+			return {
+				success: true,
+				data: existingCurrencies,
+			};
+		}
+
+		// Create default D&D currencies
+		const defaultCurrencies = [
+			{ name: 'Gold Pieces', abbreviation: 'gp', description: 'Standard gold currency' },
+			{ name: 'Silver Pieces', abbreviation: 'sp', description: 'Standard silver currency' },
+			{ name: 'Copper Pieces', abbreviation: 'cp', description: 'Standard copper currency' },
+			{ name: 'Platinum Pieces', abbreviation: 'pp', description: 'Standard platinum currency' },
+			{ name: 'Electrum Pieces', abbreviation: 'ep', description: 'Standard electrum currency' },
+		];
+
+		const currencies = await Promise.all(
+			defaultCurrencies.map((currency) =>
+				prisma.currency.create({
+					data: {
+						...currency,
+						campaignId,
+					},
+				})
+			)
+		);
+
+		return {
+			success: true,
+			data: currencies,
+		};
+	} catch (error) {
+		console.error('Error initializing default currencies:', error);
+		return {
+			success: false,
+			error: 'Failed to initialize default currencies',
+		};
+	}
+}

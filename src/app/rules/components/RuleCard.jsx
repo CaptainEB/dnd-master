@@ -7,7 +7,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const RuleCard = ({ rule, session, viewMode, canEdit, onEdit, onDelete, formatDate }) => {
+const RuleCard = ({ rule, session, canEdit, onEdit, onDelete, formatDate }) => {
 	return (
 		<Card
 			key={rule.id}
@@ -21,7 +21,7 @@ const RuleCard = ({ rule, session, viewMode, canEdit, onEdit, onDelete, formatDa
 					<CardTitle className={`text-lg sm:text-xl leading-tight ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 						{rule.title}
 					</CardTitle>
-					{viewMode === 'edit' && canEdit && (
+					{canEdit && (
 						<div className="flex items-center gap-2 flex-shrink-0">
 							<Button
 								variant="outline"

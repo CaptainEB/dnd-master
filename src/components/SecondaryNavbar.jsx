@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ClipboardList, FileText, Info, Map, Scroll, Users } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Info, Map, Scroll, ShoppingBag, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -29,6 +29,11 @@ export default function SecondaryNavbar() {
 			name: 'Info',
 			href: '/info',
 			icon: Info,
+		},
+		{
+			name: 'Shop',
+			href: '/shop',
+			icon: ShoppingBag,
 		},
 		{
 			name: 'Notes',

@@ -27,6 +27,7 @@ model user {
   notes           Note[]
   creatures       Creature[]
   mapPosts        MapPost[]
+  merchants       Merchant[]
 }
 
 model campaign {
@@ -48,6 +49,8 @@ model campaign {
   questTypes  QuestType[]
   creatures   Creature[]
   mapPosts    MapPost[]
+  merchants   Merchant[]
+  currencies  Currency[]
 }
 
 model CampaignMember {
@@ -226,11 +229,75 @@ model Creature {
   @@index([campaignId, name])
 }
 
+model Merchant {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  city        String
+  description String?
+  location    String? // Specific location within the city (e.g., "Market Square", "North Gate")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    String   @db.ObjectId
+  campaignId  String   @db.ObjectId
+
+  // Relations
+  author     user        @relation(fields: [authorId], references: [id])
+  campaign   campaign    @relation(fields: [campaignId], references: [id])
+  stockItems StockItem[]
+
+  @@index([campaignId, city])
+  @@index([campaignId, name])
+}
+
+model Currency {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String // e.g., "Gold Pieces", "Silver Coins", "Tokens"
+  abbreviation String // e.g., "gp", "sc", "tkn"
+  description  String? // Optional description
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  campaignId   String   @db.ObjectId
+
+  // Relations
+  campaign   campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  stockItems StockItem[]
+
+  @@unique([campaignId, abbreviation]) // Prevent duplicate abbreviations per campaign
+  @@index([campaignId])
+}
+
+model StockItem {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  itemName    String
+  description String?
+  price       Float // Price value
+  currencyId  String    @db.ObjectId // Reference to Currency model
+  quantity    Int? // null means unlimited stock
+  type        StockType // STAPLE or ROTATING
+  available   Boolean   @default(true) // For temporarily disabling items
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  merchantId  String    @db.ObjectId
+
+  // Relations
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  currency Currency @relation(fields: [currencyId], references: [id])
+
+  @@index([merchantId, type])
+  @@index([merchantId, available])
+  @@index([currencyId])
+}
+
 enum QuestStatus {
   AVAILABLE
   IN_PROGRESS
   UNAVAILABLE
   COMPLETED
+}
+
+enum StockType {
+  STAPLE
+  ROTATING
 }
 
 enum UserRole {
