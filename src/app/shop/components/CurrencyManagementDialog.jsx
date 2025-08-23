@@ -48,6 +48,14 @@ export default function CurrencyManagementDialog({ open, onOpenChange }) {
 			const result = await getCampaignCurrencies(session.user.activeCampaignId);
 			if (result.success) {
 				setCurrencies(result.data);
+
+				// If no currencies exist, initialize defaults
+				if (result.data.length === 0) {
+					const initResult = await initializeDefaultCurrencies(session.user.activeCampaignId);
+					if (initResult.success) {
+						setCurrencies(initResult.data);
+					}
+				}
 			} else {
 				console.error('Failed to load currencies:', result.error);
 			}
@@ -111,25 +119,6 @@ export default function CurrencyManagementDialog({ open, onOpenChange }) {
 		} catch (error) {
 			console.error('Error deleting currency:', error);
 			alert('An error occurred while deleting the currency.');
-		}
-	};
-
-	const handleInitializeDefaults = async () => {
-		if (!confirm('This will add the standard D&D currencies (Gold, Silver, Copper, Electrum, Platinum). Continue?')) {
-			return;
-		}
-
-		try {
-			const result = await initializeDefaultCurrencies(session.user.activeCampaignId);
-			if (result.success) {
-				await loadCurrencies();
-			} else {
-				console.error('Failed to initialize default currencies:', result.error);
-				alert('Failed to initialize default currencies: ' + result.error);
-			}
-		} catch (error) {
-			console.error('Error initializing default currencies:', error);
-			alert('An error occurred while initializing default currencies.');
 		}
 	};
 
@@ -268,20 +257,7 @@ export default function CurrencyManagementDialog({ open, onOpenChange }) {
 						) : currencies.length === 0 ? (
 							<div className={`text-center py-8 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
 								<Coins className="h-12 w-12 mx-auto mb-3 opacity-50" />
-								<p className="mb-4">No currencies found. Add your first currency above.</p>
-								<Button
-									onClick={handleInitializeDefaults}
-									variant="outline"
-									size="sm"
-									className={
-										session?.user?.darkMode
-											? 'border-gray-600 text-gray-300 hover:bg-gray-700'
-											: 'border-gray-300 text-gray-600 hover:bg-gray-50'
-									}
-								>
-									<Coins className="h-4 w-4 mr-2" />
-									Initialize Standard D&D Currencies
-								</Button>
+								<p>No currencies found. Add your first currency above.</p>
 							</div>
 						) : (
 							<div className="space-y-2">

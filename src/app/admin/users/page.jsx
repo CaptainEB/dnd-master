@@ -3,7 +3,7 @@
 import { DateDisplay } from '@/components/DateDisplay';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Calendar, FileText, Shield, StickyNote, UserPlus, Users } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Shield, StickyNote, User, UserPlus, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';

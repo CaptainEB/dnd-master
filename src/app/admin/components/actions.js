@@ -4689,15 +4689,9 @@ export async function getCampaignMerchants(campaignId) {
 			orderBy: [{ city: 'asc' }, { name: 'asc' }],
 		});
 
-		// Filter out stock items without currencies on the server side
-		const merchantsWithValidStock = merchants.map(merchant => ({
-			...merchant,
-			stockItems: merchant.stockItems.filter(item => item.currencyId && item.currency)
-		}));
-
 		return {
 			success: true,
-			data: merchantsWithValidStock,
+			data: merchants,
 		};
 	} catch (error) {
 		console.error('Error fetching merchants:', error);
