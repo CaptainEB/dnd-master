@@ -225,8 +225,7 @@ export default function MapPage() {
 		if (mapPost.authorId === session.user.id) return true;
 
 		// Check if user is DM
-		const membership = session.user.campaignMembers?.find((member) => member.campaignId === session.user.activeCampaignId);
-		return membership?.role === 'DM';
+		return session?.user?.campaignRole === 'DM';
 	};
 
 	// Check if user can create
@@ -235,8 +234,7 @@ export default function MapPage() {
 		if (session.user.role === 'ADMIN') return true;
 
 		// Check if user is DM
-		const membership = session.user.campaignMembers?.find((member) => member.campaignId === session.user.activeCampaignId);
-		return membership?.role === 'DM';
+		return session?.user?.campaignRole === 'DM';
 	};
 
 	// Generate fallback image
