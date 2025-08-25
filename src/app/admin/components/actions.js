@@ -2490,6 +2490,7 @@ export async function createCampaignNote(campaignId, noteData) {
 				title: noteData.title?.trim() || null,
 				content: noteData.content.trim(),
 				tags: noteData.tags || [],
+				isShared: noteData.isShared || false,
 				authorId: session.user.id,
 				campaignId: campaignId,
 			},
@@ -2553,7 +2554,7 @@ export async function updateCampaignNote(noteId, noteData) {
 			};
 		}
 
-		// Check permissions: Users can edit their own notes, DMs can edit any notes in their campaign, admins can edit any notes
+		// Check permissions: Users can edit their own notes, shared notes can be edited by campaign members, DMs can edit any notes in their campaign, admins can edit any notes
 		let canEdit = false;
 
 		// User is the author
@@ -2577,11 +2578,23 @@ export async function updateCampaignNote(noteId, noteData) {
 				canEdit = true;
 			}
 		}
+		// Note is shared and user is a campaign member
+		if (!canEdit && existingNote.isShared) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: existingNote.campaignId,
+				},
+			});
+			if (membership) {
+				canEdit = true;
+			}
+		}
 
 		if (!canEdit) {
 			return {
 				success: false,
-				error: 'Unauthorized - You can only edit your own notes unless you are a DM or admin',
+				error: 'Unauthorized - You can only edit your own notes, shared notes, or notes in campaigns where you are a DM/admin',
 			};
 		}
 
@@ -2600,6 +2613,7 @@ export async function updateCampaignNote(noteId, noteData) {
 				title: noteData.title?.trim() || null,
 				content: noteData.content.trim(),
 				tags: noteData.tags || [],
+				isShared: noteData.isShared !== undefined ? noteData.isShared : existingNote.isShared,
 				updatedAt: new Date(),
 			},
 			include: {

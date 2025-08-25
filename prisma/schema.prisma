@@ -121,6 +121,7 @@ model Note {
   title      String? // Optional title for the note
   content    String
   tags       String[] // Array of tags for organization
+  isShared   Boolean  @default(false) // Whether note can be edited by all campaign members
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   authorId   String   @db.ObjectId
@@ -130,6 +131,7 @@ model Note {
   campaign campaign @relation(fields: [campaignId], references: [id])
 
   @@index([campaignId, authorId, createdAt])
+  @@index([campaignId, isShared, createdAt])
 }
 
 model MapPost {
