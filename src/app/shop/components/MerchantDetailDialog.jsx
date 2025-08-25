@@ -73,6 +73,11 @@ export default function MerchantDetailDialog({ open, onOpenChange, merchant, ses
 		// Ensure price is a number
 		const numPrice = parseFloat(price) || 0;
 
+		// Check for variable pricing
+		if (numPrice === -1) {
+			return 'Variable';
+		}
+
 		// Return formatted string
 		if (numPrice % 1 === 0) {
 			return `${numPrice} ${currencyDisplay}`;
@@ -89,7 +94,7 @@ export default function MerchantDetailDialog({ open, onOpenChange, merchant, ses
 					}`}
 				>
 					<DialogHeader>
-						<div className="flex items-start justify-between">
+						<div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 pr-8">
 							<div className="min-w-0 flex-1">
 								<DialogTitle className={`text-xl mb-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
 									<div className="flex items-center gap-2">
@@ -110,25 +115,26 @@ export default function MerchantDetailDialog({ open, onOpenChange, merchant, ses
 
 							{/* Action Buttons for DM/Admin */}
 							{canEdit && (
-								<div className="flex gap-2 ml-4">
+								<div className="flex flex-col sm:flex-row gap-2 sm:gap-2 sm:ml-0">
 									<Button
 										size="sm"
 										variant="outline"
 										onClick={() => setEditDialogOpen(true)}
-										className={`${
+										className={`text-xs sm:text-sm ${
 											session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'
 										}`}
 									>
-										<Edit className="h-4 w-4 mr-1" />
-										Edit Info
+										<Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+										<span className="hidden sm:inline">Edit Info</span>
+										<span className="sm:hidden">Edit</span>
 									</Button>
 									<Button
 										size="sm"
 										variant="outline"
 										onClick={handleDelete}
-										className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+										className="text-xs sm:text-sm border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
 									>
-										<Trash2 className="h-4 w-4 mr-1" />
+										<Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
 										Delete
 									</Button>
 								</div>

@@ -4,13 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowUp, Plus, Search, ShoppingBag, Store } from 'lucide-react';
+import { ArrowUp, HelpCircle, Plus, Search, ShoppingBag, Store } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getCampaignMerchants } from '../admin/components/actions';
 import CreateMerchantDialog from './components/CreateMerchantDialog';
 import CurrencyManagementDialog from './components/CurrencyManagementDialog';
 import MerchantDetailDialog from './components/MerchantDetailDialog';
+import ViewCurrenciesDialog from './components/ViewCurrenciesDialog';
 
 export default function ShopPage() {
 	const { data: session, status } = useSession();
@@ -24,6 +25,7 @@ export default function ShopPage() {
 	const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 	const [selectedMerchant, setSelectedMerchant] = useState(null);
 	const [currencyDialogOpen, setCurrencyDialogOpen] = useState(false);
+	const [viewCurrenciesDialogOpen, setViewCurrenciesDialogOpen] = useState(false);
 
 	// Check permissions
 	const canEdit = session?.user?.role === 'ADMIN' || session?.user?.campaignRole === 'DM';
@@ -164,34 +166,50 @@ export default function ShopPage() {
 							<p className="text-sm sm:text-base font-medium text-purple-600">{session.user.activeCampaignName}</p>
 						</div>
 
-						{/* Action Buttons */}
-						{canEdit && (
-							<div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-								<Button
-									onClick={() => setCreateDialogOpen(true)}
-									className={`text-xs sm:text-sm px-3 sm:px-4 ${
-										session?.user?.darkMode
-											? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-											: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-									}`}
-								>
-									<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-									Add Merchant
-								</Button>
-								<Button
-									onClick={() => setCurrencyDialogOpen(true)}
-									variant="outline"
-									className={`text-xs sm:text-sm px-3 sm:px-4 ${
-										session?.user?.darkMode
-											? 'border-purple-400/50 hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
-											: 'border-purple-200 hover:bg-purple-50 text-purple-600'
-									}`}
-								>
-									<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-									Add Currency
-								</Button>
-							</div>
-						)}
+						<div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+							{/* Currencies Button - Available to all players */}
+							<Button
+								onClick={() => setViewCurrenciesDialogOpen(true)}
+								variant="outline"
+								className={`text-xs sm:text-sm px-3 sm:px-4 ${
+									session?.user?.darkMode
+										? 'border-cyan-400/50 hover:bg-cyan-900/30 text-cyan-400 hover:text-cyan-300'
+										: 'border-cyan-200 hover:bg-cyan-50 text-cyan-600'
+								}`}
+							>
+								<HelpCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+								Currencies
+							</Button>
+
+							{/* Action Buttons - DM/Admin Only */}
+							{canEdit && (
+								<>
+									<Button
+										onClick={() => setCreateDialogOpen(true)}
+										className={`text-xs sm:text-sm px-3 sm:px-4 ${
+											session?.user?.darkMode
+												? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+												: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+										}`}
+									>
+										<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+										Add Merchant
+									</Button>
+									<Button
+										onClick={() => setCurrencyDialogOpen(true)}
+										variant="outline"
+										className={`text-xs sm:text-sm px-3 sm:px-4 ${
+											session?.user?.darkMode
+												? 'border-purple-400/50 hover:bg-purple-900/30 text-purple-400 hover:text-purple-300'
+												: 'border-purple-200 hover:bg-purple-50 text-purple-600'
+										}`}
+									>
+										<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+										Add Currency
+									</Button>
+								</>
+							)}
+						</div>
 					</div>
 				</div>
 
@@ -314,6 +332,11 @@ export default function ShopPage() {
 															{merchant.stockItems.slice(0, 3).map((item) => {
 																// Format price safely
 																const formatCurrencyDisplay = (price, currency) => {
+																	// Check for variable pricing
+																	if (price === -1) {
+																		return 'Variable';
+																	}
+
 																	let currencyDisplay = 'GP';
 																	if (currency && typeof currency === 'object') {
 																		currencyDisplay = currency.abbreviation || currency.name || 'GP';
@@ -410,6 +433,8 @@ export default function ShopPage() {
 				/>
 
 				<CurrencyManagementDialog open={currencyDialogOpen} onOpenChange={setCurrencyDialogOpen} />
+
+				<ViewCurrenciesDialog open={viewCurrenciesDialogOpen} onOpenChange={setViewCurrenciesDialogOpen} />
 			</div>
 		</div>
 	);

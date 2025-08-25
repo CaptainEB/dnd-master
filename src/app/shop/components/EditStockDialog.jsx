@@ -25,6 +25,7 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 	const [addingItem, setAddingItem] = useState(false);
 	const [activeTab, setActiveTab] = useState('staple');
 	const [currencies, setCurrencies] = useState([]);
+	const [variablePricing, setVariablePricing] = useState(false);
 
 	// Load currencies when dialog opens
 	useEffect(() => {
@@ -73,6 +74,7 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 
 	const startAddItem = (type = 'STAPLE') => {
 		const defaultCurrencyId = currencies.length > 0 ? currencies[0].id : '';
+		setVariablePricing(false);
 		form.reset({
 			itemName: '',
 			description: '',
@@ -101,10 +103,14 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 			currencyId = item.currencyId;
 		}
 
+		// Check if this item has variable pricing (price === -1)
+		const isVariablePricing = item.price === -1;
+		setVariablePricing(isVariablePricing);
+
 		form.reset({
 			itemName: item.itemName,
 			description: item.description || '',
-			price: item.price.toString(),
+			price: isVariablePricing ? '' : item.price.toString(),
 			currencyId: currencyId,
 			quantity: item.quantity?.toString() || '',
 			type: item.type,
@@ -117,15 +123,30 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 	const cancelForm = () => {
 		setEditingItem(null);
 		setAddingItem(false);
+		setVariablePricing(false);
 		form.reset();
 	};
 
 	const onSubmit = async (data) => {
 		try {
+			// Manual validation for price when not using variable pricing
+			if (!variablePricing) {
+				if (!data.price || data.price.trim() === '') {
+					form.setError('price', { message: 'Price is required' });
+					return;
+				}
+
+				const priceRegex = /^\d+(\.\d{1,2})?$/;
+				if (!priceRegex.test(data.price)) {
+					form.setError('price', { message: 'Enter a valid price (e.g., 10 or 10.50)' });
+					return;
+				}
+			}
+
 			// Convert price and quantity to numbers
 			const formattedData = {
 				...data,
-				price: parseFloat(data.price),
+				price: variablePricing ? -1 : parseFloat(data.price),
 				quantity: data.quantity ? parseInt(data.quantity) : null,
 			};
 
@@ -209,6 +230,11 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 
 		// Ensure price is a number
 		const numPrice = parseFloat(price) || 0;
+
+		// Check for variable pricing
+		if (numPrice === -1) {
+			return 'Variable';
+		}
 
 		// Return formatted string
 		if (numPrice % 1 === 0) {
@@ -456,37 +482,60 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 								/>
 
 								<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-									<FormField
-										control={form.control}
-										name="price"
-										rules={{
-											required: 'Price is required',
-											pattern: {
-												value: /^\d+(\.\d{1,2})?$/,
-												message: 'Enter a valid price (e.g., 10 or 10.50)',
-											},
-										}}
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Price</FormLabel>
-												<FormControl>
-													<Input
-														{...field}
-														placeholder="10.50"
-														type="number"
-														step="0.01"
-														min="0"
-														className={
-															session?.user?.darkMode
-																? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
-																: 'border-gray-300 focus:border-purple-500'
-														}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+									<div className="space-y-3">
+										<FormField
+											control={form.control}
+											name="price"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Price</FormLabel>
+													<FormControl>
+														<Input
+															{...field}
+															placeholder={variablePricing ? 'Variable pricing enabled' : '10.50'}
+															type="number"
+															step="0.01"
+															min="0"
+															disabled={variablePricing}
+															className={
+																session?.user?.darkMode
+																	? `bg-gray-700 border-gray-600 text-white focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+																	: `border-gray-300 focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										{/* Variable Pricing Checkbox */}
+										<div className="flex items-center space-x-2">
+											<input
+												type="checkbox"
+												id="variablePricing"
+												checked={variablePricing}
+												onChange={(e) => {
+													setVariablePricing(e.target.checked);
+													if (e.target.checked) {
+														form.setValue('price', '');
+														form.clearErrors('price'); // Clear any existing price validation errors
+													}
+												}}
+												className={`w-4 h-4 rounded border-2 focus:ring-2 focus:ring-purple-500 ${
+													session?.user?.darkMode
+														? 'bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
+														: 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500'
+												}`}
+											/>
+											<label
+												htmlFor="variablePricing"
+												className={`text-sm font-medium cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+											>
+												Variable pricing (Ask DM)
+											</label>
+										</div>
+									</div>
 
 									<FormField
 										control={form.control}
