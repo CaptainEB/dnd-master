@@ -86,6 +86,8 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 		});
 		setEditingItem(null);
 		setAddingItem(true);
+		// Switch to the appropriate tab
+		setActiveTab(type.toLowerCase());
 	};
 
 	const startEditItem = (item) => {
@@ -118,6 +120,8 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 		});
 		setEditingItem(item);
 		setAddingItem(false);
+		// Switch to the appropriate tab
+		setActiveTab(item.type.toLowerCase());
 	};
 
 	const cancelForm = () => {
@@ -280,7 +284,9 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 										{formatPrice(safeItem.price, safeItem.currency)}
 									</span>
 									{safeItem.quantity !== null && safeItem.quantity !== undefined && (
-										<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>Qty: {String(safeItem.quantity)}</span>
+										<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
+											{safeItem.quantity === 0 ? 'Out of Stock' : `Qty: ${String(safeItem.quantity)}`}
+										</span>
 									)}
 								</div>
 							</div>
@@ -368,6 +374,218 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 								Add Item
 							</Button>
 						</div>
+
+						{/* Add/Edit Item Form for Staple Items */}
+						{(addingItem || editingItem) && (form.watch('type') === 'STAPLE' || (editingItem && editingItem.type === 'STAPLE')) && (
+							<div
+								className={`p-4 border rounded-lg ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700/30' : 'border-gray-200 bg-gray-50/50'}`}
+							>
+								<h4 className={`font-medium mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+									{editingItem ? 'Edit Item' : 'Add New Item'}
+								</h4>
+
+								<Form {...form}>
+									<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+										<FormField
+											control={form.control}
+											name="itemName"
+											rules={{ required: 'Item name is required' }}
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Item Name</FormLabel>
+													<FormControl>
+														<Input
+															{...field}
+															placeholder="e.g., Health Potion, Magic Sword"
+															className={
+																session?.user?.darkMode
+																	? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																	: 'border-gray-300 focus:border-purple-500'
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={form.control}
+											name="description"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Description (Optional)</FormLabel>
+													<FormControl>
+														<Textarea
+															{...field}
+															placeholder="Describe the item's properties, effects, or appearance..."
+															rows={2}
+															className={
+																session?.user?.darkMode
+																	? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																	: 'border-gray-300 focus:border-purple-500'
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="price"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Price</FormLabel>
+															<FormControl>
+																<Input
+																	{...field}
+																	placeholder={variablePricing ? 'Variable pricing enabled' : '10.50'}
+																	type="number"
+																	step="0.01"
+																	min="0"
+																	disabled={variablePricing}
+																	className={
+																		session?.user?.darkMode
+																			? `bg-gray-700 border-gray-600 text-white focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+																			: `border-gray-300 focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+																	}
+																/>
+															</FormControl>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+
+												{/* Variable Pricing Checkbox */}
+												<div className="flex items-center space-x-2">
+													<input
+														type="checkbox"
+														id="variablePricing"
+														checked={variablePricing}
+														onChange={(e) => {
+															setVariablePricing(e.target.checked);
+															if (e.target.checked) {
+																form.setValue('price', '');
+																form.clearErrors('price');
+															}
+														}}
+														className={`w-4 h-4 rounded border-2 focus:ring-2 focus:ring-purple-500 ${
+															session?.user?.darkMode
+																? 'bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
+																: 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500'
+														}`}
+													/>
+													<label
+														htmlFor="variablePricing"
+														className={`text-sm font-medium cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+													>
+														Variable pricing (Ask DM)
+													</label>
+												</div>
+											</div>
+
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="currencyId"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Currency</FormLabel>
+															<Select onValueChange={field.onChange} value={field.value}>
+																<FormControl>
+																	<SelectTrigger
+																		className={
+																			session?.user?.darkMode
+																				? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																				: 'border-gray-300 focus:border-purple-500'
+																		}
+																	>
+																		<SelectValue placeholder="Select currency" />
+																	</SelectTrigger>
+																</FormControl>
+																<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}>
+																	{currencies.map((currency) => (
+																		<SelectItem
+																			key={currency.id}
+																			value={currency.id}
+																			className={
+																				session?.user?.darkMode
+																					? 'text-gray-200 hover:bg-gray-700 focus:bg-gray-700'
+																					: 'text-gray-800 hover:bg-gray-100 focus:bg-gray-100'
+																			}
+																		>
+																			{currency.name} ({currency.abbreviation})
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+												{/* Spacer to match checkbox height */}
+												<div className="h-6"></div>
+											</div>
+
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="quantity"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Quantity (Optional)</FormLabel>
+															<FormControl>
+																<Input
+																	{...field}
+																	placeholder="Leave empty for unlimited"
+																	type="number"
+																	min="0"
+																	className={
+																		session?.user?.darkMode
+																			? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																			: 'border-gray-300 focus:border-purple-500'
+																	}
+																/>
+															</FormControl>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+												{/* Spacer to match checkbox height */}
+												<div className="h-6"></div>
+											</div>
+										</div>
+
+										<div className="flex justify-end gap-3">
+											<Button
+												type="button"
+												variant="outline"
+												onClick={cancelForm}
+												className={
+													session?.user?.darkMode
+														? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+														: 'border-gray-300 text-gray-700 hover:bg-gray-100'
+												}
+											>
+												Cancel
+											</Button>
+											<Button
+												type="submit"
+												disabled={form.formState.isSubmitting}
+												className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+											>
+												{form.formState.isSubmitting ? (editingItem ? 'Updating...' : 'Adding...') : editingItem ? 'Update Item' : 'Add Item'}
+											</Button>
+										</div>
+									</form>
+								</Form>
+							</div>
+						)}
+
 						<StockList items={stapleItems} type="Staple" />
 					</TabsContent>
 
@@ -386,121 +604,33 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 								Add Item
 							</Button>
 						</div>
-						<StockList items={rotatingItems} type="Rotating" />
-					</TabsContent>
-				</Tabs>
 
-				{/* Add/Edit Item Form */}
-				{(addingItem || editingItem) && (
-					<div className={`mt-6 p-4 border-t ${session?.user?.darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-						<h3 className={`font-medium mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
-							{editingItem ? 'Edit Item' : 'Add New Item'}
-						</h3>
+						{/* Add/Edit Item Form for Rotating Items */}
+						{(addingItem || editingItem) && (form.watch('type') === 'ROTATING' || (editingItem && editingItem.type === 'ROTATING')) && (
+							<div
+								className={`p-4 border rounded-lg ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700/30' : 'border-gray-200 bg-gray-50/50'}`}
+							>
+								<h4 className={`font-medium mb-4 ${session?.user?.darkMode ? 'text-white' : 'text-gray-900'}`}>
+									{editingItem ? 'Edit Item' : 'Add New Item'}
+								</h4>
 
-						<Form {...form}>
-							<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-								{form.formState.errors.root && (
-									<div className="p-3 bg-red-50 border border-red-200 rounded-md">
-										<p className="text-red-700 text-sm">{form.formState.errors.root.message}</p>
-									</div>
-								)}
-
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<FormField
-										control={form.control}
-										name="itemName"
-										rules={{ required: 'Item name is required' }}
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Item Name</FormLabel>
-												<FormControl>
-													<Input
-														{...field}
-														placeholder="e.g., Healing Potion"
-														className={
-															session?.user?.darkMode
-																? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
-																: 'border-gray-300 focus:border-purple-500'
-														}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="type"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Stock Type</FormLabel>
-												<Select onValueChange={field.onChange} value={field.value}>
+								<Form {...form}>
+									<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+										<FormField
+											control={form.control}
+											name="itemName"
+											rules={{ required: 'Item name is required' }}
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Item Name</FormLabel>
 													<FormControl>
-														<SelectTrigger
+														<Input
+															{...field}
+															placeholder="e.g., Health Potion, Magic Sword"
 															className={
 																session?.user?.darkMode
 																	? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
 																	: 'border-gray-300 focus:border-purple-500'
-															}
-														>
-															<SelectValue />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}>
-														<SelectItem value="STAPLE">Staple (Always Available)</SelectItem>
-														<SelectItem value="ROTATING">Rotating (Limited Time)</SelectItem>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
-								<FormField
-									control={form.control}
-									name="description"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Description (Optional)</FormLabel>
-											<FormControl>
-												<Textarea
-													{...field}
-													placeholder="Describe the item's properties, effects, or appearance..."
-													rows={2}
-													className={
-														session?.user?.darkMode
-															? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
-															: 'border-gray-300 focus:border-purple-500'
-													}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-									<div className="space-y-3">
-										<FormField
-											control={form.control}
-											name="price"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel>Price</FormLabel>
-													<FormControl>
-														<Input
-															{...field}
-															placeholder={variablePricing ? 'Variable pricing enabled' : '10.50'}
-															type="number"
-															step="0.01"
-															min="0"
-															disabled={variablePricing}
-															className={
-																session?.user?.darkMode
-																	? `bg-gray-700 border-gray-600 text-white focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
-																	: `border-gray-300 focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
 															}
 														/>
 													</FormControl>
@@ -509,113 +639,186 @@ export default function EditStockDialog({ open, onOpenChange, merchant, session,
 											)}
 										/>
 
-										{/* Variable Pricing Checkbox */}
-										<div className="flex items-center space-x-2">
-											<input
-												type="checkbox"
-												id="variablePricing"
-												checked={variablePricing}
-												onChange={(e) => {
-													setVariablePricing(e.target.checked);
-													if (e.target.checked) {
-														form.setValue('price', '');
-														form.clearErrors('price'); // Clear any existing price validation errors
-													}
-												}}
-												className={`w-4 h-4 rounded border-2 focus:ring-2 focus:ring-purple-500 ${
-													session?.user?.darkMode
-														? 'bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
-														: 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500'
-												}`}
-											/>
-											<label
-												htmlFor="variablePricing"
-												className={`text-sm font-medium cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}
-											>
-												Variable pricing (Ask DM)
-											</label>
-										</div>
-									</div>
-
-									<FormField
-										control={form.control}
-										name="currencyId"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Currency</FormLabel>
-												<Select onValueChange={field.onChange} value={field.value}>
+										<FormField
+											control={form.control}
+											name="description"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Description (Optional)</FormLabel>
 													<FormControl>
-														<SelectTrigger
+														<Textarea
+															{...field}
+															placeholder="Describe the item's properties, effects, or appearance..."
+															rows={2}
 															className={
 																session?.user?.darkMode
 																	? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
 																	: 'border-gray-300 focus:border-purple-500'
 															}
-														>
-															<SelectValue />
-														</SelectTrigger>
+														/>
 													</FormControl>
-													<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}>
-														{currencies.map((currency) => (
-															<SelectItem key={currency.id} value={currency.id}>
-																{currency.name} ({currency.abbreviation})
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
-									<FormField
-										control={form.control}
-										name="quantity"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>Quantity (Optional)</FormLabel>
-												<FormControl>
-													<Input
-														{...field}
-														placeholder="Leave empty for unlimited"
-														type="number"
-														min="0"
-														className={
+										<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="price"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Price</FormLabel>
+															<FormControl>
+																<Input
+																	{...field}
+																	placeholder={variablePricing ? 'Variable pricing enabled' : '10.50'}
+																	type="number"
+																	step="0.01"
+																	min="0"
+																	disabled={variablePricing}
+																	className={
+																		session?.user?.darkMode
+																			? `bg-gray-700 border-gray-600 text-white focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+																			: `border-gray-300 focus:border-purple-500 ${variablePricing ? 'opacity-50 cursor-not-allowed' : ''}`
+																	}
+																/>
+															</FormControl>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+
+												{/* Variable Pricing Checkbox */}
+												<div className="flex items-center space-x-2">
+													<input
+														type="checkbox"
+														id="variablePricingRotating"
+														checked={variablePricing}
+														onChange={(e) => {
+															setVariablePricing(e.target.checked);
+															if (e.target.checked) {
+																form.setValue('price', '');
+																form.clearErrors('price');
+															}
+														}}
+														className={`w-4 h-4 rounded border-2 focus:ring-2 focus:ring-purple-500 ${
 															session?.user?.darkMode
-																? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
-																: 'border-gray-300 focus:border-purple-500'
-														}
+																? 'bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
+																: 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500'
+														}`}
 													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
+													<label
+														htmlFor="variablePricingRotating"
+														className={`text-sm font-medium cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+													>
+														Variable pricing (Ask DM)
+													</label>
+												</div>
+											</div>
 
-								<div className="flex justify-end gap-2">
-									<Button
-										type="button"
-										variant="outline"
-										onClick={cancelForm}
-										className={
-											session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-										}
-									>
-										Cancel
-									</Button>
-									<Button
-										type="submit"
-										disabled={form.formState.isSubmitting}
-										className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-									>
-										{form.formState.isSubmitting ? (editingItem ? 'Updating...' : 'Adding...') : editingItem ? 'Update Item' : 'Add Item'}
-									</Button>
-								</div>
-							</form>
-						</Form>
-					</div>
-				)}
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="currencyId"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Currency</FormLabel>
+															<Select onValueChange={field.onChange} value={field.value}>
+																<FormControl>
+																	<SelectTrigger
+																		className={
+																			session?.user?.darkMode
+																				? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																				: 'border-gray-300 focus:border-purple-500'
+																		}
+																	>
+																		<SelectValue placeholder="Select currency" />
+																	</SelectTrigger>
+																</FormControl>
+																<SelectContent className={session?.user?.darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'}>
+																	{currencies.map((currency) => (
+																		<SelectItem
+																			key={currency.id}
+																			value={currency.id}
+																			className={
+																				session?.user?.darkMode
+																					? 'text-gray-200 hover:bg-gray-700 focus:bg-gray-700'
+																					: 'text-gray-800 hover:bg-gray-100 focus:bg-gray-100'
+																			}
+																		>
+																			{currency.name} ({currency.abbreviation})
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+												{/* Spacer to match checkbox height */}
+												<div className="h-6"></div>
+											</div>
+
+											<div className="space-y-3">
+												<FormField
+													control={form.control}
+													name="quantity"
+													render={({ field }) => (
+														<FormItem>
+															<FormLabel>Quantity (Optional)</FormLabel>
+															<FormControl>
+																<Input
+																	{...field}
+																	placeholder="Leave empty for unlimited"
+																	type="number"
+																	min="0"
+																	className={
+																		session?.user?.darkMode
+																			? 'bg-gray-700 border-gray-600 text-white focus:border-purple-500'
+																			: 'border-gray-300 focus:border-purple-500'
+																	}
+																/>
+															</FormControl>
+															<FormMessage />
+														</FormItem>
+													)}
+												/>
+												{/* Spacer to match checkbox height */}
+												<div className="h-6"></div>
+											</div>
+										</div>
+
+										<div className="flex justify-end gap-3">
+											<Button
+												type="button"
+												variant="outline"
+												onClick={cancelForm}
+												className={
+													session?.user?.darkMode
+														? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+														: 'border-gray-300 text-gray-700 hover:bg-gray-100'
+												}
+											>
+												Cancel
+											</Button>
+											<Button
+												type="submit"
+												disabled={form.formState.isSubmitting}
+												className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+											>
+												{form.formState.isSubmitting ? (editingItem ? 'Updating...' : 'Adding...') : editingItem ? 'Update Item' : 'Add Item'}
+											</Button>
+										</div>
+									</form>
+								</Form>
+							</div>
+						)}
+
+						<StockList items={rotatingItems} type="Rotating" />
+					</TabsContent>
+				</Tabs>
 			</DialogContent>
 		</Dialog>
 	);

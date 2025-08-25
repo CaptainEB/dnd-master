@@ -196,8 +196,10 @@ export default function MerchantDetailDialog({ open, onOpenChange, merchant, ses
 															<span className={`font-medium ${session?.user?.darkMode ? 'text-amber-400' : 'text-amber-600'}`}>
 																{formatPrice(item.price, item.currency)}
 															</span>
-															{item.quantity !== null && (
-																<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>Qty: {item.quantity}</span>
+															{item.quantity !== null && item.quantity !== undefined && (
+																<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
+																	{item.quantity === 0 ? 'Out of Stock' : `Qty: ${item.quantity}`}
+																</span>
 															)}
 															{!item.available && (
 																<Badge variant="secondary" className="text-xs">
@@ -243,8 +245,10 @@ export default function MerchantDetailDialog({ open, onOpenChange, merchant, ses
 															<span className={`font-medium ${session?.user?.darkMode ? 'text-amber-400' : 'text-amber-600'}`}>
 																{formatPrice(item.price, item.currency)}
 															</span>
-															{item.quantity !== null && (
-																<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>Qty: {item.quantity}</span>
+															{item.quantity !== null && item.quantity !== undefined && (
+																<span className={session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}>
+																	{item.quantity === 0 ? 'Out of Stock' : `Qty: ${item.quantity}`}
+																</span>
 															)}
 															{!item.available && (
 																<Badge variant="secondary" className="text-xs">
