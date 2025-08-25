@@ -673,6 +673,11 @@ export default function NotesPage() {
 																				<User className="h-3 w-3 sm:h-4 sm:w-4" />
 																				{note.author.characterName || note.author.email?.split('@')[0] || 'Unknown User'}
 																			</span>
+																			{note.isShared && (
+																				<Badge variant="outline" className="text-xs text-green-600 border-green-200">
+																					Shared
+																				</Badge>
+																			)}
 																			<span className="flex items-center gap-1 text-gray-500 text-xs sm:text-sm">
 																				<Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
 																				{formatDate(note.createdAt)}
