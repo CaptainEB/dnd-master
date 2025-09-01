@@ -19,11 +19,13 @@ export default function GlossaryPage() {
 	const [filteredCreatures, setFilteredCreatures] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
+	const [isMounted, setIsMounted] = useState(false);
 
 	// Search and filtering states
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('all');
 	const [tagFilter, setTagFilter] = useState('');
+	const [privateFilter, setPrivateFilter] = useState('all'); // 'all', 'private', 'public'
 
 	// Dialog states
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -39,6 +41,7 @@ export default function GlossaryPage() {
 		category: 'NPC',
 		tags: [],
 		avatarUrl: '',
+		isPrivate: false,
 
 		// D&D Stats
 		armorClass: '',
@@ -77,6 +80,11 @@ export default function GlossaryPage() {
 	// Check if user can manage creatures (DM or Admin)
 	const canManageCreatures = session?.user?.role === 'ADMIN' || session?.user?.campaignRole === 'DM';
 
+	// Prevent hydration issues
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
 	// Load creatures
 	const loadCreatures = useCallback(async () => {
 		if (!session?.user?.activeCampaignId) return;
@@ -103,7 +111,7 @@ export default function GlossaryPage() {
 		}
 	}, [session?.user?.activeCampaignId, loadCreatures]);
 
-	// Filter creatures based on search, category, and tags
+	// Filter creatures based on search, category, tags, and privacy
 	useEffect(() => {
 		let filtered = creatures;
 
@@ -125,8 +133,17 @@ export default function GlossaryPage() {
 			filtered = filtered.filter((creature) => creature.tags.some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase())));
 		}
 
+		// Private filter (only available for DMs/Admins)
+		if (canManageCreatures && privateFilter !== 'all') {
+			if (privateFilter === 'private') {
+				filtered = filtered.filter((creature) => creature.isPrivate === true);
+			} else if (privateFilter === 'public') {
+				filtered = filtered.filter((creature) => creature.isPrivate === false);
+			}
+		}
+
 		setFilteredCreatures(filtered);
-	}, [creatures, searchTerm, selectedCategory, tagFilter]);
+	}, [creatures, searchTerm, selectedCategory, tagFilter, privateFilter, canManageCreatures]);
 
 	// Get unique categories
 	const categories = [...new Set(creatures.map((c) => c.category))].sort();
@@ -139,6 +156,7 @@ export default function GlossaryPage() {
 			category: 'NPC',
 			tags: [],
 			avatarUrl: '',
+			isPrivate: false,
 			armorClass: '',
 			hitPoints: '',
 			speed: '',
@@ -221,6 +239,7 @@ export default function GlossaryPage() {
 			category: creature.category,
 			tags: creature.tags || [],
 			avatarUrl: creature.avatarUrl || '',
+			isPrivate: creature.isPrivate || false,
 			armorClass: creature.armorClass?.toString() || '',
 			hitPoints: creature.hitPoints?.toString() || '',
 			speed: creature.speed || '',
@@ -361,9 +380,16 @@ export default function GlossaryPage() {
 					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 					<div className="absolute bottom-4 left-6 right-6">
 						<h1 className="text-3xl font-bold text-white drop-shadow-lg">{creature.name}</h1>
-						<Badge variant="outline" className="mt-2 text-white border-white/60 bg-black/30 backdrop-blur-sm">
-							{creature.category}
-						</Badge>
+						<div className="flex items-center gap-2 mt-2">
+							<Badge variant="outline" className="text-white border-white/60 bg-black/30 backdrop-blur-sm">
+								{creature.category}
+							</Badge>
+							{creature.isPrivate && canManageCreatures && (
+								<Badge variant="outline" className="text-white border-red-400 bg-red-900/60 backdrop-blur-sm">
+									Private
+								</Badge>
+							)}
+						</div>
 					</div>
 				</div>
 			);
@@ -390,9 +416,16 @@ export default function GlossaryPage() {
 						<span className="text-4xl font-bold text-white">{firstLetter}</span>
 					</div>
 					<h1 className="text-3xl font-bold text-white drop-shadow-lg">{creature.name}</h1>
-					<Badge variant="outline" className="mt-2 text-white border-white/60 bg-black/30 backdrop-blur-sm">
-						{creature.category}
-					</Badge>
+					<div className="flex items-center justify-center gap-2 mt-2">
+						<Badge variant="outline" className="text-white border-white/60 bg-black/30 backdrop-blur-sm">
+							{creature.category}
+						</Badge>
+						{creature.isPrivate && canManageCreatures && (
+							<Badge variant="outline" className="text-white border-red-400 bg-red-900/60 backdrop-blur-sm">
+								Private
+							</Badge>
+						)}
+					</div>
 				</div>
 			</div>
 		);
@@ -432,7 +465,9 @@ export default function GlossaryPage() {
 	return (
 		<div
 			className={`min-h-screen pt-20 sm:pt-24 lg:pt-28 px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 ${
-				session?.user?.darkMode ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
+				isMounted && session?.user?.darkMode
+					? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+					: 'bg-gradient-to-br from-purple-50 via-white to-blue-50'
 			}`}
 		>
 			<div className="max-w-6xl mx-auto">
@@ -472,7 +507,7 @@ export default function GlossaryPage() {
 				{/* Search and Filters */}
 				<Card className={`mb-6 sm:mb-8 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 					<CardContent className="pt-4 sm:pt-6">
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+						<div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${canManageCreatures ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
 							{/* Search */}
 							<div className="relative">
 								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -507,7 +542,7 @@ export default function GlossaryPage() {
 							</Select>
 
 							{/* Tag Filter */}
-							<div className="relative sm:col-span-2 lg:col-span-1">
+							<div className="relative">
 								<Input
 									placeholder="Filter by tags..."
 									value={tagFilter}
@@ -519,6 +554,25 @@ export default function GlossaryPage() {
 									}`}
 								/>
 							</div>
+
+							{/* Private Filter - Only for DMs/Admins */}
+							{canManageCreatures && (
+								<Select value={privateFilter} onValueChange={setPrivateFilter}>
+									<SelectTrigger
+										className={`text-sm sm:text-base ${
+											session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200 focus:border-purple-500'
+										}`}
+									>
+										<Shield size={16} className="mr-2 flex-shrink-0" />
+										<SelectValue placeholder="All Privacy" />
+									</SelectTrigger>
+									<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+										<SelectItem value="all">All Privacy</SelectItem>
+										<SelectItem value="public">Public Only</SelectItem>
+										<SelectItem value="private">Private Only</SelectItem>
+									</SelectContent>
+								</Select>
+							)}
 						</div>
 					</CardContent>
 				</Card>
@@ -577,12 +631,22 @@ export default function GlossaryPage() {
 												<CardTitle className={`text-base sm:text-lg truncate ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 													{creature.name}
 												</CardTitle>
-												<Badge
-													variant="outline"
-													className={`mt-1 text-xs ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
-												>
-													{creature.category}
-												</Badge>
+												<div className="flex items-center gap-2 mt-1">
+													<Badge
+														variant="outline"
+														className={`text-xs ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
+													>
+														{creature.category}
+													</Badge>
+													{creature.isPrivate && canManageCreatures && (
+														<Badge
+															variant="outline"
+															className={`text-xs ${session?.user?.darkMode ? 'border-red-400 text-red-400' : 'border-red-600 text-red-600'}`}
+														>
+															Private
+														</Badge>
+													)}
+												</div>
 											</div>
 										</div>
 										{canEditCreature(creature) && (
@@ -811,6 +875,26 @@ export default function GlossaryPage() {
 								</div>
 							</div>
 
+							{/* Privacy Setting */}
+							{canManageCreatures && (
+								<div className="flex items-center space-x-2">
+									<input
+										type="checkbox"
+										id="isPrivate"
+										checked={formData.isPrivate}
+										onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
+										className={`w-4 h-4 rounded border-2 focus:ring-2 focus:ring-purple-500 ${
+											session?.user?.darkMode
+												? 'bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500'
+												: 'bg-white border-gray-300 text-purple-600 focus:ring-purple-500'
+										}`}
+									/>
+									<Label htmlFor="isPrivate" className={`text-sm ${session?.user?.darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+										Private (hidden from players)
+									</Label>
+								</div>
+							)}
+
 							{/* D&D Stats */}
 							<div className="space-y-3 sm:space-y-4">
 								<h3 className={`text-base sm:text-lg font-semibold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>D&D Statistics</h3>
@@ -1034,6 +1118,11 @@ export default function GlossaryPage() {
 							session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'
 						}`}
 					>
+						{/* Visually hidden title for accessibility */}
+						<DialogHeader className="sr-only">
+							<DialogTitle>{selectedCreatureForDetail ? selectedCreatureForDetail.name : 'Creature Details'}</DialogTitle>
+						</DialogHeader>
+
 						{selectedCreatureForDetail && (
 							<div className="h-full flex flex-col relative min-h-0">
 								{/* Custom Close Button */}

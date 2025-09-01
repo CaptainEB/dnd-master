@@ -186,6 +186,7 @@ model Creature {
   category    String   @default("NPC") // NPC, Monster, Human, etc.
   tags        String[] // Array of tags for flexible categorization
   avatarUrl   String? // Optional image URL
+  isPrivate   Boolean  @default(false) // Private creatures only visible to DM/Admin
 
   // D&D Stats
   armorClass Int?

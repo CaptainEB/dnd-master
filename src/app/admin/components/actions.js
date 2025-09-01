@@ -3777,6 +3777,14 @@ export async function getCampaignCreatures(campaignId, search = '', category = '
 			campaignId: campaignId,
 		};
 
+		// Filter out private creatures for non-DM/Admin users
+		if (session.user.role !== 'ADMIN' && session.user.campaignRole !== 'DM') {
+			// Show creatures that are NOT explicitly true (includes false, null, undefined)
+			where.NOT = {
+				isPrivate: true,
+			};
+		}
+
 		// Add search filter
 		if (search) {
 			where.OR = [{ name: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }];
@@ -3877,6 +3885,7 @@ export async function createCreature(creatureData) {
 				category: creatureData.category || 'NPC',
 				tags: creatureData.tags || [],
 				avatarUrl: creatureData.avatarUrl || null,
+				isPrivate: creatureData.isPrivate || false,
 
 				// D&D Stats
 				armorClass: creatureData.armorClass || null,
@@ -3983,6 +3992,7 @@ export async function updateCreature(creatureId, creatureData) {
 				category: creatureData.category || 'NPC',
 				tags: creatureData.tags || [],
 				avatarUrl: creatureData.avatarUrl || null,
+				isPrivate: creatureData.isPrivate || false,
 
 				// D&D Stats
 				armorClass: creatureData.armorClass || null,

@@ -27,7 +27,7 @@ export default async function RootLayout({ children }) {
 
 	return (
 		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+			<body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`} suppressHydrationWarning={true}>
 				<SessionProvider session={session}>
 					<DarkModeProvider>
 						<Navbar />
