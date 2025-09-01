@@ -613,35 +613,37 @@ export default function GlossaryPage() {
 						</CardContent>
 					</Card>
 				) : (
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
 						{filteredCreatures.map((creature) => (
 							<Card
 								key={creature.id}
-								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 cursor-pointer ${
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 cursor-pointer min-h-[200px] w-full ${
 									session?.user?.darkMode ? 'bg-gray-800/80 hover:bg-gray-800/90' : 'bg-white/80 hover:bg-white/90'
 								}`}
 								onClick={() => handleViewCreature(creature)}
 							>
-								<CardHeader className="pb-2 sm:pb-3">
-									<div className="flex items-start justify-between gap-2">
-										<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+								<CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6">
+									<div className="flex items-start justify-between gap-2 min-h-[3rem]">
+										<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-hidden">
 											{getCreatureAvatar(creature)}
 											<div className="hidden">{getCreatureAvatar(creature)}</div>
-											<div className="min-w-0 flex-1">
-												<CardTitle className={`text-base sm:text-lg truncate ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+											<div className="min-w-0 flex-1 overflow-hidden">
+												<CardTitle
+													className={`text-sm sm:text-base lg:text-lg truncate max-w-[100px] sm:max-w-[130px] lg:max-w-[150px] ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}
+												>
 													{creature.name}
 												</CardTitle>
-												<div className="flex items-center gap-2 mt-1">
+												<div className="flex items-center gap-1 sm:gap-2 mt-1 flex-wrap">
 													<Badge
 														variant="outline"
-														className={`text-xs ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
+														className={`text-xs shrink-0 ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
 													>
 														{creature.category}
 													</Badge>
 													{creature.isPrivate && canManageCreatures && (
 														<Badge
 															variant="outline"
-															className={`text-xs ${session?.user?.darkMode ? 'border-red-400 text-red-400' : 'border-red-600 text-red-600'}`}
+															className={`text-xs shrink-0 ${session?.user?.darkMode ? 'border-red-400 text-red-400' : 'border-red-600 text-red-600'}`}
 														>
 															Private
 														</Badge>
@@ -650,11 +652,11 @@ export default function GlossaryPage() {
 											</div>
 										</div>
 										{canEditCreature(creature) && (
-											<div className="flex flex-col sm:flex-row gap-1 sm:gap-2 flex-shrink-0">
+											<div className="flex flex-col gap-1 flex-shrink-0 min-w-[60px] sm:min-w-[70px]">
 												<Button
 													variant="outline"
 													size="sm"
-													className={`h-7 w-7 sm:h-8 sm:w-8 p-0 ${
+													className={`h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 p-0 ${
 														session?.user?.darkMode
 															? 'border-gray-600 text-gray-300 hover:bg-gray-700'
 															: 'border-purple-200 text-purple-600 hover:bg-purple-50'
@@ -664,12 +666,12 @@ export default function GlossaryPage() {
 														handleEdit(creature);
 													}}
 												>
-													<Edit size={12} className="sm:w-3.5 sm:h-3.5" />
+													<Edit size={10} className="sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5" />
 												</Button>
 												<Button
 													variant="outline"
 													size="sm"
-													className={`h-7 w-7 sm:h-8 sm:w-8 p-0 ${
+													className={`h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 p-0 ${
 														session?.user?.darkMode
 															? 'border-red-600 text-red-400 hover:bg-red-900/50'
 															: 'border-red-200 text-red-600 hover:bg-red-50'
@@ -679,13 +681,13 @@ export default function GlossaryPage() {
 														handleDelete(creature.id);
 													}}
 												>
-													<Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
+													<Trash2 size={10} className="sm:w-3 sm:h-3 lg:w-3.5 lg:h-3.5" />
 												</Button>
 											</div>
 										)}
 									</div>
 								</CardHeader>
-								<CardContent className="pt-0">
+								<CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
 									{/* Description */}
 									{creature.description && (
 										<div
