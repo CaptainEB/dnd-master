@@ -374,12 +374,12 @@ export default function QuestsPage() {
 									</Button>
 								</DialogTrigger>
 								<DialogContent
-									className={`max-w-xs sm:max-w-lg lg:max-w-2xl border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+									className={`max-w-xs sm:max-w-lg lg:max-w-2xl border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
 								>
 									<DialogHeader>
 										<DialogTitle className={`${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Post New Quest</DialogTitle>
 									</DialogHeader>
-									<form onSubmit={handleCreateQuest} className="space-y-4">
+									<form onSubmit={handleCreateQuest} className="space-y-4 pb-32 sm:pb-4">
 										<div>
 											<Label htmlFor="createTitle" className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 												Quest Title *
@@ -700,16 +700,16 @@ export default function QuestsPage() {
 						{filteredQuests.map((quest) => (
 							<Card
 								key={quest.id}
-								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative overflow-hidden ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
 							>
 								{/* Parchment-like border decoration */}
-								<div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200"></div>
+								<div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 rounded-t-lg"></div>
 
 								<CardHeader className="pb-2 sm:pb-3">
 									<div className="flex justify-between items-start gap-2">
 										<div className="flex-1 min-w-0">
 											<CardTitle
-												className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2 flex items-center gap-2`}
+												className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'} mb-2 flex items-center gap-2 max-w-[150px] sm:max-w-[200px] lg:max-w-[230px]`}
 											>
 												<Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
 												<span className="truncate">{quest.title}</span>
@@ -738,7 +738,7 @@ export default function QuestsPage() {
 											</CardDescription>
 										</div>
 										{canManageQuests && (
-											<div className="flex flex-col sm:flex-row gap-1">
+											<div className="flex gap-1 flex-shrink-0">
 												<Button
 													variant="outline"
 													size="sm"
@@ -782,12 +782,12 @@ export default function QuestsPage() {
 				{/* Edit Quest Dialog */}
 				<Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
 					<DialogContent
-						className={`max-w-xs sm:max-w-lg lg:max-w-2xl border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+						className={`max-w-xs sm:max-w-lg lg:max-w-2xl border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
 					>
 						<DialogHeader>
 							<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Edit Quest</DialogTitle>
 						</DialogHeader>
-						<form onSubmit={handleUpdateQuest} className="space-y-4">
+						<form onSubmit={handleUpdateQuest} className="space-y-4 pb-32 sm:pb-4">
 							<div>
 								<Label htmlFor="editTitle" className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
 									Quest Title *

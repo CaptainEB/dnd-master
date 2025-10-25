@@ -35,13 +35,15 @@ export default function CreateMerchantDialog({ open, onOpenChange, session, onMe
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className={`sm:max-w-lg ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}`}>
+			<DialogContent
+				className={`sm:max-w-lg overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200'}`}
+			>
 				<DialogHeader>
 					<DialogTitle className={session?.user?.darkMode ? 'text-white' : 'text-gray-900'}>Add New Merchant</DialogTitle>
 				</DialogHeader>
 
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-32 sm:pb-4">
 						{form.formState.errors.root && (
 							<div className="p-3 bg-red-50 border border-red-200 rounded-md">
 								<p className="text-red-700 text-sm">{form.formState.errors.root.message}</p>

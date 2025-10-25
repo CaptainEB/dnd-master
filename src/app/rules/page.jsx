@@ -282,24 +282,19 @@ export default function RulesPage() {
 				<aside className="hidden lg:block fixed left-0 top-0 h-screen w-80 z-50">
 					<div
 						className={`h-full flex flex-col ${
-							session?.user?.darkMode
-								? 'bg-gray-900/95 backdrop-blur-md border-r border-gray-700'
-								: 'bg-white/95 backdrop-blur-md border-r border-purple-200'
-						}`}
+							session?.user?.darkMode ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-purple-200'
+						} border-r shadow-lg`}
 					>
-						{/* Sidebar Header */}
-						<div className="flex-shrink-0 p-6 border-b border-current border-opacity-20">
-							<h2 className={`text-lg font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Table of Contents</h2>
-							<p className={`text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Campaign Rules</p>
+						<div className="p-6 border-b border-inherit">
+							<h2 className={`text-xl font-bold ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Rules</h2>
+							<p className={`text-sm mt-1 ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Campaign Rules & Info</p>
 						</div>
-
-						{/* Scrollable TOC Content */}
-						<div className="flex-1 overflow-y-auto p-6 space-y-4">
+						<div className="flex-1 overflow-y-auto p-4">
 							{toc.map((categoryGroup) => (
-								<div key={categoryGroup.category}>
+								<div key={categoryGroup.category} className="mb-6">
 									<h3
-										className={`font-semibold mb-3 text-base sticky top-0 bg-inherit py-2 border-b border-current border-opacity-20 ${
-											session?.user?.darkMode ? 'text-purple-400' : 'text-purple-700'
+										className={`font-semibold mb-3 text-lg sticky top-0 bg-inherit py-2 border-b border-inherit ${
+											session?.user?.darkMode ? 'text-purple-400 border-gray-600' : 'text-purple-700 border-purple-100'
 										}`}
 									>
 										{categoryGroup.category}
@@ -330,9 +325,7 @@ export default function RulesPage() {
 								</div>
 							))}
 						</div>
-
-						{/* Footer with Back to Top Button */}
-						<div className="p-4 border-t border-current border-opacity-20">
+						<div className="p-4 border-t border-inherit">
 							<button
 								onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
 								className={`w-full py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 ${
@@ -655,6 +648,23 @@ export default function RulesPage() {
 						onSubmit={onCreateSubmit}
 						session={session}
 					/>
+
+					{/* Floating Back to Top Button */}
+					{rules.length > 0 && (
+						<div className="fixed bottom-6 right-6 z-40">
+							<button
+								onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+								className={`p-3 rounded-full shadow-lg transition-all duration-200 ${
+									session?.user?.darkMode
+										? 'bg-gray-800 hover:bg-gray-700 text-purple-400 border border-gray-600'
+										: 'bg-white hover:bg-purple-50 text-purple-600 border border-purple-200'
+								} hover:shadow-xl hover:scale-105`}
+								aria-label="Back to top"
+							>
+								<ArrowUp className="h-5 w-5" />
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 		</>

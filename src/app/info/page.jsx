@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowUp, BookOpen, Edit, Eye, Image, Plus, Search, Trash2 } from 'lucide-react';
+import { ArrowUp, BookOpen, Edit, Image, Plus, Search, Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -32,7 +32,6 @@ export default function InfoPage() {
 	const [loading, setLoading] = useState(true);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('all');
-	const [viewMode, setViewMode] = useState('read');
 
 	// Dialog states
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -397,77 +396,35 @@ export default function InfoPage() {
 								<p className="text-sm sm:text-base font-medium text-purple-600">{session.user.activeCampaignName}</p>
 							</div>
 
-							<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-								{/* View Mode Toggle */}
-								<div
-									className={`flex rounded-lg p-1 backdrop-blur-sm w-full sm:w-auto ${
-										session?.user?.darkMode ? 'bg-gray-800/80 border border-gray-700' : 'bg-white/80 border border-purple-200'
-									}`}
-								>
+							{/* Action Buttons - DM/Admin Only */}
+							{canEdit && (
+								<div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
 									<Button
-										variant={viewMode === 'read' ? 'default' : 'ghost'}
-										size="sm"
-										onClick={() => setViewMode('read')}
-										className={`flex-1 sm:flex-initial text-xs sm:text-sm ${
-											viewMode === 'read'
-												? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-												: session?.user?.darkMode
-													? 'text-gray-300 hover:text-white hover:bg-gray-700'
-													: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+										onClick={() => setCreateDialogOpen(true)}
+										className={`text-xs sm:text-sm px-3 sm:px-4 ${
+											session?.user?.darkMode
+												? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
+												: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
 										}`}
 									>
-										<Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-										Read
+										<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+										Add Info
 									</Button>
-									{canEdit && (
-										<Button
-											variant={viewMode === 'edit' ? 'default' : 'ghost'}
-											size="sm"
-											onClick={() => setViewMode('edit')}
-											className={`flex-1 sm:flex-initial text-xs sm:text-sm ${
-												viewMode === 'edit'
-													? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
-													: session?.user?.darkMode
-														? 'text-gray-300 hover:text-white hover:bg-gray-700'
-														: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-											}`}
-										>
-											<Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-											Edit
-										</Button>
-									)}
+									<Button
+										onClick={() => setBackgroundDialogOpen(true)}
+										variant="outline"
+										size="sm"
+										className={`text-xs sm:text-sm px-3 sm:px-4 ${
+											session?.user?.darkMode
+												? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white'
+												: 'border-purple-200 text-purple-600 hover:bg-purple-50'
+										}`}
+									>
+										<Image className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+										Background
+									</Button>
 								</div>
-
-								{/* Add Info Button */}
-								{canEdit && (
-									<div className="flex gap-2">
-										<Button
-											onClick={() => setCreateDialogOpen(true)}
-											className={`text-xs sm:text-sm px-3 sm:px-4 ${
-												session?.user?.darkMode
-													? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-													: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
-											}`}
-										>
-											<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-											Add Info
-										</Button>
-										<Button
-											onClick={() => setBackgroundDialogOpen(true)}
-											variant="outline"
-											size="sm"
-											className={`text-xs sm:text-sm px-3 sm:px-4 ${
-												session?.user?.darkMode
-													? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white'
-													: 'border-purple-200 text-purple-600 hover:bg-purple-50'
-											}`}
-										>
-											<Image className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-											Background
-										</Button>
-									</div>
-								)}
-							</div>
+							)}
 						</div>
 					</div>
 
@@ -592,7 +549,6 @@ export default function InfoPage() {
 													key={info.id}
 													info={info}
 													session={session}
-													viewMode={viewMode}
 													canEdit={canEdit}
 													onEdit={openEditDialog}
 													onDelete={handleDeleteInfo}
@@ -608,14 +564,22 @@ export default function InfoPage() {
 
 					{/* Edit Dialog */}
 					<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-						<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+						<DialogContent
+							className={`max-w-xs sm:max-w-lg lg:max-w-2xl w-[95vw] sm:w-full mx-2 sm:mx-auto border-0 shadow-xl backdrop-blur-sm overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+						>
 							<DialogHeader>
-								<DialogTitle>Edit Information</DialogTitle>
+								<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+									Edit Information
+								</DialogTitle>
 							</DialogHeader>
 							<Form {...editForm}>
-								<form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+								<form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4 sm:space-y-6 pb-32 sm:pb-4">
 									{editForm.formState.errors.root && (
-										<div className="text-sm text-red-600 bg-red-50 p-3 rounded">{editForm.formState.errors.root.message}</div>
+										<div
+											className={`text-sm p-3 sm:p-4 rounded-lg border ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200'}`}
+										>
+											{editForm.formState.errors.root.message}
+										</div>
 									)}
 
 									<FormField
@@ -624,9 +588,15 @@ export default function InfoPage() {
 										rules={{ required: 'Title is required' }}
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Title</FormLabel>
+												<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Title *
+												</FormLabel>
 												<FormControl>
-													<Input {...field} />
+													<Input
+														{...field}
+														placeholder="Enter a descriptive title..."
+														className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -639,9 +609,16 @@ export default function InfoPage() {
 										rules={{ required: 'Description is required' }}
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Description</FormLabel>
+												<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Description *
+												</FormLabel>
 												<FormControl>
-													<Textarea {...field} placeholder="Brief description of this information..." rows={2} />
+													<Textarea
+														{...field}
+														placeholder="Brief description of this information..."
+														rows={2}
+														className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -653,10 +630,14 @@ export default function InfoPage() {
 										name="category"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Category</FormLabel>
+												<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Category
+												</FormLabel>
 												<Select onValueChange={field.onChange} value={field.value}>
 													<FormControl>
-														<SelectTrigger>
+														<SelectTrigger
+															className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-purple-200'}`}
+														>
 															<SelectValue />
 														</SelectTrigger>
 													</FormControl>
@@ -683,9 +664,18 @@ export default function InfoPage() {
 										name="order"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Order (for sorting within category)</FormLabel>
+												<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Order (for sorting within category)
+												</FormLabel>
 												<FormControl>
-													<Input {...field} type="number" min="0" onChange={(e) => field.onChange(parseInt(e.target.value) || 0)} />
+													<Input
+														{...field}
+														type="number"
+														min="0"
+														placeholder="0"
+														onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+														className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
@@ -698,21 +688,37 @@ export default function InfoPage() {
 										rules={{ required: 'Body content is required' }}
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Content (Markdown Supported)</FormLabel>
+												<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Content (Markdown Supported) *
+												</FormLabel>
 												<FormControl>
-													<Textarea {...field} placeholder="Enter detailed information here..." rows={10} />
+													<Textarea
+														{...field}
+														placeholder="Enter detailed information here..."
+														rows={10}
+														className={`text-sm sm:text-base min-h-32 sm:min-h-40 ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													/>
 												</FormControl>
 												<FormMessage />
 											</FormItem>
 										)}
 									/>
 
-									<div className="flex justify-end gap-2 pt-4">
-										<Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-											Cancel
-										</Button>
-										<Button type="submit" disabled={editForm.formState.isSubmitting}>
+									<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+										<Button
+											type="submit"
+											disabled={editForm.formState.isSubmitting}
+											className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm sm:text-base"
+										>
 											{editForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+										</Button>
+										<Button
+											type="button"
+											variant="outline"
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+											onClick={() => setEditDialogOpen(false)}
+										>
+											Cancel
 										</Button>
 									</div>
 								</form>
@@ -738,6 +744,23 @@ export default function InfoPage() {
 						onClear={handleClearBackground}
 						session={session}
 					/>
+
+					{/* Floating Back to Top Button */}
+					{infos.length > 0 && (
+						<div className="fixed bottom-6 right-6 z-40">
+							<button
+								onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+								className={`p-3 rounded-full shadow-lg transition-all duration-200 ${
+									session?.user?.darkMode
+										? 'bg-gray-800 hover:bg-gray-700 text-purple-400 border border-gray-600'
+										: 'bg-white hover:bg-purple-50 text-purple-600 border border-purple-200'
+								} hover:shadow-xl hover:scale-105`}
+								aria-label="Back to top"
+							>
+								<ArrowUp className="h-5 w-5" />
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 		</>

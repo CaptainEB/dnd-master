@@ -262,25 +262,27 @@ export default function UpdatesPage() {
 									</Button>
 								</DialogTrigger>
 								<DialogContent
-									className={`w-[95vw] max-w-md mx-auto border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+									className={`max-w-xs sm:max-w-lg lg:max-w-2xl w-[95vw] sm:w-full mx-2 sm:mx-auto border-0 shadow-xl backdrop-blur-sm overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
 								>
 									<DialogHeader>
-										<DialogTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+										<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
 											Create New Update
 										</DialogTitle>
 									</DialogHeader>
 									<Form {...createForm}>
-										<form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+										<form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 sm:space-y-6 pb-32 sm:pb-4">
 											<FormField
 												control={createForm.control}
 												name="title"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}>Title</FormLabel>
+														<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+															Update Title *
+														</FormLabel>
 														<FormControl>
 															<Input
 																placeholder="e.g., Session 5 Rewards"
-																className={`${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+																className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
 																{...field}
 															/>
 														</FormControl>
@@ -293,12 +295,14 @@ export default function UpdatesPage() {
 												name="content"
 												render={({ field }) => (
 													<FormItem>
-														<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}>Content</FormLabel>
+														<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+															Content *
+														</FormLabel>
 														<FormControl>
 															<Textarea
 																placeholder="e.g., All party members receive 1000 XP and 500 gold pieces..."
-																rows={4}
-																className={`${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+																rows={6}
+																className={`text-sm sm:text-base min-h-32 sm:min-h-40 ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
 																{...field}
 															/>
 														</FormControl>
@@ -308,30 +312,26 @@ export default function UpdatesPage() {
 											/>
 											{createForm.formState.errors.root && (
 												<div
-													className={`text-sm p-3 rounded-lg border ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200'}`}
+													className={`text-sm p-3 sm:p-4 rounded-lg border ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200'}`}
 												>
 													{createForm.formState.errors.root.message}
 												</div>
 											)}
-											<div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
-												<Button
-													type="button"
-													variant="outline"
-													className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
-													onClick={() => setCreateDialogOpen(false)}
-												>
-													Cancel
-												</Button>
+											<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
 												<Button
 													type="submit"
 													disabled={createForm.formState.isSubmitting}
-													className={`text-sm sm:text-base ${
-														session?.user?.darkMode
-															? 'bg-cyan-600 hover:bg-cyan-700'
-															: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-													}`}
+													className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm sm:text-base"
 												>
 													{createForm.formState.isSubmitting ? 'Creating...' : 'Create Update'}
+												</Button>
+												<Button
+													type="button"
+													variant="outline"
+													className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+													onClick={() => setCreateDialogOpen(false)}
+												>
+													Cancel
 												</Button>
 											</div>
 										</form>
@@ -490,22 +490,25 @@ export default function UpdatesPage() {
 				{/* Edit Dialog */}
 				<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
 					<DialogContent
-						className={`w-[95vw] max-w-md mx-auto border-0 shadow-xl backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+						className={`max-w-xs sm:max-w-lg lg:max-w-2xl w-[95vw] sm:w-full mx-2 sm:mx-auto border-0 shadow-xl backdrop-blur-sm overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
 					>
 						<DialogHeader>
-							<DialogTitle className={`text-base sm:text-lg ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Edit Update</DialogTitle>
+							<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>Edit Update</DialogTitle>
 						</DialogHeader>
 						<Form {...editForm}>
-							<form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+							<form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4 sm:space-y-6 pb-32 sm:pb-4">
 								<FormField
 									control={editForm.control}
 									name="title"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}>Title</FormLabel>
+											<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+												Update Title *
+											</FormLabel>
 											<FormControl>
 												<Input
-													className={`${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													placeholder="e.g., Session 5 Rewards"
+													className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
 													{...field}
 												/>
 											</FormControl>
@@ -518,11 +521,14 @@ export default function UpdatesPage() {
 									name="content"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel className={session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}>Content</FormLabel>
+											<FormLabel className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+												Content *
+											</FormLabel>
 											<FormControl>
 												<Textarea
-													rows={4}
-													className={`${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
+													placeholder="e.g., All party members receive 1000 XP and 500 gold pieces..."
+													rows={6}
+													className={`text-sm sm:text-base min-h-32 sm:min-h-40 ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-purple-200'} focus:border-purple-500 focus:ring-purple-500`}
 													{...field}
 												/>
 											</FormControl>
@@ -532,30 +538,26 @@ export default function UpdatesPage() {
 								/>
 								{editForm.formState.errors.root && (
 									<div
-										className={`text-sm p-3 rounded-lg border ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200'}`}
+										className={`text-sm p-3 sm:p-4 rounded-lg border ${session?.user?.darkMode ? 'text-red-400 bg-red-900/20 border-red-800' : 'text-red-600 bg-red-50 border-red-200'}`}
 									>
 										{editForm.formState.errors.root.message}
 									</div>
 								)}
-								<div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4">
-									<Button
-										type="button"
-										variant="outline"
-										className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'}`}
-										onClick={() => setEditDialogOpen(false)}
-									>
-										Cancel
-									</Button>
+								<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
 									<Button
 										type="submit"
 										disabled={editForm.formState.isSubmitting}
-										className={`text-sm sm:text-base ${
-											session?.user?.darkMode
-												? 'bg-cyan-600 hover:bg-cyan-700'
-												: 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
-										}`}
+										className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-sm sm:text-base"
 									>
 										{editForm.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+									</Button>
+									<Button
+										type="button"
+										variant="outline"
+										className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+										onClick={() => setEditDialogOpen(false)}
+									>
+										Cancel
 									</Button>
 								</div>
 							</form>

@@ -4,7 +4,7 @@ import { Edit, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-export default function InfoCard({ info, session, viewMode, canEdit, onEdit, onDelete, formatDate }) {
+export default function InfoCard({ info, session, canEdit, onEdit, onDelete, formatDate }) {
 	return (
 		<Card
 			id={`info-${info.id}`}
@@ -39,7 +39,7 @@ export default function InfoCard({ info, session, viewMode, canEdit, onEdit, onD
 					</div>
 
 					{/* Edit/Delete buttons */}
-					{canEdit && viewMode === 'edit' && (
+					{canEdit && (
 						<div className="flex gap-2 flex-shrink-0">
 							<Button
 								variant="outline"

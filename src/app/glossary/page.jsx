@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, Filter, Plus, Search, Shield, Trash2, User, Users, X } from 'lucide-react';
+import { Edit, Filter, LayoutGrid, List, Plus, Search, Shield, Trash2, User, Users, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -26,6 +26,7 @@ export default function GlossaryPage() {
 	const [selectedCategory, setSelectedCategory] = useState('all');
 	const [tagFilter, setTagFilter] = useState('');
 	const [privateFilter, setPrivateFilter] = useState('all'); // 'all', 'private', 'public'
+	const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
 
 	// Dialog states
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -332,6 +333,32 @@ export default function GlossaryPage() {
 		return <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${colors[colorIndex]}`}>{firstLetter}</div>;
 	};
 
+	// Get small avatar for list view
+	const getSmallCreatureAvatar = (creature) => {
+		if (creature.avatarUrl) {
+			return (
+				<img
+					src={creature.avatarUrl}
+					alt={creature.name}
+					className="w-8 h-8 rounded-full object-cover"
+					onError={(e) => {
+						e.target.style.display = 'none';
+						e.target.nextSibling.style.display = 'flex';
+					}}
+				/>
+			);
+		}
+
+		// Default small avatar with first letter
+		const firstLetter = creature.name.charAt(0).toUpperCase();
+		const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-orange-500'];
+		const colorIndex = creature.name.charCodeAt(0) % colors.length;
+
+		return (
+			<div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${colors[colorIndex]}`}>{firstLetter}</div>
+		);
+	};
+
 	// Generate large creature avatar for detail modal
 	const getLargeCreatureAvatar = (creature) => {
 		if (creature.avatarUrl) {
@@ -366,11 +393,11 @@ export default function GlossaryPage() {
 	const getCreatureHeaderImage = (creature) => {
 		if (creature.avatarUrl) {
 			return (
-				<div className="relative w-full h-64 overflow-hidden rounded-t-lg">
+				<div className="relative w-full h-100 overflow-hidden rounded-t-lg">
 					<img
 						src={creature.avatarUrl}
 						alt={creature.name}
-						className="w-full h-full object-cover"
+						className="w-full h-full object-cover object-top"
 						onError={(e) => {
 							e.target.style.display = 'none';
 							e.target.parentElement.classList.add('hidden');
@@ -507,7 +534,7 @@ export default function GlossaryPage() {
 				{/* Search and Filters */}
 				<Card className={`mb-6 sm:mb-8 border-0 shadow-lg backdrop-blur-sm ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
 					<CardContent className="pt-4 sm:pt-6">
-						<div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${canManageCreatures ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+						<div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${canManageCreatures ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
 							{/* Search */}
 							<div className="relative">
 								<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -573,6 +600,22 @@ export default function GlossaryPage() {
 									</SelectContent>
 								</Select>
 							)}
+
+							{/* View Mode Selector */}
+							<Select value={viewMode} onValueChange={setViewMode}>
+								<SelectTrigger
+									className={`text-sm sm:text-base ${
+										session?.user?.darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'border-purple-200 focus:border-purple-500'
+									}`}
+								>
+									{viewMode === 'card' ? <LayoutGrid size={16} className="mr-2 flex-shrink-0" /> : <List size={16} className="mr-2 flex-shrink-0" />}
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent className={session?.user?.darkMode ? 'bg-gray-700 border-gray-600' : ''}>
+									<SelectItem value="card">Card View</SelectItem>
+									<SelectItem value="list">List View</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
 					</CardContent>
 				</Card>
@@ -612,7 +655,7 @@ export default function GlossaryPage() {
 							</div>
 						</CardContent>
 					</Card>
-				) : (
+				) : viewMode === 'card' ? (
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
 						{filteredCreatures.map((creature) => (
 							<Card
@@ -771,6 +814,118 @@ export default function GlossaryPage() {
 							</Card>
 						))}
 					</div>
+				) : (
+					/* List View */
+					<div className="space-y-2">
+						{filteredCreatures.map((creature) => (
+							<Card
+								key={creature.id}
+								className={`border-0 shadow-md backdrop-blur-sm hover:shadow-lg transition-all duration-200 cursor-pointer ${
+									session?.user?.darkMode ? 'bg-gray-800/80 hover:bg-gray-800/90' : 'bg-white/80 hover:bg-white/90'
+								}`}
+								onClick={() => handleViewCreature(creature)}
+							>
+								<CardContent className="p-3 sm:p-4">
+									<div className="flex items-center gap-3 sm:gap-4">
+										{/* Small Avatar */}
+										<div className="flex-shrink-0">
+											{getSmallCreatureAvatar(creature)}
+											<div className="hidden">{getSmallCreatureAvatar(creature)}</div>
+										</div>
+
+										{/* Name and Category */}
+										<div className="flex-1 min-w-0">
+											<div className="flex items-center gap-2 flex-wrap">
+												<h3 className={`font-semibold text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+													{creature.name}
+												</h3>
+												<Badge
+													variant="outline"
+													className={`text-xs shrink-0 ${session?.user?.darkMode ? 'border-cyan-400 text-cyan-400' : 'border-purple-600 text-purple-600'}`}
+												>
+													{creature.category}
+												</Badge>
+												{creature.isPrivate && canManageCreatures && (
+													<Badge
+														variant="outline"
+														className={`text-xs shrink-0 ${session?.user?.darkMode ? 'border-red-400 text-red-400' : 'border-red-600 text-red-600'}`}
+													>
+														Private
+													</Badge>
+												)}
+											</div>
+										</div>
+
+										{/* Quick Stats */}
+										{(creature.armorClass || creature.hitPoints || creature.challengeRating) && (
+											<div className="hidden sm:flex items-center gap-4 flex-shrink-0">
+												{creature.armorClass && (
+													<div className="text-center">
+														<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>AC</div>
+														<div className={`font-medium text-sm ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{creature.armorClass}
+														</div>
+													</div>
+												)}
+												{creature.hitPoints && (
+													<div className="text-center">
+														<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>HP</div>
+														<div className={`font-medium text-sm ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{creature.hitPoints}
+														</div>
+													</div>
+												)}
+												{creature.challengeRating && (
+													<div className="text-center">
+														<div className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>CR</div>
+														<div className={`font-medium text-sm ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+															{creature.challengeRating}
+														</div>
+													</div>
+												)}
+											</div>
+										)}
+
+										{/* Edit/Delete Buttons */}
+										{canEditCreature(creature) && (
+											<div className="flex gap-1 flex-shrink-0 ml-6 sm:ml-8">
+												<Button
+													variant="outline"
+													size="sm"
+													className={`h-7 w-7 p-0 ${
+														session?.user?.darkMode
+															? 'border-gray-600 text-gray-300 hover:bg-gray-700'
+															: 'border-purple-200 text-purple-600 hover:bg-purple-50'
+													}`}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleEdit(creature);
+													}}
+												>
+													<Edit size={12} />
+												</Button>
+												<Button
+													variant="outline"
+													size="sm"
+													className={`h-7 w-7 p-0 ${
+														session?.user?.darkMode
+															? 'border-red-600 text-red-400 hover:bg-red-900/50'
+															: 'border-red-200 text-red-600 hover:bg-red-50'
+													}`}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleDelete(creature.id);
+													}}
+												>
+													<Trash2 size={12} />
+												</Button>
+											</div>
+										)}
+									</div>
+								</CardContent>
+							</Card>
+						))}
+					</div>
 				)}
 
 				{/* Create/Edit Dialog */}
@@ -797,7 +952,7 @@ export default function GlossaryPage() {
 							</DialogTitle>
 						</DialogHeader>
 
-						<form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+						<form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 pb-32 sm:pb-4">
 							{/* Basic Information */}
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
 								<div>
