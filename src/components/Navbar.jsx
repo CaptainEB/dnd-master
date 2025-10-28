@@ -40,10 +40,10 @@ export default function Navbar() {
 
 							{status === 'authenticated' && session?.user && (
 								<>
-									{/* Active Campaign Selector */}
-									<ActiveCampaignSelector />
+							{/* Active Campaign Selector */}
+							<ActiveCampaignSelector />
 
-									{/* Dashboard Button */}
+							{/* Dashboard Button */}
 									<Link
 										href={
 											session.user.role === 'ADMIN' ? '/admin/dashboard' : session.user.campaignRole === 'DM' ? '/dm/dashboard' : '/player/dashboard'

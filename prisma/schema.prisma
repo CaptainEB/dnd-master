@@ -51,6 +51,7 @@ model campaign {
   mapPosts    MapPost[]
   merchants   Merchant[]
   currencies  Currency[]
+  playerKeep  PlayerKeep?
 }
 
 model CampaignMember {
@@ -250,6 +251,70 @@ model Merchant {
 
   @@index([campaignId, city])
   @@index([campaignId, name])
+}
+
+model PlayerKeep {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  iconUrl     String? // URL for player keep icon/image
+  description String? // Description of the player keep
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  campaignId  String   @unique @db.ObjectId
+
+  // Relations
+  campaign   campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  facilities Facility[]
+  hirelings  Hireling[]
+  checkIns   KeepCheckIn[]
+}
+
+model Facility {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  upkeepAmount   Float // Weekly upkeep cost
+  upkeepCurrency String // Currency abbreviation (e.g., "gp")
+  profitAmount   Float // Weekly profit
+  profitCurrency String // Currency abbreviation (e.g., "gp")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  playerKeepId   String   @db.ObjectId
+
+  // Relations
+  playerKeep PlayerKeep @relation(fields: [playerKeepId], references: [id], onDelete: Cascade)
+
+  @@index([playerKeepId])
+}
+
+model Hireling {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  salaryAmount   Float // Weekly salary cost
+  salaryCurrency String // Currency abbreviation (e.g., "gp")
+  profitAmount   Float // Weekly profit from services
+  profitCurrency String // Currency abbreviation (e.g., "gp")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  playerKeepId   String   @db.ObjectId
+
+  // Relations
+  playerKeep PlayerKeep @relation(fields: [playerKeepId], references: [id], onDelete: Cascade)
+
+  @@index([playerKeepId])
+}
+
+model KeepCheckIn {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  weeksAway    Int // Number of weeks the party was away
+  breakdown    Json // Detailed breakdown of costs and profits
+  netProfit    Json // Net profit/loss for each currency type
+  createdAt    DateTime @default(now())
+  playerKeepId String   @db.ObjectId
+
+  // Relations
+  playerKeep PlayerKeep @relation(fields: [playerKeepId], references: [id], onDelete: Cascade)
+
+  @@index([playerKeepId])
+  @@index([createdAt])
 }
 
 model Currency {

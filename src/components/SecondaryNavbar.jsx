@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ClipboardList, FileText, Info, Map, Scroll, ShoppingBag, Users } from 'lucide-react';
+import { BookOpen, Building2, ClipboardList, FileText, Info, Map, Scroll, ShoppingBag, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -19,6 +19,11 @@ export default function SecondaryNavbar() {
 			name: 'Updates',
 			href: '/updates',
 			icon: ClipboardList,
+		},
+		{
+			name: 'Player Keep',
+			href: '/playerkeep',
+			icon: Building2,
 		},
 		{
 			name: 'Rules',

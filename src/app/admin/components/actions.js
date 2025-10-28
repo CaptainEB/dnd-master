@@ -5478,3 +5478,620 @@ export async function initializeDefaultCurrencies(campaignId) {
 		};
 	}
 }
+
+// ============================================
+// PLAYER KEEP FUNCTIONS
+// ============================================
+
+/**
+ * Get or create player keep for campaign
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function getPlayerKeep(campaignId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Get or create player keep
+		let playerKeep = await prisma.playerKeep.findUnique({
+			where: { campaignId },
+			include: {
+				facilities: {
+					orderBy: { createdAt: 'desc' },
+				},
+				hirelings: {
+					orderBy: { createdAt: 'desc' },
+				},
+				checkIns: {
+					orderBy: { createdAt: 'desc' },
+					take: 10, // Get last 10 check-ins
+				},
+			},
+		});
+
+		// If no player keep exists, create one
+		if (!playerKeep) {
+			playerKeep = await prisma.playerKeep.create({
+				data: {
+					campaignId,
+				},
+				include: {
+					facilities: true,
+					hirelings: true,
+					checkIns: true,
+				},
+			});
+		}
+
+		return {
+			success: true,
+			data: playerKeep,
+		};
+	} catch (error) {
+		console.error('Error getting player keep:', error);
+		return {
+			success: false,
+			error: 'Failed to get player keep',
+		};
+	}
+}
+
+/**
+ * Update player keep icon
+ * @param {string} playerKeepId - PlayerKeep ID
+ * @param {string} iconUrl - Icon URL
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updatePlayerKeepIcon(playerKeepId, iconUrl) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify player keep belongs to user's active campaign
+		const existingKeep = await prisma.playerKeep.findUnique({
+			where: { id: playerKeepId },
+			select: { campaignId: true },
+		});
+
+		if (!existingKeep || existingKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Player keep does not belong to your campaign',
+			};
+		}
+
+		const playerKeep = await prisma.playerKeep.update({
+			where: { id: playerKeepId },
+			data: { iconUrl },
+		});
+
+		return {
+			success: true,
+			data: playerKeep,
+		};
+	} catch (error) {
+		console.error('Error updating player keep icon:', error);
+		return {
+			success: false,
+			error: 'Failed to update player keep icon',
+		};
+	}
+}
+
+/**
+ * Update player keep description
+ * @param {string} playerKeepId - PlayerKeep ID
+ * @param {string} description - Description
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updatePlayerKeepDescription(playerKeepId, description) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify player keep belongs to user's active campaign
+		const existingKeep = await prisma.playerKeep.findUnique({
+			where: { id: playerKeepId },
+			select: { campaignId: true },
+		});
+
+		if (!existingKeep || existingKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Player keep does not belong to your campaign',
+			};
+		}
+
+		const playerKeep = await prisma.playerKeep.update({
+			where: { id: playerKeepId },
+			data: { description },
+		});
+
+		return {
+			success: true,
+			data: playerKeep,
+		};
+	} catch (error) {
+		console.error('Error updating player keep description:', error);
+		return {
+			success: false,
+			error: 'Failed to update player keep description',
+		};
+	}
+}
+
+/**
+ * Create a facility
+ * @param {Object} facilityData - Facility data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createFacility(facilityData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		const facility = await prisma.facility.create({
+			data: facilityData,
+		});
+
+		return {
+			success: true,
+			data: facility,
+		};
+	} catch (error) {
+		console.error('Error creating facility:', error);
+		return {
+			success: false,
+			error: 'Failed to create facility',
+		};
+	}
+}
+
+/**
+ * Update a facility
+ * @param {string} facilityId - Facility ID
+ * @param {Object} facilityData - Facility data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateFacility(facilityId, facilityData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify facility belongs to user's active campaign
+		const existingFacility = await prisma.facility.findUnique({
+			where: { id: facilityId },
+			include: {
+				playerKeep: {
+					select: { campaignId: true },
+				},
+			},
+		});
+
+		if (!existingFacility || existingFacility.playerKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Facility does not belong to your campaign',
+			};
+		}
+
+		const facility = await prisma.facility.update({
+			where: { id: facilityId },
+			data: facilityData,
+		});
+
+		return {
+			success: true,
+			data: facility,
+		};
+	} catch (error) {
+		console.error('Error updating facility:', error);
+		return {
+			success: false,
+			error: 'Failed to update facility',
+		};
+	}
+}
+
+/**
+ * Delete a facility
+ * @param {string} facilityId - Facility ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteFacility(facilityId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify facility belongs to user's active campaign
+		const existingFacility = await prisma.facility.findUnique({
+			where: { id: facilityId },
+			include: {
+				playerKeep: {
+					select: { campaignId: true },
+				},
+			},
+		});
+
+		if (!existingFacility || existingFacility.playerKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Facility does not belong to your campaign',
+			};
+		}
+
+		await prisma.facility.delete({
+			where: { id: facilityId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting facility:', error);
+		return {
+			success: false,
+			error: 'Failed to delete facility',
+		};
+	}
+}
+
+/**
+ * Create a hireling
+ * @param {Object} hirelingData - Hireling data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createHireling(hirelingData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		const hireling = await prisma.hireling.create({
+			data: hirelingData,
+		});
+
+		return {
+			success: true,
+			data: hireling,
+		};
+	} catch (error) {
+		console.error('Error creating hireling:', error);
+		return {
+			success: false,
+			error: 'Failed to create hireling',
+		};
+	}
+}
+
+/**
+ * Update a hireling
+ * @param {string} hirelingId - Hireling ID
+ * @param {Object} hirelingData - Hireling data
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updateHireling(hirelingId, hirelingData) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify hireling belongs to user's active campaign
+		const existingHireling = await prisma.hireling.findUnique({
+			where: { id: hirelingId },
+			include: {
+				playerKeep: {
+					select: { campaignId: true },
+				},
+			},
+		});
+
+		if (!existingHireling || existingHireling.playerKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Hireling does not belong to your campaign',
+			};
+		}
+
+		const hireling = await prisma.hireling.update({
+			where: { id: hirelingId },
+			data: hirelingData,
+		});
+
+		return {
+			success: true,
+			data: hireling,
+		};
+	} catch (error) {
+		console.error('Error updating hireling:', error);
+		return {
+			success: false,
+			error: 'Failed to update hireling',
+		};
+	}
+}
+
+/**
+ * Delete a hireling
+ * @param {string} hirelingId - Hireling ID
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function deleteHireling(hirelingId) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify hireling belongs to user's active campaign
+		const existingHireling = await prisma.hireling.findUnique({
+			where: { id: hirelingId },
+			include: {
+				playerKeep: {
+					select: { campaignId: true },
+				},
+			},
+		});
+
+		if (!existingHireling || existingHireling.playerKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Hireling does not belong to your campaign',
+			};
+		}
+
+		await prisma.hireling.delete({
+			where: { id: hirelingId },
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error deleting hireling:', error);
+		return {
+			success: false,
+			error: 'Failed to delete hireling',
+		};
+	}
+}
+
+/**
+ * Create a keep check-in with calculated breakdown
+ * @param {string} playerKeepId - PlayerKeep ID
+ * @param {number} weeksAway - Number of weeks away
+ * @param {Object} breakdown - Breakdown of costs and profits
+ * @param {Object} netProfit - Net profit for each currency
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function createKeepCheckIn(playerKeepId, weeksAway, breakdown, netProfit) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify player keep belongs to user's active campaign
+		const existingKeep = await prisma.playerKeep.findUnique({
+			where: { id: playerKeepId },
+			select: { campaignId: true },
+		});
+
+		if (!existingKeep || existingKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Player keep does not belong to your campaign',
+			};
+		}
+
+		const checkIn = await prisma.keepCheckIn.create({
+			data: {
+				playerKeepId,
+				weeksAway,
+				breakdown,
+				netProfit,
+			},
+		});
+
+		return {
+			success: true,
+			data: checkIn,
+		};
+	} catch (error) {
+		console.error('Error creating keep check-in:', error);
+		return {
+			success: false,
+			error: 'Failed to create keep check-in',
+		};
+	}
+}
+
+/**
+ * Get keep check-ins history
+ * @param {string} playerKeepId - PlayerKeep ID
+ * @param {number} limit - Number of records to return
+ * @returns {Promise<{success: boolean, data?: any[], error?: string}>}
+ */
+export async function getKeepCheckIns(playerKeepId, limit = 20) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		const checkIns = await prisma.keepCheckIn.findMany({
+			where: { playerKeepId },
+			orderBy: { createdAt: 'desc' },
+			take: limit,
+		});
+
+		return {
+			success: true,
+			data: checkIns,
+		};
+	} catch (error) {
+		console.error('Error getting keep check-ins:', error);
+		return {
+			success: false,
+			error: 'Failed to get keep check-ins',
+		};
+	}
+}
