@@ -5662,6 +5662,65 @@ export async function updatePlayerKeepDescription(playerKeepId, description) {
 }
 
 /**
+ * Update player keep notes
+ * @param {string} playerKeepId - ID of player keep to update
+ * @param {string} notes - New notes content
+ * @returns {Promise<{success: boolean, data?: any, error?: string}>}
+ */
+export async function updatePlayerKeepNotes(playerKeepId, notes) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM or Admin
+		const userRole = session.user.role;
+		const campaignRole = session.user.campaignRole;
+
+		if (userRole !== 'ADMIN' && campaignRole !== 'DM') {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Verify player keep belongs to user's active campaign
+		const existingKeep = await prisma.playerKeep.findUnique({
+			where: { id: playerKeepId },
+			select: { campaignId: true },
+		});
+
+		if (!existingKeep || existingKeep.campaignId !== session.user.activeCampaignId) {
+			return {
+				success: false,
+				error: 'Unauthorized - Player keep does not belong to your campaign',
+			};
+		}
+
+		const playerKeep = await prisma.playerKeep.update({
+			where: { id: playerKeepId },
+			data: { notes },
+		});
+
+		return {
+			success: true,
+			data: playerKeep,
+		};
+	} catch (error) {
+		console.error('Error updating player keep notes:', error);
+		return {
+			success: false,
+			error: 'Failed to update player keep notes',
+		};
+	}
+}
+
+/**
  * Create a facility
  * @param {Object} facilityData - Facility data
  * @returns {Promise<{success: boolean, data?: any, error?: string}>}
@@ -6028,7 +6087,9 @@ export async function createKeepCheckIn(playerKeepId, weeksAway, breakdown, netP
 		// Verify player keep belongs to user's active campaign
 		const existingKeep = await prisma.playerKeep.findUnique({
 			where: { id: playerKeepId },
-			select: { campaignId: true },
+			include: {
+				facilities: true,
+			},
 		});
 
 		if (!existingKeep || existingKeep.campaignId !== session.user.activeCampaignId) {
@@ -6038,18 +6099,153 @@ export async function createKeepCheckIn(playerKeepId, weeksAway, breakdown, netP
 			};
 		}
 
+		// Process crafting items and recurring production
+		const completedItems = [];
+		const recurringProduction = [];
+		const facilityUpdates = [];
+
+		for (const facility of existingKeep.facilities) {
+			// Handle crafting items (items with weeksRemaining that decrease over time)
+			if (facility.craftingItems && Array.isArray(facility.craftingItems) && facility.craftingItems.length > 0) {
+				const updatedCraftingItems = [];
+
+				for (const item of facility.craftingItems) {
+					const newWeeksRemaining = item.weeksRemaining - weeksAway;
+
+					if (newWeeksRemaining <= 0) {
+						// Item is complete
+						completedItems.push({
+							facilityName: facility.name,
+							itemName: item.name,
+							craftTime: item.originalWeeks || item.weeksRemaining + weeksAway,
+						});
+					} else {
+						// Item still in progress
+						updatedCraftingItems.push({
+							...item,
+							weeksRemaining: newWeeksRemaining,
+						});
+					}
+				}
+
+				// Always update facility if it had crafting items (time has passed)
+				const existingUpdate = facilityUpdates.find((u) => u.id === facility.id);
+				if (existingUpdate) {
+					existingUpdate.craftingItems = updatedCraftingItems;
+				} else {
+					facilityUpdates.push({
+						id: facility.id,
+						craftingItems: updatedCraftingItems,
+					});
+				}
+			}
+
+			// Handle recurring production (items produced with progress tracking)
+			if (facility.recurringItems && Array.isArray(facility.recurringItems) && facility.recurringItems.length > 0) {
+				const updatedRecurringItems = [];
+				let hasRecurringUpdates = false;
+
+				for (const item of facility.recurringItems) {
+					const craftingDuration = item.craftingDuration || 1; // Default to 1 week if not specified
+					const currentProgress = item.progressWeeks || 0; // Get current progress or start at 0
+					const totalWeeks = currentProgress + weeksAway; // Add new weeks to progress
+					const completedCycles = Math.floor(totalWeeks / craftingDuration); // How many complete cycles
+					const newProgress = totalWeeks % craftingDuration; // Remainder becomes new progress
+					const totalProduced = item.quantity * completedCycles;
+
+					// Update item with new progress
+					updatedRecurringItems.push({
+						...item,
+						progressWeeks: newProgress,
+					});
+
+					// Track if we need to update the facility
+					if (newProgress !== currentProgress) {
+						hasRecurringUpdates = true;
+					}
+
+					// Add to production breakdown if any items were produced
+					if (totalProduced > 0) {
+						recurringProduction.push({
+							facilityName: facility.name,
+							itemName: item.name,
+							quantityPerCycle: item.quantity,
+							craftingDuration: craftingDuration,
+							completedCycles: completedCycles,
+							totalProduced,
+						});
+					}
+				}
+
+				// Update facility if recurring items changed
+				if (hasRecurringUpdates) {
+					// Find existing update or create new one
+					const existingUpdate = facilityUpdates.find((u) => u.id === facility.id);
+					if (existingUpdate) {
+						existingUpdate.recurringItems = updatedRecurringItems;
+					} else {
+						facilityUpdates.push({
+							id: facility.id,
+							recurringItems: updatedRecurringItems,
+						});
+					}
+				}
+			}
+		}
+
+		// Update facilities with new crafting item states and recurring progress
+		for (const update of facilityUpdates) {
+			const updateData = {};
+			if (update.craftingItems !== undefined) {
+				updateData.craftingItems = update.craftingItems;
+			}
+			if (update.recurringItems !== undefined) {
+				updateData.recurringItems = update.recurringItems;
+			}
+			await prisma.facility.update({
+				where: { id: update.id },
+				data: updateData,
+			});
+		}
+
+		// Add completed items and recurring production to breakdown
+		const enhancedBreakdown = {
+			...breakdown,
+			completedItems,
+			recurringProduction,
+		};
+
+		// Check if we need to delete old check-ins (keep only last 50)
+		const checkInCount = await prisma.keepCheckIn.count({
+			where: { playerKeepId },
+		});
+
+		if (checkInCount >= 50) {
+			// Get the oldest check-in to delete
+			const oldestCheckIn = await prisma.keepCheckIn.findFirst({
+				where: { playerKeepId },
+				orderBy: { createdAt: 'asc' },
+			});
+
+			if (oldestCheckIn) {
+				await prisma.keepCheckIn.delete({
+					where: { id: oldestCheckIn.id },
+				});
+			}
+		}
+
 		const checkIn = await prisma.keepCheckIn.create({
 			data: {
 				playerKeepId,
 				weeksAway,
-				breakdown,
+				breakdown: enhancedBreakdown,
 				netProfit,
 			},
 		});
 
 		return {
 			success: true,
-			data: checkIn,
+			checkIn,
 		};
 	} catch (error) {
 		console.error('Error creating keep check-in:', error);

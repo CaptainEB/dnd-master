@@ -33,66 +33,78 @@ export default function CheckInDialog({ open, onOpenChange, playerKeep, currenci
 
 		// Calculate facility costs and profits
 		playerKeep.facilities?.forEach((facility) => {
-			const upkeepTotal = facility.upkeepAmount * weeks;
-			const profitTotal = facility.profitAmount * weeks;
+			// Only add if values exist
+			if (facility.upkeepAmount && facility.upkeepCurrency) {
+				const upkeepTotal = facility.upkeepAmount * weeks;
 
-			if (!currencyTotals[facility.upkeepCurrency]) {
-				currencyTotals[facility.upkeepCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				if (!currencyTotals[facility.upkeepCurrency]) {
+					currencyTotals[facility.upkeepCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				}
+
+				currencyTotals[facility.upkeepCurrency].totalUpkeep += upkeepTotal;
+				currencyTotals[facility.upkeepCurrency].facilities.push({
+					name: facility.name,
+					type: 'upkeep',
+					amount: upkeepTotal,
+					currency: facility.upkeepCurrency,
+					perWeek: facility.upkeepAmount,
+				});
 			}
-			if (!currencyTotals[facility.profitCurrency]) {
-				currencyTotals[facility.profitCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+
+			if (facility.profitAmount && facility.profitCurrency) {
+				const profitTotal = facility.profitAmount * weeks;
+
+				if (!currencyTotals[facility.profitCurrency]) {
+					currencyTotals[facility.profitCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				}
+
+				currencyTotals[facility.profitCurrency].totalProfit += profitTotal;
+				currencyTotals[facility.profitCurrency].facilities.push({
+					name: facility.name,
+					type: 'profit',
+					amount: profitTotal,
+					currency: facility.profitCurrency,
+					perWeek: facility.profitAmount,
+				});
 			}
-
-			currencyTotals[facility.upkeepCurrency].totalUpkeep += upkeepTotal;
-			currencyTotals[facility.profitCurrency].totalProfit += profitTotal;
-
-			currencyTotals[facility.upkeepCurrency].facilities.push({
-				name: facility.name,
-				type: 'upkeep',
-				amount: upkeepTotal,
-				currency: facility.upkeepCurrency,
-				perWeek: facility.upkeepAmount,
-			});
-
-			currencyTotals[facility.profitCurrency].facilities.push({
-				name: facility.name,
-				type: 'profit',
-				amount: profitTotal,
-				currency: facility.profitCurrency,
-				perWeek: facility.profitAmount,
-			});
 		});
 
 		// Calculate hireling costs and profits
 		playerKeep.hirelings?.forEach((hireling) => {
-			const salaryTotal = hireling.salaryAmount * weeks;
-			const profitTotal = hireling.profitAmount * weeks;
+			// Only add if values exist
+			if (hireling.salaryAmount && hireling.salaryCurrency) {
+				const salaryTotal = hireling.salaryAmount * weeks;
 
-			if (!currencyTotals[hireling.salaryCurrency]) {
-				currencyTotals[hireling.salaryCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				if (!currencyTotals[hireling.salaryCurrency]) {
+					currencyTotals[hireling.salaryCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				}
+
+				currencyTotals[hireling.salaryCurrency].totalUpkeep += salaryTotal;
+				currencyTotals[hireling.salaryCurrency].hirelings.push({
+					name: hireling.name,
+					type: 'salary',
+					amount: salaryTotal,
+					currency: hireling.salaryCurrency,
+					perWeek: hireling.salaryAmount,
+				});
 			}
-			if (!currencyTotals[hireling.profitCurrency]) {
-				currencyTotals[hireling.profitCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+
+			if (hireling.profitAmount && hireling.profitCurrency) {
+				const profitTotal = hireling.profitAmount * weeks;
+
+				if (!currencyTotals[hireling.profitCurrency]) {
+					currencyTotals[hireling.profitCurrency] = { totalUpkeep: 0, totalProfit: 0, facilities: [], hirelings: [] };
+				}
+
+				currencyTotals[hireling.profitCurrency].totalProfit += profitTotal;
+				currencyTotals[hireling.profitCurrency].hirelings.push({
+					name: hireling.name,
+					type: 'profit',
+					amount: profitTotal,
+					currency: hireling.profitCurrency,
+					perWeek: hireling.profitAmount,
+				});
 			}
-
-			currencyTotals[hireling.salaryCurrency].totalUpkeep += salaryTotal;
-			currencyTotals[hireling.profitCurrency].totalProfit += profitTotal;
-
-			currencyTotals[hireling.salaryCurrency].hirelings.push({
-				name: hireling.name,
-				type: 'salary',
-				amount: salaryTotal,
-				currency: hireling.salaryCurrency,
-				perWeek: hireling.salaryAmount,
-			});
-
-			currencyTotals[hireling.profitCurrency].hirelings.push({
-				name: hireling.name,
-				type: 'profit',
-				amount: profitTotal,
-				currency: hireling.profitCurrency,
-				perWeek: hireling.profitAmount,
-			});
 		});
 
 		// Calculate net profit for each currency
@@ -102,10 +114,55 @@ export default function CheckInDialog({ open, onOpenChange, playerKeep, currenci
 			netProfit[currency] = data.totalProfit - data.totalUpkeep;
 		});
 
+		// Calculate completed crafting items
+		const completedItems = [];
+		playerKeep.facilities?.forEach((facility) => {
+			if (facility.craftingItems && Array.isArray(facility.craftingItems)) {
+				facility.craftingItems.forEach((item) => {
+					if (item.weeksRemaining - weeks <= 0) {
+						completedItems.push({
+							facilityName: facility.name,
+							itemName: item.name,
+							weeksToComplete: item.originalWeeks || item.weeksRemaining,
+						});
+					}
+				});
+			}
+		});
+
+		// Calculate recurring production (with progress tracking)
+		const recurringProduction = [];
+		playerKeep.facilities?.forEach((facility) => {
+			if (facility.recurringItems && Array.isArray(facility.recurringItems)) {
+				facility.recurringItems.forEach((item) => {
+					const craftingDuration = item.craftingDuration || 1; // Default to 1 week if not specified
+					const currentProgress = item.progressWeeks || 0; // Get current progress
+					const totalWeeks = currentProgress + weeks; // Add new weeks to progress
+					const completedCycles = Math.floor(totalWeeks / craftingDuration); // Calculate completed cycles
+					const totalProduced = item.quantity * completedCycles;
+
+					if (totalProduced > 0) {
+						recurringProduction.push({
+							facilityName: facility.name,
+							itemName: item.name,
+							quantityPerCycle: item.quantity,
+							craftingDuration: craftingDuration,
+							completedCycles: completedCycles,
+							totalProduced,
+							currentProgress: currentProgress, // Include for display
+							newProgress: totalWeeks % craftingDuration, // Show what progress will be after
+						});
+					}
+				});
+			}
+		});
+
 		setBreakdown({
 			weeks,
 			currencyTotals,
 			netProfit,
+			completedItems,
+			recurringProduction,
 		});
 		setShowBreakdown(true);
 	};
@@ -183,6 +240,54 @@ export default function CheckInDialog({ open, onOpenChange, playerKeep, currenci
 						<DialogTitle className={darkMode ? 'text-white' : 'text-gray-800'}>Keep Report - {breakdown?.weeks} Weeks</DialogTitle>
 					</DialogHeader>
 					<div className="space-y-4 pt-4 overflow-y-auto max-h-[70vh] pb-4">
+						{/* Completed Crafting Items Section */}
+						{breakdown?.completedItems && breakdown.completedItems.length > 0 && (
+							<div
+								className={`p-4 rounded-lg border ${
+									darkMode ? 'bg-blue-900/30 border-blue-600' : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300'
+								}`}
+							>
+								<div className="flex items-center gap-2 mb-3 pb-3 border-b border-blue-400/30">
+									<span className={`text-lg font-bold ${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>✨ Crafting Completed</span>
+								</div>
+								<div className="space-y-2">
+									{breakdown.completedItems.map((item, idx) => (
+										<div key={idx} className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+											<span className="font-semibold">{item.facilityName}:</span> {item.itemName}
+											<span className={`ml-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+												({item.weeksToComplete} {item.weeksToComplete === 1 ? 'week' : 'weeks'})
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
+
+						{/* Recurring Production Section */}
+						{breakdown?.recurringProduction && breakdown.recurringProduction.length > 0 && (
+							<div
+								className={`p-4 rounded-lg border ${
+									darkMode ? 'bg-green-900/30 border-green-600' : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+								}`}
+							>
+								<div className="flex items-center gap-2 mb-3 pb-3 border-b border-green-400/30">
+									<span className={`text-lg font-bold ${darkMode ? 'text-green-300' : 'text-green-700'}`}>📦 Items Produced</span>
+								</div>
+								<div className="space-y-2">
+									{breakdown.recurringProduction.map((item, idx) => (
+										<div key={idx} className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+											<span className="font-semibold">{item.facilityName}:</span> {item.totalProduced}× {item.itemName}
+											<span className={`ml-2 ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+												({item.completedCycles} {item.completedCycles === 1 ? 'cycle' : 'cycles'} × {item.quantityPerCycle}, {item.craftingDuration}{' '}
+												{item.craftingDuration === 1 ? 'week' : 'weeks'} each)
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
+
+						{/* Currency Breakdown */}
 						{breakdown &&
 							Object.entries(breakdown.currencyTotals).map(([currency, data]) => {
 								// Skip currencies with no transactions

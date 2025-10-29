@@ -257,6 +257,7 @@ model PlayerKeep {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   iconUrl     String? // URL for player keep icon/image
   description String? // Description of the player keep
+  notes       String? // DM notes for custom requests, items, etc.
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   campaignId  String   @unique @db.ObjectId
@@ -271,10 +272,14 @@ model PlayerKeep {
 model Facility {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  upkeepAmount   Float // Weekly upkeep cost
-  upkeepCurrency String // Currency abbreviation (e.g., "gp")
-  profitAmount   Float // Weekly profit
-  profitCurrency String // Currency abbreviation (e.g., "gp")
+  description    String? // Description of the facility
+  upkeepAmount   Float? // Weekly upkeep cost (optional)
+  upkeepCurrency String? // Currency abbreviation (e.g., "gp")
+  profitAmount   Float? // Weekly profit (optional)
+  profitCurrency String? // Currency abbreviation (e.g., "gp")
+  notes          String? // Custom notes for the DM
+  craftingItems  Json? // Array of items being crafted: [{name: string, weeksRemaining: number, originalWeeks: number}]
+  recurringItems Json? // Array of items produced: [{name: string, quantity: number, craftingDuration: number, progressWeeks: number}] - craftingDuration is weeks per cycle, progressWeeks tracks accumulated time
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   playerKeepId   String   @db.ObjectId
@@ -288,10 +293,11 @@ model Facility {
 model Hireling {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   name           String
-  salaryAmount   Float // Weekly salary cost
-  salaryCurrency String // Currency abbreviation (e.g., "gp")
-  profitAmount   Float // Weekly profit from services
-  profitCurrency String // Currency abbreviation (e.g., "gp")
+  description    String? // Description of the hireling
+  salaryAmount   Float? // Weekly salary cost (optional)
+  salaryCurrency String? // Currency abbreviation (e.g., "gp")
+  profitAmount   Float? // Weekly profit from services (optional)
+  profitCurrency String? // Currency abbreviation (e.g., "gp")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   playerKeepId   String   @db.ObjectId
