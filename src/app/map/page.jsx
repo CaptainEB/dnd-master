@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit, ImageIcon, Plus, Search, Trash2, User, X } from 'lucide-react';
+import { Edit, ExternalLink, ImageIcon, Plus, Search, Trash2, User, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -520,30 +520,47 @@ export default function MapPage() {
 												<span>{new Date(mapPost.createdAt).toLocaleDateString()}</span>
 											</div>
 										</div>
-										{canEditDelete(mapPost) && (
-											<div className="flex gap-2 shrink-0">
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => openEditDialog(mapPost)}
-													className={`${
-														session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'
-													}`}
-												>
-													<Edit size={14} className="sm:w-4 sm:h-4" />
-													<span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
-												</Button>
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => handleDeleteMapPost(mapPost.id)}
-													className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
-												>
-													<Trash2 size={14} className="sm:w-4 sm:h-4" />
-													<span className="sr-only sm:not-sr-only sm:ml-1">Delete</span>
-												</Button>
-											</div>
-										)}
+										<div className="flex gap-2 shrink-0">
+											{/* Open in New Tab - Always visible */}
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={() => window.open(mapPost.imageUrl, '_blank', 'noopener,noreferrer')}
+												className={`${
+													session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'
+												}`}
+												title="Open image in new tab"
+											>
+												<ExternalLink size={14} className="sm:w-4 sm:h-4" />
+												<span className="sr-only sm:not-sr-only sm:ml-1">Open</span>
+											</Button>
+
+											{/* Edit/Delete - Only for authorized users */}
+											{canEditDelete(mapPost) && (
+												<>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => openEditDialog(mapPost)}
+														className={`${
+															session?.user?.darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-50'
+														}`}
+													>
+														<Edit size={14} className="sm:w-4 sm:h-4" />
+														<span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
+													</Button>
+													<Button
+														variant="outline"
+														size="sm"
+														onClick={() => handleDeleteMapPost(mapPost.id)}
+														className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+													>
+														<Trash2 size={14} className="sm:w-4 sm:h-4" />
+														<span className="sr-only sm:not-sr-only sm:ml-1">Delete</span>
+													</Button>
+												</>
+											)}
+										</div>
 									</div>
 								</CardHeader>
 								<CardContent className="pt-0">
