@@ -2841,6 +2841,9 @@ export async function createCampaignQuest(campaignId, questData) {
 				status: questData.status || 'AVAILABLE',
 				reward: questData.reward?.trim() || null,
 				difficulty: questData.difficulty?.trim() || null,
+				xp: questData.xp ? parseInt(questData.xp) : null,
+				xpHidden: questData.xpHidden !== undefined ? questData.xpHidden : true,
+				location: questData.location?.trim() || null,
 				campaignId: campaignId,
 				questTypeId: questData.questTypeId || null,
 			},
@@ -2853,6 +2856,25 @@ export async function createCampaignQuest(campaignId, questData) {
 				},
 			},
 		});
+
+		// If a new location was provided, add it to campaign's questLocations if not already present
+		if (questData.location && questData.location.trim()) {
+			const campaign = await prisma.campaign.findUnique({
+				where: { id: campaignId },
+				select: { questLocations: true },
+			});
+
+			if (campaign && !campaign.questLocations.includes(questData.location.trim())) {
+				await prisma.campaign.update({
+					where: { id: campaignId },
+					data: {
+						questLocations: {
+							push: questData.location.trim(),
+						},
+					},
+				});
+			}
+		}
 
 		return {
 			success: true,
@@ -2930,6 +2952,9 @@ export async function updateCampaignQuest(questId, questData) {
 				status: questData.status,
 				reward: questData.reward?.trim() || null,
 				difficulty: questData.difficulty?.trim() || null,
+				xp: questData.xp !== undefined ? (questData.xp ? parseInt(questData.xp) : null) : undefined,
+				xpHidden: questData.xpHidden !== undefined ? questData.xpHidden : undefined,
+				location: questData.location !== undefined ? questData.location?.trim() || null : undefined,
 				questTypeId: questData.questTypeId || null,
 			},
 			include: {
@@ -2941,6 +2966,25 @@ export async function updateCampaignQuest(questId, questData) {
 				},
 			},
 		});
+
+		// If a new location was provided, add it to campaign's questLocations if not already present
+		if (questData.location && questData.location.trim()) {
+			const campaign = await prisma.campaign.findUnique({
+				where: { id: existingQuest.campaignId },
+				select: { questLocations: true },
+			});
+
+			if (campaign && !campaign.questLocations.includes(questData.location.trim())) {
+				await prisma.campaign.update({
+					where: { id: existingQuest.campaignId },
+					data: {
+						questLocations: {
+							push: questData.location.trim(),
+						},
+					},
+				});
+			}
+		}
 
 		return {
 			success: true,
@@ -4309,6 +4353,112 @@ export async function deleteQuestType(questTypeId) {
 		return {
 			success: false,
 			error: 'Failed to delete quest type',
+		};
+	}
+}
+
+/**
+ * Get quest locations for a campaign
+ * @param {string} campaignId
+ * @returns {Promise<{success: boolean, data?: string[], error?: string}>}
+ */
+export async function getQuestLocations(campaignId) {
+	try {
+		const campaign = await prisma.campaign.findUnique({
+			where: { id: campaignId },
+			select: { questLocations: true },
+		});
+
+		if (!campaign) {
+			return {
+				success: false,
+				error: 'Campaign not found',
+			};
+		}
+
+		return {
+			success: true,
+			data: campaign.questLocations || [],
+		};
+	} catch (error) {
+		console.error('Error fetching quest locations:', error);
+		return {
+			success: false,
+			error: 'Failed to fetch quest locations',
+		};
+	}
+}
+
+/**
+ * Remove a quest location from campaign's questLocations array
+ * Note: This does not affect existing quests with this location
+ * @param {string} campaignId
+ * @param {string} location
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export async function removeQuestLocation(campaignId, location) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return {
+				success: false,
+				error: 'Authentication required',
+			};
+		}
+
+		// Check if user is DM/Admin
+		let hasPermission = session.user.role === 'ADMIN';
+
+		if (!hasPermission) {
+			const membership = await prisma.campaignMember.findFirst({
+				where: {
+					userId: session.user.id,
+					campaignId: campaignId,
+					role: 'DM',
+				},
+			});
+			hasPermission = !!membership;
+		}
+
+		if (!hasPermission) {
+			return {
+				success: false,
+				error: 'Unauthorized - DM or Admin access required',
+			};
+		}
+
+		// Get current locations
+		const campaign = await prisma.campaign.findUnique({
+			where: { id: campaignId },
+			select: { questLocations: true },
+		});
+
+		if (!campaign) {
+			return {
+				success: false,
+				error: 'Campaign not found',
+			};
+		}
+
+		// Remove the location from the array
+		const updatedLocations = campaign.questLocations.filter((loc) => loc !== location);
+
+		await prisma.campaign.update({
+			where: { id: campaignId },
+			data: {
+				questLocations: updatedLocations,
+			},
+		});
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error('Error removing quest location:', error);
+		return {
+			success: false,
+			error: 'Failed to remove quest location',
 		};
 	}
 }

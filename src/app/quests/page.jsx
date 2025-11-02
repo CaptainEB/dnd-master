@@ -6,7 +6,9 @@ import {
 	deleteCampaignQuest,
 	deleteQuestType,
 	getCampaignQuests,
+	getQuestLocations,
 	getQuestTypes,
+	removeQuestLocation,
 	updateCampaignQuest,
 } from '@/app/admin/components/actions';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Coins, Crown, Edit, Plus, Save, Scroll, Shield, Sword, Tag, Target, Trash2, X, Zap } from 'lucide-react';
+import { Calendar, Coins, Crown, Edit, Eye, EyeOff, MapPin, Plus, Save, Scroll, Shield, Sword, Tag, Target, Trash2, X, Zap } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -27,6 +29,7 @@ export default function QuestsPage() {
 	const [mounted, setMounted] = useState(false);
 	const [quests, setQuests] = useState([]);
 	const [questTypes, setQuestTypes] = useState([]);
+	const [questLocations, setQuestLocations] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 	const [selectedStatus, setSelectedStatus] = useState('AVAILABLE');
@@ -34,10 +37,16 @@ export default function QuestsPage() {
 
 	// Quest Type Filter
 	const [questTypeFilter, setQuestTypeFilter] = useState('all');
+	// Location Filter
+	const [locationFilter, setLocationFilter] = useState('all');
 
 	// Quest Type Management
 	const [showQuestTypeDialog, setShowQuestTypeDialog] = useState(false);
 	const [newQuestTypeName, setNewQuestTypeName] = useState('');
+
+	// Quest Detail Dialog
+	const [selectedQuest, setSelectedQuest] = useState(null);
+	const [showDetailDialog, setShowDetailDialog] = useState(false);
 
 	// Form states
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -50,6 +59,9 @@ export default function QuestsPage() {
 		reward: '',
 		difficulty: '',
 		questTypeId: 'none',
+		xp: '',
+		xpHidden: true,
+		location: '',
 	});
 
 	useEffect(() => {
@@ -96,12 +108,26 @@ export default function QuestsPage() {
 		}
 	}, [session?.user?.activeCampaignId]);
 
+	const loadQuestLocations = useCallback(async () => {
+		if (!session?.user?.activeCampaignId) return;
+
+		try {
+			const result = await getQuestLocations(session.user.activeCampaignId);
+			if (result.success) {
+				setQuestLocations(result.data);
+			}
+		} catch (err) {
+			console.error('Failed to load quest locations:', err);
+		}
+	}, [session?.user?.activeCampaignId]);
+
 	useEffect(() => {
 		if (mounted && session?.user?.activeCampaignId) {
 			loadQuests();
 			loadQuestTypes();
+			loadQuestLocations();
 		}
-	}, [mounted, loadQuests, loadQuestTypes]);
+	}, [mounted, loadQuests, loadQuestTypes, loadQuestLocations]);
 
 	const handleCreateQuest = async (e) => {
 		e.preventDefault();
@@ -115,14 +141,27 @@ export default function QuestsPage() {
 			const questData = {
 				...formData,
 				questTypeId: formData.questTypeId === 'none' ? null : formData.questTypeId,
+				xp: formData.xp ? parseInt(formData.xp) : null,
+				location: formData.location?.trim() || null,
 			};
 			const result = await createCampaignQuest(session.user.activeCampaignId, questData);
 
 			if (result.success) {
-				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '', questTypeId: 'none' });
+				setFormData({
+					title: '',
+					description: '',
+					status: 'AVAILABLE',
+					reward: '',
+					difficulty: '',
+					questTypeId: 'none',
+					xp: '',
+					xpHidden: true,
+					location: '',
+				});
 				setShowCreateDialog(false);
 				setError('');
 				await loadQuests();
+				await loadQuestLocations(); // Refresh locations list
 			} else {
 				setError(result.error || 'Failed to create quest');
 			}
@@ -144,15 +183,28 @@ export default function QuestsPage() {
 			const questData = {
 				...formData,
 				questTypeId: formData.questTypeId === 'none' ? null : formData.questTypeId,
+				xp: formData.xp ? parseInt(formData.xp) : null,
+				location: formData.location?.trim() || null,
 			};
 			const result = await updateCampaignQuest(editingQuest.id, questData);
 
 			if (result.success) {
 				setEditingQuest(null);
 				setShowEditDialog(false);
-				setFormData({ title: '', description: '', status: 'AVAILABLE', reward: '', difficulty: '', questTypeId: 'none' });
+				setFormData({
+					title: '',
+					description: '',
+					status: 'AVAILABLE',
+					reward: '',
+					difficulty: '',
+					questTypeId: 'none',
+					xp: '',
+					xpHidden: true,
+					location: '',
+				});
 				setError('');
 				await loadQuests();
+				await loadQuestLocations(); // Refresh locations list
 			} else {
 				setError(result.error || 'Failed to update quest');
 			}
@@ -189,6 +241,9 @@ export default function QuestsPage() {
 			reward: quest.reward || '',
 			difficulty: quest.difficulty || '',
 			questTypeId: quest.questTypeId || 'none',
+			xp: quest.xp ? quest.xp.toString() : '',
+			xpHidden: quest.xpHidden !== undefined ? quest.xpHidden : true,
+			location: quest.location || '',
 		});
 		setShowEditDialog(true);
 	};
@@ -235,6 +290,24 @@ export default function QuestsPage() {
 		} catch (err) {
 			setError('Failed to delete quest type');
 			console.error('Error deleting quest type:', err);
+		}
+	};
+
+	const handleRemoveLocation = async (location) => {
+		if (!confirm(`Remove "${location}" from location list? This won't affect existing quests.`)) {
+			return;
+		}
+
+		try {
+			const result = await removeQuestLocation(session.user.activeCampaignId, location);
+			if (result.success) {
+				await loadQuestLocations();
+			} else {
+				setError(result.error || 'Failed to remove location');
+			}
+		} catch (err) {
+			setError('Failed to remove location');
+			console.error('Error removing location:', err);
 		}
 	};
 
@@ -306,7 +379,17 @@ export default function QuestsPage() {
 			questTypeMatch = quest.questTypeId === questTypeFilter;
 		}
 
-		return statusMatch && questTypeMatch;
+		// Filter by location
+		let locationMatch = true;
+		if (locationFilter === 'all') {
+			locationMatch = true;
+		} else if (locationFilter === 'none') {
+			locationMatch = !quest.location;
+		} else {
+			locationMatch = quest.location === locationFilter;
+		}
+
+		return statusMatch && questTypeMatch && locationMatch;
 	});
 
 	if (!mounted) {
@@ -472,6 +555,81 @@ export default function QuestsPage() {
 												/>
 											</div>
 										</div>
+
+										{/* XP and Location Fields */}
+										<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+											<div>
+												<Label htmlFor="createXP" className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													XP Reward (Optional)
+												</Label>
+												<Input
+													id="createXP"
+													type="number"
+													placeholder="e.g., 500"
+													value={formData.xp}
+													onChange={(e) => setFormData({ ...formData, xp: e.target.value })}
+													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+												/>
+												<div className="flex items-center mt-2">
+													<input
+														type="checkbox"
+														id="createXPHidden"
+														checked={formData.xpHidden}
+														onChange={(e) => setFormData({ ...formData, xpHidden: e.target.checked })}
+														className="hidden"
+													/>
+													<Label
+														htmlFor="createXPHidden"
+														className={`text-xs sm:text-sm cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+													>
+														{formData.xpHidden ? <EyeOff className="h-4 w-4 inline mr-1" /> : <Eye className="h-4 w-4 inline mr-1" />}
+														Hide XP from players
+													</Label>
+												</div>
+											</div>
+											<div>
+												<Label
+													htmlFor="createLocation"
+													className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}
+												>
+													<MapPin className="h-4 w-4 inline mr-1" />
+													Location (Optional)
+												</Label>
+												<Input
+													id="createLocation"
+													placeholder="e.g., Neverwinter, The Underdark"
+													value={formData.location}
+													onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+												/>
+												{questLocations.length > 0 && (
+													<div className="mt-2">
+														<Label className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Or choose existing:</Label>
+														<Select
+															value={formData.location || 'none'}
+															onValueChange={(value) => {
+																if (value !== 'none') {
+																	setFormData({ ...formData, location: value });
+																}
+															}}
+														>
+															<SelectTrigger className="w-full mt-1 text-xs sm:text-sm h-8">
+																<SelectValue placeholder="Choose location" />
+															</SelectTrigger>
+															<SelectContent>
+																<SelectItem value="none">-- Choose Location --</SelectItem>
+																{questLocations.map((loc) => (
+																	<SelectItem key={loc} value={loc}>
+																		{loc}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+													</div>
+												)}
+											</div>
+										</div>
+
 										<div className="flex flex-col sm:flex-row gap-2 pt-4">
 											<Button
 												type="submit"
@@ -497,61 +655,117 @@ export default function QuestsPage() {
 								<DialogTrigger asChild>
 									<Button variant="outline" className="border-purple-200 text-purple-600 hover:bg-purple-50 w-full sm:w-auto text-sm sm:text-base">
 										<Tag className="h-4 w-4 mr-2" />
-										Manage Quest Types
+										Manage Types & Locations
 									</Button>
 								</DialogTrigger>
 								<DialogContent
-									className={`max-w-xs sm:max-w-md border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+									className={`max-w-xs sm:max-w-lg border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto max-h-[90vh] overflow-y-auto ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
 								>
 									<DialogHeader>
 										<DialogTitle className={`text-lg sm:text-xl ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
-											Manage Quest Types
+											Manage Quest Types & Locations
 										</DialogTitle>
 									</DialogHeader>
-									<div className="space-y-4">
-										{/* Create New Quest Type */}
-										<form onSubmit={handleCreateQuestType} className="space-y-3">
-											<div>
-												<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-													New Quest Type Name
-												</Label>
-												<Input
-													placeholder="e.g., Guild Missions, Side Quests"
-													value={newQuestTypeName}
-													onChange={(e) => setNewQuestTypeName(e.target.value)}
-													className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
-												/>
-											</div>
-											<Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm sm:text-base">
-												Create Quest Type
-											</Button>
-										</form>
+									<div className="space-y-6">
+										{/* Quest Types Section */}
+										<div className="space-y-4">
+											<h3
+												className={`text-base sm:text-lg font-semibold flex items-center gap-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}
+											>
+												<Tag className="h-5 w-5" />
+												Quest Types
+											</h3>
+											{/* Create New Quest Type */}
+											<form onSubmit={handleCreateQuestType} className="space-y-3">
+												<div>
+													<Label className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+														New Quest Type Name
+													</Label>
+													<Input
+														placeholder="e.g., Guild Missions, Side Quests"
+														value={newQuestTypeName}
+														onChange={(e) => setNewQuestTypeName(e.target.value)}
+														className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+													/>
+												</div>
+												<Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm sm:text-base">
+													Create Quest Type
+												</Button>
+											</form>
 
-										{/* Existing Quest Types */}
-										<div className="space-y-2">
-											<h4 className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-												Existing Quest Types
-											</h4>
-											{questTypes.length === 0 ? (
-												<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No quest types created yet</p>
-											) : (
-												questTypes.map((type) => (
-													<div
-														key={type.id}
-														className={`flex items-center justify-between p-2 rounded border ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}
-													>
-														<span className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>{type.name}</span>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleDeleteQuestType(type.id)}
-															className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+											{/* Existing Quest Types */}
+											<div className="space-y-2">
+												<h4 className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+													Existing Quest Types
+												</h4>
+												{questTypes.length === 0 ? (
+													<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No quest types created yet</p>
+												) : (
+													questTypes.map((type) => (
+														<div
+															key={type.id}
+															className={`flex items-center justify-between p-2 rounded border ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}
 														>
-															<X className="h-4 w-4" />
-														</Button>
-													</div>
-												))
-											)}
+															<span className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>{type.name}</span>
+															<Button
+																variant="ghost"
+																size="sm"
+																onClick={() => handleDeleteQuestType(type.id)}
+																className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+															>
+																<X className="h-4 w-4" />
+															</Button>
+														</div>
+													))
+												)}
+											</div>
+										</div>
+
+										{/* Divider */}
+										<div className={`border-t ${session?.user?.darkMode ? 'border-gray-600' : 'border-gray-300'}`}></div>
+
+										{/* Locations Section */}
+										<div className="space-y-4">
+											<h3
+												className={`text-base sm:text-lg font-semibold flex items-center gap-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}
+											>
+												<MapPin className="h-5 w-5" />
+												Quest Locations
+											</h3>
+											<p className={`text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+												Manage location list for dropdown. Removing a location won't affect existing quests.
+											</p>
+
+											{/* Existing Locations */}
+											<div className="space-y-2">
+												{questLocations.length === 0 ? (
+													<p className={`text-sm ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+														No locations yet. Create a quest with a location to add one.
+													</p>
+												) : (
+													questLocations.map((location) => (
+														<div
+															key={location}
+															className={`flex items-center justify-between p-2 rounded border ${session?.user?.darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-200 bg-gray-50'}`}
+														>
+															<span
+																className={`text-sm sm:text-base flex items-center gap-2 ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}
+															>
+																<MapPin className="h-4 w-4" />
+																{location}
+															</span>
+															<Button
+																variant="ghost"
+																size="sm"
+																onClick={() => handleRemoveLocation(location)}
+																className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+															>
+																<X className="h-4 w-4" />
+															</Button>
+														</div>
+													))
+												)}
+											</div>
 										</div>
 									</div>
 								</DialogContent>
@@ -571,30 +785,58 @@ export default function QuestsPage() {
 					</Card>
 				)}
 
-				{/* Quest Type Filter */}
+				{/* Quest Type and Location Filters */}
 				<Card
 					className={`mb-4 sm:mb-6 backdrop-blur-sm shadow-lg ${session?.user?.darkMode ? 'border-purple-800 bg-gray-800/80' : 'border-purple-200 bg-white/80'}`}
 				>
 					<CardContent className="pt-4 sm:pt-6">
-						<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-							<Label className={`font-medium text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
-								Filter by Quest Type:
-							</Label>
-							<Select value={questTypeFilter} onValueChange={setQuestTypeFilter}>
-								<SelectTrigger
-									className={`w-full sm:w-64 text-sm sm:text-base ${session?.user?.darkMode ? 'border-purple-600 bg-gray-700 text-white' : 'border-purple-200 bg-white'}`}
-								>
-									<SelectValue placeholder="Select quest type filter" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="all">All Quest Types ({quests.length})</SelectItem>
-									{questTypes.map((type) => (
-										<SelectItem key={type.id} value={type.id}>
-											{type.name} ({quests.filter((q) => q.questTypeId === type.id).length})
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+						<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+							{/* Quest Type Filter */}
+							<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+								<Label className={`font-medium text-sm sm:text-base flex-shrink-0 ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+									<Tag className="h-4 w-4 inline mr-1" />
+									Quest Type:
+								</Label>
+								<Select value={questTypeFilter} onValueChange={setQuestTypeFilter}>
+									<SelectTrigger
+										className={`w-full text-sm sm:text-base ${session?.user?.darkMode ? 'border-purple-600 bg-gray-700 text-white' : 'border-purple-200 bg-white'}`}
+									>
+										<SelectValue placeholder="Select quest type filter" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All Quest Types ({quests.length})</SelectItem>
+										{questTypes.map((type) => (
+											<SelectItem key={type.id} value={type.id}>
+												{type.name} ({quests.filter((q) => q.questTypeId === type.id).length})
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+
+							{/* Location Filter */}
+							<div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+								<Label className={`font-medium text-sm sm:text-base flex-shrink-0 ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+									<MapPin className="h-4 w-4 inline mr-1" />
+									Location:
+								</Label>
+								<Select value={locationFilter} onValueChange={setLocationFilter}>
+									<SelectTrigger
+										className={`w-full text-sm sm:text-base ${session?.user?.darkMode ? 'border-purple-600 bg-gray-700 text-white' : 'border-purple-200 bg-white'}`}
+									>
+										<SelectValue placeholder="Select location filter" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All Locations ({quests.length})</SelectItem>
+										<SelectItem value="none">No Location ({quests.filter((q) => !q.location).length})</SelectItem>
+										{questLocations.map((location) => (
+											<SelectItem key={location} value={location}>
+												{location} ({quests.filter((q) => q.location === location).length})
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
 						</div>
 					</CardContent>
 				</Card>
@@ -667,7 +909,8 @@ export default function QuestsPage() {
 				{!loading && filteredQuests.length > 0 && (
 					<div className={`mb-3 sm:mb-4 text-xs sm:text-sm ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
 						Showing {filteredQuests.length} of {quests.length} quest{quests.length === 1 ? '' : 's'}
-						{questTypeFilter !== 'all' && <span> • Filtered by: {questTypes.find((type) => type.id === questTypeFilter)?.name || 'Unknown'}</span>}
+						{questTypeFilter !== 'all' && <span> • Type: {questTypes.find((type) => type.id === questTypeFilter)?.name || 'Unknown'}</span>}
+						{locationFilter !== 'all' && <span> • Location: {locationFilter === 'none' ? 'No Location' : locationFilter}</span>}
 					</div>
 				)}
 				{loading ? (
@@ -700,7 +943,11 @@ export default function QuestsPage() {
 						{filteredQuests.map((quest) => (
 							<Card
 								key={quest.id}
-								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
+								className={`border-0 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-200 relative cursor-pointer ${session?.user?.darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}
+								onClick={() => {
+									setSelectedQuest(quest);
+									setShowDetailDialog(true);
+								}}
 							>
 								{/* Parchment-like border decoration */}
 								<div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 rounded-t-lg"></div>
@@ -731,6 +978,15 @@ export default function QuestsPage() {
 														<span className="truncate">{quest.questType.name}</span>
 													</Badge>
 												)}
+												{quest.location && (
+													<Badge
+														variant="outline"
+														className={`border-emerald-200 bg-emerald-50 text-emerald-700 text-xs ${session?.user?.darkMode ? 'border-emerald-600 bg-emerald-900/50 text-emerald-300' : ''}`}
+													>
+														<MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+														<span className="truncate">{quest.location}</span>
+													</Badge>
+												)}
 											</div>
 											<CardDescription className="flex items-center gap-1 text-gray-500 text-xs sm:text-sm">
 												<Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -743,7 +999,10 @@ export default function QuestsPage() {
 													variant="outline"
 													size="sm"
 													className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 h-7 w-7 sm:h-8 sm:w-8 p-0"
-													onClick={() => startEditing(quest)}
+													onClick={(e) => {
+														e.stopPropagation();
+														startEditing(quest);
+													}}
 												>
 													<Edit className="h-3 w-3" />
 												</Button>
@@ -751,7 +1010,10 @@ export default function QuestsPage() {
 													variant="outline"
 													size="sm"
 													className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-7 w-7 sm:h-8 sm:w-8 p-0"
-													onClick={() => handleDeleteQuest(quest.id)}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleDeleteQuest(quest.id);
+													}}
 												>
 													<Trash2 className="h-3 w-3" />
 												</Button>
@@ -763,16 +1025,36 @@ export default function QuestsPage() {
 									<div
 										className={`p-3 sm:p-4 rounded-lg border mb-3 ${session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'}`}
 									>
-										<p className={`text-xs sm:text-sm leading-relaxed ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+										<p className={`text-xs sm:text-sm leading-relaxed line-clamp-3 ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
 											{quest.description}
 										</p>
 									</div>
-									{quest.reward && (
-										<div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-yellow-700">
-											<Coins className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-											<span className="truncate">Reward: {quest.reward}</span>
-										</div>
-									)}
+									<div className="space-y-2">
+										{quest.reward && (
+											<div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-yellow-700">
+												<Coins className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+												<span className="truncate">Reward: {quest.reward}</span>
+											</div>
+										)}
+										{/* Show XP if: (not hidden) OR (hidden AND user is DM/Admin) */}
+										{quest.xp && (!quest.xpHidden || canManageQuests) && (
+											<div
+												className={`flex items-center gap-2 text-xs sm:text-sm font-medium ${session?.user?.darkMode ? 'text-cyan-300' : 'text-cyan-700'}`}
+											>
+												<Zap className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+												<span>
+													XP: {quest.xp}
+													{quest.xpHidden && canManageQuests && (
+														<>
+															{' '}
+															<EyeOff className="h-3 w-3 inline ml-1" />
+															<span className="text-xs opacity-75">(Hidden)</span>
+														</>
+													)}
+												</span>
+											</div>
+										)}
+									</div>
 								</CardContent>
 							</Card>
 						))}
@@ -872,6 +1154,78 @@ export default function QuestsPage() {
 									</SelectContent>
 								</Select>
 							</div>
+
+							{/* XP and Location Fields */}
+							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+								<div>
+									<Label htmlFor="editXP" className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+										XP Reward (Optional)
+									</Label>
+									<Input
+										id="editXP"
+										type="number"
+										placeholder="e.g., 500"
+										value={formData.xp}
+										onChange={(e) => setFormData({ ...formData, xp: e.target.value })}
+										className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+									/>
+									<div className="flex items-center mt-2">
+										<input
+											type="checkbox"
+											id="editXPHidden"
+											checked={formData.xpHidden}
+											onChange={(e) => setFormData({ ...formData, xpHidden: e.target.checked })}
+											className="hidden"
+										/>
+										<Label
+											htmlFor="editXPHidden"
+											className={`text-xs sm:text-sm cursor-pointer ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-600'}`}
+										>
+											{formData.xpHidden ? <EyeOff className="h-4 w-4 inline mr-1" /> : <Eye className="h-4 w-4 inline mr-1" />}
+											Hide XP from players
+										</Label>
+									</div>
+								</div>
+								<div>
+									<Label htmlFor="editLocation" className={`text-sm sm:text-base ${session?.user?.darkMode ? 'text-white' : 'text-gray-700'}`}>
+										<MapPin className="h-4 w-4 inline mr-1" />
+										Location (Optional)
+									</Label>
+									<Input
+										id="editLocation"
+										placeholder="e.g., Neverwinter, The Underdark"
+										value={formData.location}
+										onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+										className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base"
+									/>
+									{questLocations.length > 0 && (
+										<div className="mt-2">
+											<Label className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Or choose existing:</Label>
+											<Select
+												value={formData.location || 'none'}
+												onValueChange={(value) => {
+													if (value !== 'none') {
+														setFormData({ ...formData, location: value });
+													}
+												}}
+											>
+												<SelectTrigger className="w-full mt-1 text-xs sm:text-sm h-8">
+													<SelectValue placeholder="Choose location" />
+												</SelectTrigger>
+												<SelectContent>
+													<SelectItem value="none">-- Choose Location --</SelectItem>
+													{questLocations.map((loc) => (
+														<SelectItem key={loc} value={loc}>
+															{loc}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+									)}
+								</div>
+							</div>
+
 							<div className="flex flex-col sm:flex-row gap-2 pt-4">
 								<Button
 									type="submit"
@@ -890,6 +1244,142 @@ export default function QuestsPage() {
 								</Button>
 							</div>
 						</form>
+					</DialogContent>
+				</Dialog>
+
+				{/* Quest Detail Dialog */}
+				<Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+					<DialogContent
+						className={`max-w-xs sm:max-w-lg lg:max-w-3xl border-0 shadow-xl backdrop-blur-sm mx-2 sm:mx-auto overflow-y-auto max-h-[90vh] ${session?.user?.darkMode ? 'bg-gray-800/95' : 'bg-white/95'}`}
+					>
+						{selectedQuest && (
+							<>
+								<DialogHeader>
+									<DialogTitle className={`text-xl sm:text-2xl flex items-center gap-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+										<Crown className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-600 flex-shrink-0" />
+										{selectedQuest.title}
+									</DialogTitle>
+								</DialogHeader>
+
+								<div className="space-y-4 sm:space-y-6">
+									{/* Badges Row */}
+									<div className="flex flex-wrap gap-2">
+										<Badge className={`border text-sm ${getStatusColor(selectedQuest.status)}`}>{selectedQuest.status.replace('_', ' ')}</Badge>
+										{selectedQuest.difficulty && (
+											<Badge variant="outline" className={`border text-sm ${getDifficultyColor(selectedQuest.difficulty)}`}>
+												{getDifficultyIcon(selectedQuest.difficulty)}
+												<span className="ml-1">{selectedQuest.difficulty}</span>
+											</Badge>
+										)}
+										{selectedQuest.questType && (
+											<Badge
+												variant="outline"
+												className={`border-blue-200 bg-blue-50 text-blue-700 text-sm ${session?.user?.darkMode ? 'border-blue-600 bg-blue-900/50 text-blue-300' : ''}`}
+											>
+												<Tag className="h-4 w-4 mr-1 flex-shrink-0" />
+												{selectedQuest.questType.name}
+											</Badge>
+										)}
+										{selectedQuest.location && (
+											<Badge
+												variant="outline"
+												className={`border-emerald-200 bg-emerald-50 text-emerald-700 text-sm ${session?.user?.darkMode ? 'border-emerald-600 bg-emerald-900/50 text-emerald-300' : ''}`}
+											>
+												<MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+												{selectedQuest.location}
+											</Badge>
+										)}
+									</div>
+
+									{/* Posted Date */}
+									<div className="flex items-center gap-2 text-gray-500 text-sm">
+										<Calendar className="h-4 w-4 flex-shrink-0" />
+										<span>Posted on {formatDate(selectedQuest.createdAt)}</span>
+									</div>
+
+									{/* Description */}
+									<div>
+										<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+											<Scroll className="h-5 w-5 inline mr-2" />
+											Quest Details
+										</h3>
+										<div
+											className={`p-4 sm:p-6 rounded-lg border ${session?.user?.darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gradient-to-r from-purple-50/50 to-blue-50/50 border-purple-100'}`}
+										>
+											<p
+												className={`text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${session?.user?.darkMode ? 'text-gray-300' : 'text-gray-700'}`}
+											>
+												{selectedQuest.description}
+											</p>
+										</div>
+									</div>
+
+									{/* Reward */}
+									{selectedQuest.reward && (
+										<div>
+											<h3 className={`text-lg font-semibold mb-3 ${session?.user?.darkMode ? 'text-white' : 'text-gray-800'}`}>
+												<Coins className="h-5 w-5 inline mr-2 text-yellow-600" />
+												Reward
+											</h3>
+											<div
+												className={`p-4 rounded-lg border ${session?.user?.darkMode ? 'bg-yellow-900/20 border-yellow-700' : 'bg-yellow-50 border-yellow-200'}`}
+											>
+												<p className={`text-sm sm:text-base font-medium ${session?.user?.darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+													{selectedQuest.reward}
+												</p>
+											</div>
+										</div>
+									)}
+
+									{/* XP */}
+									{selectedQuest.xp && (!selectedQuest.xpHidden || canManageQuests) && (
+										<div className={`flex items-center gap-2 text-sm ${session?.user?.darkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+											<Zap className="h-4 w-4" />
+											<span className="font-medium">{selectedQuest.xp} XP</span>
+											{selectedQuest.xpHidden && canManageQuests && (
+												<span className={`text-xs ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>(Hidden)</span>
+											)}
+										</div>
+									)}
+
+									{/* Action Buttons */}
+									<div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-300 dark:border-gray-600">
+										{canManageQuests && (
+											<>
+												<Button
+													className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-sm sm:text-base"
+													onClick={() => {
+														setShowDetailDialog(false);
+														startEditing(selectedQuest);
+													}}
+												>
+													<Edit className="h-4 w-4 mr-2" />
+													Edit Quest
+												</Button>
+												<Button
+													variant="outline"
+													className="border-red-200 text-red-600 hover:bg-red-50 text-sm sm:text-base"
+													onClick={() => {
+														setShowDetailDialog(false);
+														handleDeleteQuest(selectedQuest.id);
+													}}
+												>
+													<Trash2 className="h-4 w-4 mr-2" />
+													Delete Quest
+												</Button>
+											</>
+										)}
+										<Button
+											variant="outline"
+											className={`text-sm sm:text-base ${session?.user?.darkMode ? 'border-gray-600 hover:bg-gray-700 text-gray-300' : 'border-gray-300 hover:bg-gray-50'}`}
+											onClick={() => setShowDetailDialog(false)}
+										>
+											Close
+										</Button>
+									</div>
+								</div>
+							</>
+						)}
 					</DialogContent>
 				</Dialog>
 			</div>

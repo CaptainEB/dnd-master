@@ -35,6 +35,7 @@ model campaign {
   name              String
   description       String?
   infoBackgroundUrl String? // URL for custom background image on info page
+  questLocations    String[] @default([]) // Array of quest location names for dropdown
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -159,6 +160,9 @@ model Quest {
   status      QuestStatus @default(AVAILABLE)
   reward      String?
   difficulty  String?
+  xp          Int? // Optional XP reward for quest
+  xpHidden    Boolean     @default(true) // Whether XP is hidden from players
+  location    String? // Optional location for the quest
   createdAt   DateTime    @default(now())
   campaignId  String      @db.ObjectId
   questTypeId String?     @db.ObjectId
