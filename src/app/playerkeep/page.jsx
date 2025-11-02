@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Castle, Clock, Edit, ImageIcon, Package, Plus, Trash, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CheckInDialog from './components/CheckInDialog';
 import FacilityDialog from './components/FacilityDialog';
 import HirelingDialog from './components/HirelingDialog';
@@ -222,6 +222,54 @@ export default function PlayerKeepPage() {
 		}
 	};
 
+	// Calculate weekly production totals by currency
+	const weeklyTotals = useMemo(() => {
+		if (!playerKeep) return {};
+
+		const totals = {};
+
+		// Calculate facility costs and profits
+		playerKeep.facilities?.forEach((facility) => {
+			if (facility.upkeepAmount && facility.upkeepCurrency) {
+				if (!totals[facility.upkeepCurrency]) {
+					totals[facility.upkeepCurrency] = { upkeep: 0, profit: 0 };
+				}
+				totals[facility.upkeepCurrency].upkeep += facility.upkeepAmount;
+			}
+
+			if (facility.profitAmount && facility.profitCurrency) {
+				if (!totals[facility.profitCurrency]) {
+					totals[facility.profitCurrency] = { upkeep: 0, profit: 0 };
+				}
+				totals[facility.profitCurrency].profit += facility.profitAmount;
+			}
+		});
+
+		// Calculate hireling costs and profits
+		playerKeep.hirelings?.forEach((hireling) => {
+			if (hireling.salaryAmount && hireling.salaryCurrency) {
+				if (!totals[hireling.salaryCurrency]) {
+					totals[hireling.salaryCurrency] = { upkeep: 0, profit: 0 };
+				}
+				totals[hireling.salaryCurrency].upkeep += hireling.salaryAmount;
+			}
+
+			if (hireling.profitAmount && hireling.profitCurrency) {
+				if (!totals[hireling.profitCurrency]) {
+					totals[hireling.profitCurrency] = { upkeep: 0, profit: 0 };
+				}
+				totals[hireling.profitCurrency].profit += hireling.profitAmount;
+			}
+		});
+
+		// Calculate net for each currency
+		Object.keys(totals).forEach((currency) => {
+			totals[currency].net = totals[currency].profit - totals[currency].upkeep;
+		});
+
+		return totals;
+	}, [playerKeep]);
+
 	if (loading) {
 		return (
 			<div className="min-h-screen p-4 sm:p-6 lg:p-8 flex items-center justify-center">
@@ -421,6 +469,45 @@ export default function PlayerKeepPage() {
 								</div>
 							)}
 						</div>
+
+						{/* Weekly Production Summary */}
+						{Object.keys(weeklyTotals).length > 0 && (
+							<div className={`mt-4 pt-4 border-t ${session?.user?.darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+								<div className="flex flex-wrap items-center gap-3">
+									<span className={`text-xs font-medium ${session?.user?.darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Weekly Production:</span>
+									{Object.entries(weeklyTotals).map(([currency, data]) => {
+										const isPositive = data.net > 0;
+										const isNegative = data.net < 0;
+										const isZero = data.net === 0;
+
+										return (
+											<div
+												key={currency}
+												className={`flex items-center gap-1 text-xs font-medium ${
+													isPositive
+														? session?.user?.darkMode
+															? 'text-green-400'
+															: 'text-green-600'
+														: isNegative
+															? session?.user?.darkMode
+																? 'text-red-400'
+																: 'text-red-600'
+															: session?.user?.darkMode
+																? 'text-gray-400'
+																: 'text-gray-600'
+												}`}
+											>
+												{isPositive ? <TrendingUp size={14} /> : isNegative ? <TrendingDown size={14} /> : null}
+												<span>
+													{isPositive ? '+' : ''}
+													{data.net.toFixed(2)} {currency}
+												</span>
+											</div>
+										);
+									})}
+								</div>
+							</div>
+						)}
 					</CardContent>
 				</Card>
 				{/* Facilities and Hirelings - Side by Side */}
